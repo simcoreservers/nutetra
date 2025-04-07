@@ -4,6 +4,7 @@ Handles real-time updates for sensor data and notifications
 """
 
 from flask_socketio import SocketIO
+from flask import current_app
 import time
 import threading
 import logging
@@ -12,12 +13,14 @@ import logging
 socketio = None
 broadcast_thread = None
 thread_stop_event = threading.Event()
+app = None
 
-def init_socketio(app):
+def init_socketio(flask_app):
     """
     Initialize Socket.IO with the Flask app
     """
-    global socketio
+    global socketio, app
+    app = flask_app
     socketio = SocketIO(app, cors_allowed_origins="*")
     register_handlers()
     
@@ -80,26 +83,28 @@ def background_broadcaster():
     """
     Background thread function that sends sensor updates periodically
     """
-    from ..models.settings import Settings
-    from ..models.sensor import SensorData
-    
-    while not thread_stop_event.is_set():
-        try:
-            # Get refresh interval from settings
-            refresh_interval = Settings.get('refresh_interval', 10)
-            
-            # Get latest sensor data
-            sensor_data = SensorData.get_latest()
-            
-            if sensor_data:
-                # Broadcast update to clients
-                emit_sensor_update(sensor_data)
-            
-            # Sleep for the refresh interval
-            time.sleep(refresh_interval)
-        except Exception as e:
-            logging.error(f'Error in Socket.IO broadcaster: {e}')
-            time.sleep(10)  # Sleep on error to prevent high CPU usage
+    global app
+    with app.app_context():
+        from ..models.settings import Settings
+        from ..models.sensor import SensorData
+        
+        while not thread_stop_event.is_set():
+            try:
+                # Get refresh interval from settings
+                refresh_interval = Settings.get('refresh_interval', 10)
+                
+                # Get latest sensor data
+                sensor_data = SensorData.get_latest()
+                
+                if sensor_data:
+                    # Broadcast update to clients
+                    emit_sensor_update(sensor_data)
+                
+                # Sleep for the refresh interval
+                time.sleep(refresh_interval)
+            except Exception as e:
+                logging.error(f'Error in Socket.IO broadcaster: {e}')
+                time.sleep(10)  # Sleep on error to prevent high CPU usage
 
 def emit_sensor_update(sensor_data):
     """

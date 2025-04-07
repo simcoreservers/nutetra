@@ -461,7 +461,7 @@ def get_current_sensor_values():
         }), 500
 
 @api_bp.route('/sensor-history', methods=['GET'])
-def get_sensor_history():
+def get_sensor_history_range():
     """
     Return sensor history for specified timeframe
     Timeframes: 1h, 6h, 24h, 7d
