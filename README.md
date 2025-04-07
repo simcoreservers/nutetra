@@ -44,7 +44,7 @@ cd nutetra
 2. Create and activate a virtual environment:
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+source venv/bin/activate
 ```
 
 3. Install dependencies:
@@ -66,7 +66,7 @@ python run.py
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/nutetra.git
+git clone https://github.com/simcoreservers/nutetra.git
 cd nutetra
 ```
 

@@ -86,8 +86,7 @@ def background_broadcaster():
     while not thread_stop_event.is_set():
         try:
             # Get refresh interval from settings
-            settings = Settings.get()
-            refresh_interval = settings.refresh_interval if settings else 10
+            refresh_interval = Settings.get('refresh_interval', 10)
             
             # Get latest sensor data
             sensor_data = SensorData.get_latest()
