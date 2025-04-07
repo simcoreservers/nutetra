@@ -119,6 +119,11 @@ def emit_sensor_update(sensor_data):
         'ec': sensor_data.ec,
         'temp': sensor_data.temperature,
         'timestamp': sensor_data.timestamp.isoformat(),
+        'sensor_status': {
+            'ph': 'disconnected' if sensor_data.ph is None else 'connected',
+            'ec': 'disconnected' if sensor_data.ec is None else 'connected',
+            'temp': 'disconnected' if sensor_data.temperature is None else 'connected'
+        }
     }
     
     # Emit to the sensor channel

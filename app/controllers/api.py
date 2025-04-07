@@ -471,28 +471,41 @@ def get_sensor_history_range():
     # Convert timeframe to timedelta
     if timeframe == '1h':
         time_delta = timedelta(hours=1)
-        points = 60  # One reading per minute
     elif timeframe == '6h':
         time_delta = timedelta(hours=6)
-        points = 72  # One reading per 5 minutes
     elif timeframe == '24h':
         time_delta = timedelta(hours=24)
-        points = 96  # One reading per 15 minutes
     elif timeframe == '7d':
         time_delta = timedelta(days=7)
-        points = 168  # One reading per hour
     else:
         time_delta = timedelta(hours=24)
-        points = 96
     
     try:
         # Get sensor data from database
         start_time = datetime.now() - time_delta
         sensor_data = SensorData.get_range(start_time, datetime.now())
         
-        # If no data available, generate simulated data
+        # If no data available, return empty chart data with disconnected status
         if not sensor_data:
-            return get_simulated_history(time_delta, points)
+            return jsonify({
+                'ph': {
+                    'values': [],
+                    'timestamps': [],
+                    'status': 'disconnected'
+                },
+                'ec': {
+                    'values': [],
+                    'timestamps': [],
+                    'status': 'disconnected'
+                },
+                'temp': {
+                    'values': [],
+                    'timestamps': [],
+                    'status': 'disconnected'
+                },
+                'status': 'error',
+                'message': 'No sensor data available'
+            })
         
         # Format the data for charts
         timestamps = [reading.timestamp.isoformat() for reading in sensor_data]
@@ -500,18 +513,26 @@ def get_sensor_history_range():
         ec_values = [reading.ec for reading in sensor_data]
         temp_values = [reading.temperature for reading in sensor_data]
         
+        # Determine sensor status
+        has_ph = any(v is not None for v in ph_values)
+        has_ec = any(v is not None for v in ec_values)
+        has_temp = any(v is not None for v in temp_values)
+        
         return jsonify({
             'ph': {
                 'values': ph_values,
-                'timestamps': timestamps
+                'timestamps': timestamps,
+                'status': 'connected' if has_ph else 'disconnected'
             },
             'ec': {
                 'values': ec_values,
-                'timestamps': timestamps
+                'timestamps': timestamps,
+                'status': 'connected' if has_ec else 'disconnected'
             },
             'temp': {
                 'values': temp_values,
-                'timestamps': timestamps
+                'timestamps': timestamps,
+                'status': 'connected' if has_temp else 'disconnected'
             },
             'status': 'ok'
         })
@@ -520,64 +541,6 @@ def get_sensor_history_range():
             'error': str(e),
             'status': 'error'
         }), 500
-
-def get_simulated_history(time_delta, points):
-    """
-    Generate simulated sensor data for charts when real data is unavailable
-    """
-    now = datetime.now()
-    
-    # Calculate time interval between points
-    interval = time_delta / points
-    
-    # Generate timestamps
-    timestamps = [(now - (interval * i)).isoformat() for i in range(points)]
-    timestamps.reverse()  # Oldest first
-    
-    # Settings for target values
-    settings = Settings.get()
-    if settings:
-        ph_target = (settings.ph_min + settings.ph_max) / 2
-        ec_target = (settings.ec_min + settings.ec_max) / 2
-        temp_target = (settings.temp_min + settings.temp_max) / 2
-    else:
-        ph_target = 6.0
-        ec_target = 1200
-        temp_target = 22.5
-    
-    # Generate simulated values
-    ph_values = generate_simulated_values(ph_target, 0.3, points)
-    ec_values = generate_simulated_values(ec_target, 100, points)
-    temp_values = generate_simulated_values(temp_target, 0.5, points)
-    
-    return jsonify({
-        'ph': {
-            'values': ph_values,
-            'timestamps': timestamps
-        },
-        'ec': {
-            'values': ec_values,
-            'timestamps': timestamps
-        },
-        'temp': {
-            'values': temp_values,
-            'timestamps': timestamps
-        },
-        'status': 'simulated'
-    })
-
-def generate_simulated_values(target, variance, count):
-    """
-    Generate smooth simulated data points around a target value
-    """
-    values = [target]
-    for i in range(1, count):
-        # Random walk with tendency to return to target
-        pull_to_target = (target - values[-1]) * 0.3
-        random_change = (random.random() - 0.5) * variance
-        new_value = values[-1] + pull_to_target + random_change
-        values.append(new_value)
-    return values
 
 @api_bp.route('/notifications', methods=['GET'])
 def get_notifications():

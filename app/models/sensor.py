@@ -86,4 +86,51 @@ class SensorData:
                 timestamp=ts
             ))
         
+        return result
+    
+    @staticmethod
+    def get_range(start_time, end_time):
+        """
+        Get sensor data for a specific time range
+        Returns a list of SensorData objects
+        """
+        # Get readings within time range
+        ph_readings = SensorReading.query.filter(
+            SensorReading.sensor_type == 'ph',
+            SensorReading.timestamp >= start_time,
+            SensorReading.timestamp <= end_time
+        ).order_by(SensorReading.timestamp).all()
+        
+        ec_readings = SensorReading.query.filter(
+            SensorReading.sensor_type == 'ec',
+            SensorReading.timestamp >= start_time,
+            SensorReading.timestamp <= end_time
+        ).order_by(SensorReading.timestamp).all()
+        
+        temp_readings = SensorReading.query.filter(
+            SensorReading.sensor_type == 'temp',
+            SensorReading.timestamp >= start_time,
+            SensorReading.timestamp <= end_time
+        ).order_by(SensorReading.timestamp).all()
+        
+        # Convert to dictionaries for easy lookup
+        ph_dict = {r.timestamp: r.value for r in ph_readings}
+        ec_dict = {r.timestamp: r.value for r in ec_readings}
+        temp_dict = {r.timestamp: r.value for r in temp_readings}
+        
+        # Combine all timestamps
+        all_timestamps = sorted(
+            set(ph_dict.keys()) | set(ec_dict.keys()) | set(temp_dict.keys())
+        )
+        
+        # Create SensorData objects
+        result = []
+        for ts in all_timestamps:
+            result.append(SensorData(
+                ph=ph_dict.get(ts),
+                ec=ec_dict.get(ts),
+                temperature=temp_dict.get(ts),
+                timestamp=ts
+            ))
+        
         return result 

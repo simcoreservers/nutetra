@@ -1,11 +1,31 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask.cli import with_appcontext
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
+import click
 
 # Initialize extensions
 db = SQLAlchemy()
 scheduler = BackgroundScheduler()
+
+# Import Flask CLI command for database initialization
+@click.command('init-db')
+@with_appcontext
+def init_db_command():
+    """Create all database tables."""
+    db.create_all()
+    click.echo('Initialized the database.')
+    
+    # Initialize default settings
+    from app.models.settings import Settings
+    Settings.initialize_defaults()
+    click.echo('Initialized default settings.')
+    
+    # Initialize default pumps
+    from app.models.pump import Pump
+    Pump.initialize_defaults()
+    click.echo('Initialized default pumps.')
 
 def create_app(test_config=None):
     # Create and configure the app
@@ -66,4 +86,7 @@ def create_app(test_config=None):
         init_sensors()
         init_dosing()
         
+    # Register the database command
+    app.cli.add_command(init_db_command)
+
     return app 
