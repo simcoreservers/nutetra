@@ -19,7 +19,8 @@ python-engineio==4.4.1
 eventlet==0.33.3
 
 # Hardware interface
-RPi.GPIO==0.7.1; platform_machine == 'armv7l' or platform_machine == 'aarch64'
+lgpio==0.2.2.0; platform_machine == 'armv7l' or platform_machine == 'aarch64'
+smbus2==0.4.2
 
 # Data handling
 numpy==1.24.2

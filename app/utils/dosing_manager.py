@@ -1,7 +1,7 @@
 import time
 import threading
 import logging
-import RPi.GPIO as GPIO
+import lgpio
 from app import scheduler
 from app.models.pump import Pump
 from app.models.dosing_event import DosingEvent
@@ -24,18 +24,21 @@ last_dosing = {
 # Lock for thread safety when controlling pumps
 pump_lock = threading.Lock()
 
+# lgpio chip handle
+chip = None
+
 def init_dosing():
     """Initialize the dosing system and GPIO pins"""
+    global chip
     try:
-        # Set up GPIO
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
+        # Set up lgpio
+        chip = lgpio.gpiochip_open(0)  # Open the default gpiochip
         
         # Set up pins for all pumps
         pumps = Pump.get_enabled()
         for pump in pumps:
-            GPIO.setup(pump.gpio_pin, GPIO.OUT)
-            GPIO.output(pump.gpio_pin, GPIO.LOW)  # Ensure all pumps are off
+            lgpio.gpio_claim_output(chip, pump.gpio_pin)
+            lgpio.gpio_write(chip, pump.gpio_pin, 0)  # Ensure all pumps are off (0 = LOW)
         
         logger.info(f"Initialized {len(pumps)} dosing pumps")
         
@@ -110,6 +113,7 @@ def check_night_mode():
 
 def activate_pump(pump_id, duration_ms, reason=None, sensor_before=None):
     """Activate a pump for the specified duration in milliseconds"""
+    global chip
     with pump_lock:  # Ensure thread safety
         try:
             # Get the pump from database
@@ -144,15 +148,15 @@ def activate_pump(pump_id, duration_ms, reason=None, sensor_before=None):
             elif sensor_value is None and pump.type.startswith('nutrient'):
                 sensor_value = get_last_reading('ec')
             
-            # Set the GPIO pin HIGH to activate the pump
-            GPIO.output(pump.gpio_pin, GPIO.HIGH)
+            # Set the GPIO pin HIGH to activate the pump (1 = HIGH)
+            lgpio.gpio_write(chip, pump.gpio_pin, 1)
             logger.info(f"Activated pump {pump.name} for {duration_ms}ms ({amount_ml:.2f}ml)")
             
             # Wait for the specified duration
             time.sleep(duration_ms / 1000.0)
             
-            # Set the GPIO pin LOW to deactivate the pump
-            GPIO.output(pump.gpio_pin, GPIO.LOW)
+            # Set the GPIO pin LOW to deactivate the pump (0 = LOW)
+            lgpio.gpio_write(chip, pump.gpio_pin, 0)
             
             # Read the sensor again after dosing
             sensor_after = None
@@ -199,8 +203,8 @@ def activate_pump(pump_id, duration_ms, reason=None, sensor_before=None):
             logger.error(f"Error activating pump {pump_id}: {e}")
             # Make sure the pump is off in case of error
             try:
-                if 'pump' in locals() and pump:
-                    GPIO.output(pump.gpio_pin, GPIO.LOW)
+                if 'pump' in locals() and pump and chip is not None:
+                    lgpio.gpio_write(chip, pump.gpio_pin, 0)
             except:
                 pass
             return False
@@ -338,8 +342,10 @@ def check_and_adjust_ec():
         logger.error(f"Error in EC adjustment: {e}")
 
 def cleanup():
-    """Clean up GPIO pins on shutdown"""
-    try:
-        GPIO.cleanup()
-    except:
-        pass 
+    """Clean up GPIO resources"""
+    global chip
+    if chip is not None:
+        try:
+            lgpio.gpiochip_close(chip)
+        except Exception as e:
+            logger.error(f"Error closing GPIO chip: {e}") 

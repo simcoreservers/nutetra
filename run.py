@@ -31,7 +31,7 @@ app = create_app()
 if __name__ == '__main__':
     # Check if running on a Raspberry Pi
     try:
-        import RPi.GPIO as GPIO
+        import lgpio
         is_raspberry_pi = True
         logging.info("Running on Raspberry Pi - Hardware features enabled")
     except (ImportError, RuntimeError):
