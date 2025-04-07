@@ -10,20 +10,20 @@ import logging
 from app import create_app
 from app.utils.socketio_manager import socketio
 
+# Create logs directory if it doesn't exist
+logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
+if not os.path.exists(logs_dir):
+    os.makedirs(logs_dir)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(os.path.join(os.path.dirname(__file__), 'logs', 'nutetra.log'), mode='a')
+        logging.FileHandler(os.path.join(logs_dir, 'nutetra.log'), mode='a')
     ]
 )
-
-# Create logs directory if it doesn't exist
-logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
-if not os.path.exists(logs_dir):
-    os.makedirs(logs_dir)
 
 # Create Flask app
 app = create_app()
