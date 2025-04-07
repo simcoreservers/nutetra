@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Sensors | NuTetra Controller{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Sensor Management</h1>
+            <p class="lead">Monitor and calibrate your nutrient solution sensors.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- pH Sensor Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">pH Sensor</h5>
+                </div>
+                <div class="card-body">
+                    <div class="sensor-status mb-3">
+                        <span class="status-indicator {{ 'connected' if get_sensor_status('ph') == 'connected' else 'disconnected' }}"></span>
+                        <span class="status-text">{{ get_sensor_status('ph')|title }}</span>
+                    </div>
+                    
+                    {% set ph_reading = get_last_reading('ph') %}
+                    <div class="current-reading">
+                        <h2 class="reading-value">{{ ph_reading|ph }}</h2>
+                        <div class="reading-range">
+                            Target: {{ settings.get('ph_target_min', 5.8)|ph }} - {{ settings.get('ph_target_max', 6.2)|ph }}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('sensors.calibrate', sensor_type='ph') }}" class="btn btn-primary">Calibrate</a>
+                    <a href="{{ url_for('sensors.history', sensor_type='ph') }}" class="btn btn-outline-secondary">View History</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- EC Sensor Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">EC Sensor</h5>
+                </div>
+                <div class="card-body">
+                    <div class="sensor-status mb-3">
+                        <span class="status-indicator {{ 'connected' if get_sensor_status('ec') == 'connected' else 'disconnected' }}"></span>
+                        <span class="status-text">{{ get_sensor_status('ec')|title }}</span>
+                    </div>
+                    
+                    {% set ec_reading = get_last_reading('ec') %}
+                    <div class="current-reading">
+                        <h2 class="reading-value">{{ ec_reading|ec }}</h2>
+                        <div class="reading-range">
+                            Target: {{ settings.get('ec_target_min', 1.2)|ec }} - {{ settings.get('ec_target_max', 1.5)|ec }}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('sensors.calibrate', sensor_type='ec') }}" class="btn btn-primary">Calibrate</a>
+                    <a href="{{ url_for('sensors.history', sensor_type='ec') }}" class="btn btn-outline-secondary">View History</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Temperature Sensor Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Temperature Sensor</h5>
+                </div>
+                <div class="card-body">
+                    <div class="sensor-status mb-3">
+                        <span class="status-indicator {{ 'connected' if get_sensor_status('temp') == 'connected' else 'disconnected' }}"></span>
+                        <span class="status-text">{{ get_sensor_status('temp')|title }}</span>
+                    </div>
+                    
+                    {% set temp_reading = get_last_reading('temp') %}
+                    <div class="current-reading">
+                        <h2 class="reading-value">{{ temp_reading|temp }}</h2>
+                        <div class="reading-range">
+                            Target: {{ settings.get('temp_target_min', 18.0)|temp }} - {{ settings.get('temp_target_max', 24.0)|temp }}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('sensors.calibrate', sensor_type='temp') }}" class="btn btn-primary">Calibrate</a>
+                    <a href="{{ url_for('sensors.history', sensor_type='temp') }}" class="btn btn-outline-secondary">View History</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Sensor Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('sensors.update_settings') }}">
+                        <div class="row">
+                            <!-- pH Settings -->
+                            <div class="col-md-4">
+                                <h6>pH Settings</h6>
+                                <div class="form-group mb-3">
+                                    <label for="ph_target_min">Target Minimum</label>
+                                    <input type="number" class="form-control" id="ph_target_min" name="ph_target_min" 
+                                           value="{{ settings.get('ph_target_min', 5.8) }}" step="0.1" min="0" max="14">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="ph_target_max">Target Maximum</label>
+                                    <input type="number" class="form-control" id="ph_target_max" name="ph_target_max" 
+                                           value="{{ settings.get('ph_target_max', 6.2) }}" step="0.1" min="0" max="14">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ph_check_interval">Check Interval (seconds)</label>
+                                    <input type="number" class="form-control" id="ph_check_interval" name="ph_check_interval" 
+                                           value="{{ settings.get('ph_check_interval', 300) }}" step="10" min="10">
+                                </div>
+                            </div>
+                            
+                            <!-- EC Settings -->
+                            <div class="col-md-4">
+                                <h6>EC Settings</h6>
+                                <div class="form-group mb-3">
+                                    <label for="ec_target_min">Target Minimum (μS/cm)</label>
+                                    <input type="number" class="form-control" id="ec_target_min" name="ec_target_min" 
+                                           value="{{ settings.get('ec_target_min', 1200) }}" step="50" min="0">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="ec_target_max">Target Maximum (μS/cm)</label>
+                                    <input type="number" class="form-control" id="ec_target_max" name="ec_target_max" 
+                                           value="{{ settings.get('ec_target_max', 1500) }}" step="50" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ec_check_interval">Check Interval (seconds)</label>
+                                    <input type="number" class="form-control" id="ec_check_interval" name="ec_check_interval" 
+                                           value="{{ settings.get('ec_check_interval', 300) }}" step="10" min="10">
+                                </div>
+                            </div>
+                            
+                            <!-- Temperature Settings -->
+                            <div class="col-md-4">
+                                <h6>Temperature Settings</h6>
+                                <div class="form-group mb-3">
+                                    <label for="temp_target_min">Target Minimum (°C)</label>
+                                    <input type="number" class="form-control" id="temp_target_min" name="temp_target_min" 
+                                           value="{{ settings.get('temp_target_min', 18.0) }}" step="0.5" min="0">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="temp_target_max">Target Maximum (°C)</label>
+                                    <input type="number" class="form-control" id="temp_target_max" name="temp_target_max" 
+                                           value="{{ settings.get('temp_target_max', 24.0) }}" step="0.5" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="temp_check_interval">Check Interval (seconds)</label>
+                                    <input type="number" class="form-control" id="temp_check_interval" name="temp_check_interval" 
+                                           value="{{ settings.get('temp_check_interval', 300) }}" step="10" min="10">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
