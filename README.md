@@ -37,7 +37,7 @@ A complete hydroponics automation system for the Raspberry Pi 5, designed to mon
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/nutetra.git
+git clone https://github.com/simcoreservers/nutetra.git
 cd nutetra
 ```
 
@@ -78,7 +78,7 @@ docker run -p 5000:5000 --privileged nutetra
 
 ## Configuration
 
-1. Access the web interface at `http://[raspberry-pi-ip]:5000`
+1. Access the web interface at `http://nutetra.local:5000`
 2. Navigate to Settings to configure:
    - Sensor calibration
    - Target values for pH, EC, and temperature
