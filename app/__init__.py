@@ -37,6 +37,27 @@ def register_template_helpers(app):
         if value is None:
             return ""
         return value.strftime(format)
+        
+    @app.template_filter('ph')
+    def format_ph(value):
+        """Format pH value with 2 decimal places."""
+        if value is None:
+            return "N/A"
+        return f"{value:.2f}"
+        
+    @app.template_filter('ec')
+    def format_ec(value):
+        """Format EC value with appropriate units."""
+        if value is None:
+            return "N/A"
+        return f"{value:.0f} μS/cm"
+        
+    @app.template_filter('temp')
+    def format_temp(value):
+        """Format temperature value with 1 decimal place."""
+        if value is None:
+            return "N/A"
+        return f"{value:.1f}°C"
     
     # Register context processors
     @app.context_processor
@@ -44,10 +65,28 @@ def register_template_helpers(app):
         """Make global functions and variables available to all templates"""
         from app.models.settings import Settings
         from app.utils.sensor_manager import get_last_reading
+        from app.models.notification import Notification
+        from flask import request
+        
+        def get_sensor_status(sensor_type):
+            """Get connection status of a sensor"""
+            reading = get_last_reading(sensor_type)
+            return "connected" if reading is not None else "disconnected"
+            
+        def get_recent_notifications(limit=5):
+            """Get recent notifications"""
+            return Notification.get_all(limit=limit)
+            
+        def is_active_page(endpoint):
+            """Check if the given endpoint is the current page"""
+            return request.endpoint and request.endpoint.startswith(endpoint)
         
         return {
             'settings': Settings,
-            'get_last_reading': get_last_reading
+            'get_last_reading': get_last_reading,
+            'get_sensor_status': get_sensor_status,
+            'get_recent_notifications': get_recent_notifications,
+            'is_active_page': is_active_page
         }
 
 def create_app(test_config=None):
