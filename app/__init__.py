@@ -40,10 +40,15 @@ def register_template_helpers(app):
     
     # Register context processors
     @app.context_processor
-    def inject_settings():
-        """Make settings available to all templates"""
+    def inject_template_globals():
+        """Make global functions and variables available to all templates"""
         from app.models.settings import Settings
-        return {'settings': Settings}
+        from app.utils.sensor_manager import get_last_reading
+        
+        return {
+            'settings': Settings,
+            'get_last_reading': get_last_reading
+        }
 
 def create_app(test_config=None):
     # Create and configure the app
