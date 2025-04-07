@@ -8,7 +8,7 @@ import os
 import sys
 import logging
 from app import create_app
-from app.utils.socketio_manager import socketio
+from app.utils.socketio_manager import init_socketio
 
 # Create logs directory if it doesn't exist
 logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -27,6 +27,9 @@ logging.basicConfig(
 
 # Create Flask app
 app = create_app()
+
+# Initialize Socket.IO
+socketio = init_socketio(app)
 
 if __name__ == '__main__':
     # Check if running on a Raspberry Pi
