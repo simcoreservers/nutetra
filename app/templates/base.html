@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NuTetra Controller{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    
+    <!-- CSS dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <!-- Add any additional CSS files needed for specific pages -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if settings.get('dark_mode', True) %}dark-mode{% endif %}">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="NuTetra" class="logo">
+                <h1>NuTetra</h1>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="{% if request.path == url_for('main.index') %}active{% endif %}">
+                        <a href="{{ url_for('main.index') }}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    <li class="{% if '/sensors' in request.path %}active{% endif %}">
+                        <a href="{{ url_for('sensors.index') }}">
+                            <i class="fas fa-thermometer-half"></i>
+                            <span>Sensors</span>
+                        </a>
+                    </li>
+                    
+                    <li class="{% if '/dosing' in request.path %}active{% endif %}">
+                        <a href="{{ url_for('dosing.index') }}">
+                            <i class="fas fa-tint"></i>
+                            <span>Dosing</span>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="{{ url_for('dosing.pumps') }}">Pumps</a></li>
+                            <li><a href="{{ url_for('dosing.events') }}">Events</a></li>
+                            <li><a href="{{ url_for('dosing.settings') }}">Settings</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="{% if '/settings' in request.path %}active{% endif %}">
+                        <a href="{{ url_for('settings.index') }}">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="{{ url_for('settings.system') }}">System</a></li>
+                            <li><a href="{{ url_for('settings.notifications') }}">Notifications</a></li>
+                            <li><a href="{{ url_for('settings.backup') }}">Backup & Restore</a></li>
+                            <li><a href="{{ url_for('settings.diagnostics') }}">Diagnostics</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>&copy; 2023 NuTetra</p>
+                <p class="version">v1.0.0</p>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation Bar -->
+            <header class="top-nav">
+                <div class="nav-left">
+                    <button id="sidebar-toggle" class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                </div>
+                
+                <div class="nav-right">
+                    <!-- Real-time status indicators -->
+                    <div class="status-indicators">
+                        {% set ph_reading = get_last_reading('ph') %}
+                        {% set ec_reading = get_last_reading('ec') %}
+                        {% set temp_reading = get_last_reading('temp') %}
+                        
+                        {% set ph_min = settings.get('ph_target_min', 5.8) %}
+                        {% set ph_max = settings.get('ph_target_max', 6.2) %}
+                        {% set ec_min = settings.get('ec_target_min', 1.2) %}
+                        {% set ec_max = settings.get('ec_target_max', 1.5) %}
+                        {% set temp_min = settings.get('temp_target_min', 18.0) %}
+                        {% set temp_max = settings.get('temp_target_max', 24.0) %}
+                        
+                        <div class="status-item {% if ph_reading and (ph_reading < ph_min or ph_reading > ph_max) %}alert{% endif %}">
+                            <span class="label">pH</span>
+                            <span class="value">{{ ph_reading|round(2) if ph_reading else '--' }}</span>
+                        </div>
+                        
+                        <div class="status-item {% if ec_reading and (ec_reading < ec_min or ec_reading > ec_max) %}alert{% endif %}">
+                            <span class="label">EC</span>
+                            <span class="value">{{ ec_reading|round(2) if ec_reading else '--' }}</span>
+                        </div>
+                        
+                        <div class="status-item {% if temp_reading and (temp_reading < temp_min or temp_reading > temp_max) %}alert{% endif %}">
+                            <span class="label">Temp</span>
+                            <span class="value">{{ temp_reading|round(1) if temp_reading else '--' }}°C</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications bell -->
+                    <div class="notifications-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-count" id="notification-count">0</span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Flash Messages -->
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <span>{{ message }}</span>
+                                <button class="close-btn">&times;</button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Notification Drawer -->
+    <div class="notifications-drawer" id="notifications-drawer">
+        <div class="drawer-header">
+            <h3>Notifications</h3>
+            <button class="close-drawer">&times;</button>
+        </div>
+        <div class="notifications-list" id="notifications-list">
+            <p class="empty-state">No notifications</p>
+        </div>
+    </div>
+    
+    <!-- JavaScript dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+    <!-- Add any additional JS files needed for specific pages -->
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Socket.IO integration -->
+    <script>
+        // Connect to Socket.IO server
+        const socket = io();
+        
+        // Listen for real-time updates
+        socket.on('sensor_update', function(data) {
+            // Update status indicators with new data
+            updateStatusIndicator(data.sensor_type, data.value);
+        });
+        
+        socket.on('notification', function(data) {
+            // Add new notification to the drawer
+            addNotification(data.subject, data.message, data.level);
+        });
+        
+        socket.on('dosing_event', function(data) {
+            // Add dosing event notification
+            addNotification('Dosing Event', `${data.pump_name}: ${data.amount_ml.toFixed(2)}ml (${data.reason})`, 'info');
+        });
+        
+        // Helper function to update status indicators
+        function updateStatusIndicator(type, value) {
+            const elements = document.querySelectorAll('.status-item');
+            
+            elements.forEach(element => {
+                const label = element.querySelector('.label').textContent.toLowerCase();
+                
+                if ((type === 'ph' && label === 'ph') || 
+                    (type === 'ec' && label === 'ec') || 
+                    (type === 'temp' && label === 'temp')) {
+                    
+                    let displayValue = value;
+                    if (type === 'ph' || type === 'ec') {
+                        displayValue = value.toFixed(2);
+                    } else if (type === 'temp') {
+                        displayValue = value.toFixed(1) + '°C';
+                    }
+                    
+                    element.querySelector('.value').textContent = displayValue;
+                }
+            });
+        }
+        
+        // Helper function to add notifications
+        function addNotification(title, message, level) {
+            const notificationsList = document.getElementById('notifications-list');
+            const emptyState = notificationsList.querySelector('.empty-state');
+            
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${level || 'info'}`;
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <h4>${title}</h4>
+                    <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <p>${message}</p>
+            `;
+            
+            notificationsList.prepend(notification);
+            
+            // Update notification count
+            const count = document.getElementById('notification-count');
+            count.textContent = parseInt(count.textContent) + 1;
+            count.style.display = 'inline-block';
+        }
+    </script>
+</body>
+</html> 

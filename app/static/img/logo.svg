@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="100" fill="#1A1A1A"/>
+  
+  <!-- Water Drop Base -->
+  <path d="M100 155C129.823 155 154 130.823 154 101C154 71.1766 129.823 47 100 47C70.1766 47 46 71.1766 46 101C46 130.823 70.1766 155 100 155Z" fill="#252525"/>
+  
+  <!-- Hexagon Structure (hydroponics symbol) -->
+  <path d="M100 55L145 80V130L100 155L55 130V80L100 55Z" stroke="#4FACFE" stroke-width="5" stroke-linejoin="round"/>
+  
+  <!-- Internal Hexagon Divisions -->
+  <path d="M100 55V155" stroke="#4FACFE" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M55 80L145 80" stroke="#4FACFE" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M55 130L145 130" stroke="#4FACFE" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Plant Element -->
+  <path d="M100 55C100 55 110 70 110 85C110 95 100 105 100 105C100 105 90 95 90 85C90 70 100 55 100 55Z" fill="#43E97B"/>
+  
+  <!-- Water Drop Element -->
+  <path d="M100 155C100 155 115 135 115 125C115 115 105 110 100 110C95 110 85 115 85 125C85 135 100 155 100 155Z" fill="#4FACFE"/>
+  
+  <!-- pH and EC Small Icons -->
+  <circle cx="75" cy="105" r="10" fill="#F4736B"/>
+  <path d="M70 105H80" stroke="white" stroke-width="2"/>
+  <path d="M75 100V110" stroke="white" stroke-width="2"/>
+  
+  <circle cx="125" cy="105" r="10" fill="#FFD166"/>
+  <path d="M120 105H130" stroke="white" stroke-width="2"/>
+  
+  <!-- Temperature Indicator -->
+  <circle cx="100" cy="105" r="12" fill="#333333" stroke="#4FACFE" stroke-width="2"/>
+  <line x1="100" y1="93" x2="100" y2="105" stroke="white" stroke-width="2"/>
+  <path d="M100 105L108 112" stroke="white" stroke-width="2"/>
+</svg> 

@@ -1,0 +1,622 @@
+{% extends "base.html" %}
+
+{% block title %}NuTetra Controller - Dashboard{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sensor Readings Section -->
+    <section class="dashboard-section readings-section">
+        <div class="section-header">
+            <h3>Current Readings</h3>
+            <button class="refresh-btn" id="refresh-readings-btn">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+        
+        <div class="readings-grid">
+            <!-- pH Reading -->
+            <div class="reading-card {% if ph_reading and (ph_reading < ph_min or ph_reading > ph_max) %}alert{% endif %}">
+                <div class="reading-icon">
+                    <i class="fas fa-flask"></i>
+                </div>
+                <div class="reading-details">
+                    <h4>pH Level</h4>
+                    <div class="reading-value" id="ph-value">
+                        {{ ph_reading|round(2) if ph_reading else '--' }}
+                    </div>
+                    <div class="reading-range">Target: {{ ph_min }} - {{ ph_max }}</div>
+                </div>
+            </div>
+            
+            <!-- EC Reading -->
+            <div class="reading-card {% if ec_reading and (ec_reading < ec_min or ec_reading > ec_max) %}alert{% endif %}">
+                <div class="reading-icon">
+                    <i class="fas fa-water"></i>
+                </div>
+                <div class="reading-details">
+                    <h4>EC Level</h4>
+                    <div class="reading-value" id="ec-value">
+                        {{ ec_reading|round(2) if ec_reading else '--' }}
+                    </div>
+                    <div class="reading-range">Target: {{ ec_min }} - {{ ec_max }}</div>
+                </div>
+            </div>
+            
+            <!-- Temperature Reading -->
+            <div class="reading-card {% if temp_reading and (temp_reading < temp_min or temp_reading > temp_max) %}alert{% endif %}">
+                <div class="reading-icon">
+                    <i class="fas fa-thermometer-half"></i>
+                </div>
+                <div class="reading-details">
+                    <h4>Temperature</h4>
+                    <div class="reading-value" id="temp-value">
+                        {{ temp_reading|round(1) if temp_reading else '--' }}°C
+                    </div>
+                    <div class="reading-range">Target: {{ temp_min }} - {{ temp_max }}°C</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Charts Section -->
+    <section class="dashboard-section charts-section">
+        <div class="section-header">
+            <h3>Sensor History</h3>
+            <div class="chart-controls">
+                <select id="chart-timeframe">
+                    <option value="1h">1 Hour</option>
+                    <option value="6h">6 Hours</option>
+                    <option value="24h" selected>24 Hours</option>
+                    <option value="7d">7 Days</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="charts-container">
+            <!-- Tabs for different charts -->
+            <div class="chart-tabs">
+                <button class="chart-tab active" data-chart="ph">pH</button>
+                <button class="chart-tab" data-chart="ec">EC</button>
+                <button class="chart-tab" data-chart="temp">Temperature</button>
+            </div>
+            
+            <!-- Chart canvases -->
+            <div class="chart-panels">
+                <div class="chart-panel active" id="ph-chart-panel">
+                    <canvas id="ph-chart"></canvas>
+                </div>
+                <div class="chart-panel" id="ec-chart-panel">
+                    <canvas id="ec-chart"></canvas>
+                </div>
+                <div class="chart-panel" id="temp-chart-panel">
+                    <canvas id="temp-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Quick Actions Section -->
+    <section class="dashboard-section actions-section">
+        <div class="section-header">
+            <h3>Quick Actions</h3>
+        </div>
+        
+        <div class="actions-grid">
+            <!-- Auto-Dosing Toggle -->
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Auto-Dosing</h4>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-dosing-toggle" {% if auto_dosing %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                    <div class="action-status">
+                        <span id="auto-dosing-status">{{ 'Enabled' if auto_dosing else 'Disabled' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manual Dose -->
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-hand-pointer"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Manual Dose</h4>
+                    <button class="action-button" id="manual-dose-btn">
+                        Open Controls
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Export Data -->
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-file-export"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Export Data</h4>
+                    <div class="action-buttons">
+                        <a href="{{ url_for('api.export_readings', format='csv') }}" class="action-button">CSV</a>
+                        <a href="{{ url_for('api.export_readings', format='json') }}" class="action-button">JSON</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Recent Activity Section -->
+    <section class="dashboard-section activity-section">
+        <div class="section-header">
+            <h3>Recent Activity</h3>
+            <a href="{{ url_for('dosing.events') }}" class="view-all-link">View All</a>
+        </div>
+        
+        <div class="activity-list">
+            {% if recent_events %}
+                {% for event in recent_events %}
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-tint-slash"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-header">
+                            <h4>{{ event.pump_name }}</h4>
+                            <span class="activity-time">{{ event.timestamp|datetime }}</span>
+                        </div>
+                        <p class="activity-description">
+                            {{ event.amount_ml|round(2) }} ml ({{ event.reason }})
+                            {% if event.sensor_before and event.sensor_after %}
+                                • {{ event.sensor_before|round(2) }} → {{ event.sensor_after|round(2) }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-state">No recent dosing activity</p>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+<!-- Manual Dosing Modal -->
+<div class="modal" id="manual-dose-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Manual Dosing</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="pump-controls">
+                <!-- This will be populated with pump controls via JavaScript -->
+                <p class="loading-state">Loading pumps...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Chart data from the server
+    const phChartData = {{ ph_chart_data|safe }};
+    const ecChartData = {{ ec_chart_data|safe }};
+    const tempChartData = {{ temp_chart_data|safe }};
+    
+    // Target ranges
+    const phTargetMin = {{ ph_min }};
+    const phTargetMax = {{ ph_max }};
+    const ecTargetMin = {{ ec_min }};
+    const ecTargetMax = {{ ec_max }};
+    const tempTargetMin = {{ temp_min }};
+    const tempTargetMax = {{ temp_max }};
+    
+    // Charts initialization
+    let phChart, ecChart, tempChart;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts
+        initCharts();
+        
+        // Set up event listeners
+        setupEventListeners();
+        
+        // Load pumps for manual dosing
+        loadPumps();
+        
+        // Setup refresh interval
+        const refreshInterval = {{ settings.get('refresh_interval', 10) }} * 1000;
+        if (refreshInterval > 0) {
+            setInterval(refreshReadings, refreshInterval);
+        }
+    });
+    
+    function initCharts() {
+        // Common chart options
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 500
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour'
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        };
+        
+        // pH Chart
+        const phCtx = document.getElementById('ph-chart').getContext('2d');
+        phChart = new Chart(phCtx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'pH',
+                    data: phChartData.map(item => ({
+                        x: new Date(item.time),
+                        y: item.value
+                    })),
+                    borderColor: '#4facfe',
+                    backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        suggestedMin: Math.max(0, phTargetMin - 0.5),
+                        suggestedMax: phTargetMax + 0.5
+                    }
+                },
+                plugins: {
+                    ...commonOptions.plugins,
+                    annotation: {
+                        annotations: {
+                            phTargetMinLine: {
+                                type: 'line',
+                                yMin: phTargetMin,
+                                yMax: phTargetMin,
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                                borderWidth: 1,
+                                borderDash: [5, 5]
+                            },
+                            phTargetMaxLine: {
+                                type: 'line',
+                                yMin: phTargetMax,
+                                yMax: phTargetMax,
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                                borderWidth: 1,
+                                borderDash: [5, 5]
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // EC Chart
+        const ecCtx = document.getElementById('ec-chart').getContext('2d');
+        ecChart = new Chart(ecCtx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'EC',
+                    data: ecChartData.map(item => ({
+                        x: new Date(item.time),
+                        y: item.value
+                    })),
+                    borderColor: '#43e97b',
+                    backgroundColor: 'rgba(67, 233, 123, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        suggestedMin: Math.max(0, ecTargetMin - 0.2),
+                        suggestedMax: ecTargetMax + 0.2
+                    }
+                },
+                plugins: {
+                    ...commonOptions.plugins,
+                    annotation: {
+                        annotations: {
+                            ecTargetMinLine: {
+                                type: 'line',
+                                yMin: ecTargetMin,
+                                yMax: ecTargetMin,
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                                borderWidth: 1,
+                                borderDash: [5, 5]
+                            },
+                            ecTargetMaxLine: {
+                                type: 'line',
+                                yMin: ecTargetMax,
+                                yMax: ecTargetMax,
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                                borderWidth: 1,
+                                borderDash: [5, 5]
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Temperature Chart
+        const tempCtx = document.getElementById('temp-chart').getContext('2d');
+        tempChart = new Chart(tempCtx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Temperature',
+                    data: tempChartData.map(item => ({
+                        x: new Date(item.time),
+                        y: item.value
+                    })),
+                    borderColor: '#f4736b',
+                    backgroundColor: 'rgba(244, 115, 107, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        suggestedMin: Math.max(0, tempTargetMin - 2),
+                        suggestedMax: tempTargetMax + 2
+                    }
+                },
+                plugins: {
+                    ...commonOptions.plugins,
+                    annotation: {
+                        annotations: {
+                            tempTargetMinLine: {
+                                type: 'line',
+                                yMin: tempTargetMin,
+                                yMax: tempTargetMin,
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                                borderWidth: 1,
+                                borderDash: [5, 5]
+                            },
+                            tempTargetMaxLine: {
+                                type: 'line',
+                                yMin: tempTargetMax,
+                                yMax: tempTargetMax,
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                                borderWidth: 1,
+                                borderDash: [5, 5]
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function setupEventListeners() {
+        // Refresh readings button
+        document.getElementById('refresh-readings-btn').addEventListener('click', function() {
+            this.classList.add('rotating');
+            refreshReadings().then(() => {
+                setTimeout(() => {
+                    this.classList.remove('rotating');
+                }, 500);
+            });
+        });
+        
+        // Chart tabs
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab
+                document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show corresponding chart panel
+                const chartId = this.getAttribute('data-chart');
+                document.querySelectorAll('.chart-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                document.getElementById(`${chartId}-chart-panel`).classList.add('active');
+                
+                // Resize chart to fit container
+                if (chartId === 'ph') phChart.resize();
+                if (chartId === 'ec') ecChart.resize();
+                if (chartId === 'temp') tempChart.resize();
+            });
+        });
+        
+        // Auto-dosing toggle
+        document.getElementById('auto-dosing-toggle').addEventListener('change', function() {
+            const status = document.getElementById('auto-dosing-status');
+            const enabled = this.checked;
+            
+            status.textContent = enabled ? 'Enabled' : 'Disabled';
+            
+            // Update setting via API
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    auto_dosing_enabled: enabled
+                })
+            }).then(response => response.json()).then(data => {
+                if (!data.success) {
+                    alert('Failed to update auto-dosing setting');
+                    this.checked = !enabled;
+                    status.textContent = !enabled ? 'Enabled' : 'Disabled';
+                }
+            });
+        });
+        
+        // Manual dose button
+        document.getElementById('manual-dose-btn').addEventListener('click', function() {
+            document.getElementById('manual-dose-modal').classList.add('active');
+        });
+        
+        // Close modal button
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.modal').classList.remove('active');
+            });
+        });
+    }
+    
+    function refreshReadings() {
+        return fetch('/api/sensors/read_now', {
+            method: 'POST'
+        }).then(response => response.json()).then(data => {
+            if (data.success) {
+                const readings = data.data;
+                
+                // Update UI with new readings
+                if (readings.ph !== null) {
+                    document.getElementById('ph-value').textContent = readings.ph.toFixed(2);
+                }
+                
+                if (readings.ec !== null) {
+                    document.getElementById('ec-value').textContent = readings.ec.toFixed(2);
+                }
+                
+                if (readings.temp !== null) {
+                    document.getElementById('temp-value').textContent = readings.temp.toFixed(1) + '°C';
+                }
+                
+                // Update charts with new data
+                // This would typically require fetching the updated chart data
+                // But for simplicity, we'll just use the real-time updates via Socket.IO
+            }
+            
+            return data;
+        });
+    }
+    
+    function loadPumps() {
+        fetch('/api/pumps').then(response => response.json()).then(data => {
+            if (data.success) {
+                const pumpsContainer = document.querySelector('.pump-controls');
+                pumpsContainer.innerHTML = '';
+                
+                if (data.data.length === 0) {
+                    pumpsContainer.innerHTML = '<p class="empty-state">No pumps configured</p>';
+                    return;
+                }
+                
+                data.data.forEach(pump => {
+                    const pumpControl = document.createElement('div');
+                    pumpControl.className = 'pump-control';
+                    pumpControl.innerHTML = `
+                        <h4>${pump.name}</h4>
+                        <div class="pump-amount">
+                            <input type="number" id="pump-${pump.id}-amount" min="0.1" max="50" step="0.1" value="1.0">
+                            <span>ml</span>
+                        </div>
+                        <button class="dose-button" data-pump-id="${pump.id}">Dose</button>
+                    `;
+                    pumpsContainer.appendChild(pumpControl);
+                });
+                
+                // Add event listeners to dose buttons
+                document.querySelectorAll('.dose-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const pumpId = this.getAttribute('data-pump-id');
+                        const amountInput = document.getElementById(`pump-${pumpId}-amount`);
+                        const amount = parseFloat(amountInput.value);
+                        
+                        if (isNaN(amount) || amount <= 0) {
+                            alert('Please enter a valid amount');
+                            return;
+                        }
+                        
+                        // Disable button and show loading state
+                        this.disabled = true;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        
+                        // Activate the pump
+                        fetch(`/api/dosing/pump/${pumpId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                amount_ml: amount
+                            })
+                        }).then(response => response.json()).then(data => {
+                            // Reset button state
+                            this.disabled = false;
+                            this.innerHTML = 'Dose';
+                            
+                            if (data.success) {
+                                // Show success message
+                                const message = document.createElement('div');
+                                message.className = 'pump-message success';
+                                message.textContent = 'Dosing completed';
+                                this.closest('.pump-control').appendChild(message);
+                                
+                                // Remove message after a delay
+                                setTimeout(() => {
+                                    message.remove();
+                                }, 3000);
+                            } else {
+                                // Show error message
+                                const message = document.createElement('div');
+                                message.className = 'pump-message error';
+                                message.textContent = data.error || 'Failed to dose';
+                                this.closest('.pump-control').appendChild(message);
+                                
+                                // Remove message after a delay
+                                setTimeout(() => {
+                                    message.remove();
+                                }, 3000);
+                            }
+                        });
+                    });
+                });
+            }
+        });
+    }
+</script>
+{% endblock %} 

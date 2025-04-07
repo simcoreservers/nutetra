@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Flask
+instance/
+.webassets-cache
+
+# Environments
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.env
+
+# NuTetra specific
+logs/
+*.log
+*.sqlite
+*.db
+uploads/
+backups/
+
+# Sensor and pump calibration data
+calibration/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+.directory
+Desktop.ini
+
+# Docker
+.dockerignore
+docker-compose.override.yml 
