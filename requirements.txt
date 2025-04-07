@@ -2,6 +2,7 @@
 
 # Flask and extensions
 Flask==2.2.3
+Werkzeug==2.2.3
 Flask-SQLAlchemy==3.0.3
 Flask-SocketIO==5.3.3
 Flask-Mail==0.9.1
