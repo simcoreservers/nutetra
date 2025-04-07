@@ -27,21 +27,30 @@ def init_db_command():
     Pump.initialize_defaults()
     click.echo('Initialized default pumps.')
 
-# Add Jinja2 filters
-def register_jinja_filters(app):
+def register_template_helpers(app):
+    """Register template helpers like filters and context processors"""
+    
+    # Register filters
     @app.template_filter('datetime')
     def format_datetime(value, format='%Y-%m-%d %H:%M'):
         """Format a datetime object."""
         if value is None:
             return ""
         return value.strftime(format)
+    
+    # Register context processors
+    @app.context_processor
+    def inject_settings():
+        """Make settings available to all templates"""
+        from app.models.settings import Settings
+        return {'settings': Settings}
 
 def create_app(test_config=None):
     # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     
-    # Register Jinja2 filters
-    register_jinja_filters(app)
+    # Register template helpers
+    register_template_helpers(app)
     
     # Set configuration
     app.config.from_mapping(
