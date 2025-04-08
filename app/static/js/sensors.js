@@ -16,11 +16,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function initSensorPage() {
     console.log("Initializing sensor page...");
     
-    // Force all sensor cards to stay visible at all times
+    // Force all sensor cards to stay visible - once is enough
     forceSensorCardsVisible();
-    
-    // Set up a recurring check to ensure cards remain visible
-    setInterval(forceSensorCardsVisible, 1000);
     
     // Initialize the settings form
     initSettingsForm();
@@ -28,23 +25,16 @@ function initSensorPage() {
 
 /**
  * Force sensor cards to always be visible regardless of their state
+ * Applied once during page load to ensure cards remain visible
  */
 function forceSensorCardsVisible() {
     const sensorCards = document.querySelectorAll('.reading-card');
     
     sensorCards.forEach(card => {
-        // Force directly applied inline styles to ensure visibility
-        // These will override any CSS rules regardless of specificity
-        card.style.setProperty('display', 'flex', 'important');
-        card.style.setProperty('opacity', '1', 'important');
-        card.style.setProperty('visibility', 'visible', 'important');
-        card.style.setProperty('position', 'relative', 'important');
-        card.style.removeProperty('display', 'none');
-        
-        // Ensure cards with alert class remain visible
-        if (card.classList.contains('alert')) {
-            card.style.setProperty('display', 'flex', 'important');
-        }
+        // Keep styles simple to avoid triggering too many repaints
+        card.style.display = 'flex';
+        card.style.opacity = '1';
+        card.style.visibility = 'visible';
     });
 }
 
@@ -68,9 +58,6 @@ function handleSensorUpdate(data) {
     updateSensorDisplay('ph', phValue, sensorStatus.ph);
     updateSensorDisplay('ec', ecValue, sensorStatus.ec);
     updateSensorDisplay('temp', tempValue, sensorStatus.temp);
-    
-    // Force cards to remain visible
-    forceSensorCardsVisible();
 }
 
 /**
@@ -80,9 +67,6 @@ function updateSensorDisplay(sensorType, value, status) {
     // Get card elements
     const card = document.getElementById(`${sensorType}-sensor-card`);
     if (!card) return;
-    
-    // Always keep card visible
-    card.style.setProperty('display', 'flex', 'important');
     
     // Update reading value
     const valueElement = document.getElementById(`${sensorType}-value`);
@@ -174,18 +158,4 @@ function showToast(message, type = 'info') {
         // Simple alert fallback
         alert(message);
     }
-}
-
-// Make sure DOM mutation events don't hide cards
-const observer = new MutationObserver(function(mutations) {
-    forceSensorCardsVisible();
-});
-
-// Start observing once DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true
-    });
-}); 
+} 

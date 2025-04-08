@@ -191,17 +191,4 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/sensors.js') }}"></script>
-<script>
-    // Inline fix to ensure cards stay visible
-    document.addEventListener('DOMContentLoaded', function() {
-        // Force display on all sensor cards
-        const sensorCards = document.querySelectorAll('.reading-card');
-        
-        // Apply styles directly to ensure visibility
-        sensorCards.forEach(card => {
-            // These !important styles override any other CSS
-            card.setAttribute('style', 'display: flex !important; opacity: 1 !important; visibility: visible !important; position: relative !important;');
-        });
-    });
-</script>
 {% endblock %} 
