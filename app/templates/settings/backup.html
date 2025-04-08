@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}Backup & Restore | NuTetra Controller{% endblock %}
+{% block page_title %}Backup & Restore{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>System Backup & Restore</h3>
+        </div>
+        
+        <div class="backup-grid">
+            <!-- Download Backup Card -->
+            <div class="backup-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-download"></i> Download Backup</h4>
+                </div>
+                <div class="card-body">
+                    <p>Download a backup of your current system configuration. This includes all settings and pump configurations.</p>
+                    
+                    <div class="form-group">
+                        <label for="backup-data">Backup Data (JSON)</label>
+                        <textarea id="backup-data" class="form-control code-preview" rows="5" readonly>{{ backup_data }}</textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <a href="data:text/json;charset=utf-8,{{ backup_data|urlencode }}" 
+                           download="{{ backup_filename }}" class="button primary-button">
+                            <i class="fas fa-download"></i> Download Backup
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Restore Backup Card -->
+            <div class="backup-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-upload"></i> Restore from Backup</h4>
+                </div>
+                <div class="card-body">
+                    <p>Restore your system configuration from a previous backup file.</p>
+                    <p class="warning-text"><i class="fas fa-exclamation-triangle"></i> Warning: This will overwrite your current configuration.</p>
+                    
+                    <form method="post" action="{{ url_for('settings.backup') }}" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="restore-file">Select Backup File</label>
+                            <div class="file-input-container">
+                                <input type="file" id="restore-file" name="restore_file" class="form-control" accept=".json">
+                                <label for="restore-file" class="file-input-label">
+                                    <i class="fas fa-file-upload"></i> Choose File
+                                </label>
+                                <span id="file-name">No file selected</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="button warning-button">
+                                <i class="fas fa-upload"></i> Restore System
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Reset System Card -->
+            <div class="backup-card">
+                <div class="card-header danger-header">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Reset System</h4>
+                </div>
+                <div class="card-body">
+                    <p>Reset your system to default settings. This action cannot be undone.</p>
+                    <p class="danger-text"><i class="fas fa-exclamation-circle"></i> Caution: All your custom settings will be lost.</p>
+                    
+                    <div class="reset-options">
+                        <form method="post" action="{{ url_for('settings.reset') }}" id="reset-form">
+                            <div class="form-group">
+                                <label>Reset Options</label>
+                                <div class="radio-group">
+                                    <div class="radio-option">
+                                        <input type="radio" id="reset-settings" name="reset_type" value="settings">
+                                        <label for="reset-settings">Reset Settings Only</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" id="reset-pumps" name="reset_type" value="pumps">
+                                        <label for="reset-pumps">Reset Pump Configurations Only</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" id="reset-all" name="reset_type" value="all">
+                                        <label for="reset-all">Reset Everything</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" id="confirm-reset-btn" class="button danger-button">
+                                    <i class="fas fa-trash-alt"></i> Reset System
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-actions">
+            <a href="{{ url_for('settings.index') }}" class="button">Back to Settings</a>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="reset-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header danger-header">
+            <h4>Confirm System Reset</h4>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p class="danger-text"><i class="fas fa-exclamation-triangle"></i> Warning: You are about to reset your system. This action cannot be undone.</p>
+            <p>Are you sure you want to proceed?</p>
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-reset" class="button">Cancel</button>
+            <button id="proceed-reset" class="button danger-button">Reset System</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .backup-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .backup-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .card-header i {
+        margin-right: var(--spacing-sm);
+    }
+    
+    .danger-header {
+        background-color: var(--danger-color-light);
+        color: var(--danger-color);
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: var(--spacing-md);
+    }
+    
+    .primary-button {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+    
+    .warning-button {
+        background-color: var(--warning-color);
+        color: #fff;
+    }
+    
+    .danger-button {
+        background-color: var(--danger-color);
+        color: #fff;
+    }
+    
+    .warning-text {
+        color: var(--warning-color);
+        font-weight: 500;
+    }
+    
+    .danger-text {
+        color: var(--danger-color);
+        font-weight: 500;
+    }
+    
+    .code-preview {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        padding: var(--spacing-sm);
+        white-space: pre;
+        overflow-x: auto;
+    }
+    
+    .file-input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .file-input-container input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 0.1px;
+        height: 0.1px;
+    }
+    
+    .file-input-label {
+        background-color: var(--bg-color-light);
+        color: var(--text-color);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        margin-right: var(--spacing-sm);
+        font-weight: normal;
+    }
+    
+    .radio-group {
+        margin-top: var(--spacing-sm);
+    }
+    
+    .radio-option {
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        align-items: center;
+    }
+    
+    .radio-option input[type="radio"] {
+        margin-right: var(--spacing-sm);
+    }
+    
+    .section-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: var(--spacing-md);
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        width: 400px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h4 {
+        margin: 0;
+    }
+    
+    .close-modal {
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+    
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+    
+    .modal-footer {
+        padding: var(--spacing-md);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // File input display
+        const fileInput = document.getElementById('restore-file');
+        const fileNameDisplay = document.getElementById('file-name');
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    fileNameDisplay.textContent = this.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = 'No file selected';
+                }
+            });
+        }
+        
+        // Reset system modal
+        const resetModal = document.getElementById('reset-modal');
+        const confirmResetBtn = document.getElementById('confirm-reset-btn');
+        const cancelResetBtn = document.getElementById('cancel-reset');
+        const proceedResetBtn = document.getElementById('proceed-reset');
+        const closeModalBtn = document.querySelector('.close-modal');
+        const resetForm = document.getElementById('reset-form');
+        
+        // Open modal
+        confirmResetBtn.addEventListener('click', function() {
+            const selectedOption = document.querySelector('input[name="reset_type"]:checked');
+            
+            if (!selectedOption) {
+                alert('Please select a reset option');
+                return;
+            }
+            
+            resetModal.style.display = 'flex';
+        });
+        
+        // Close modal
+        function closeModal() {
+            resetModal.style.display = 'none';
+        }
+        
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelResetBtn.addEventListener('click', closeModal);
+        
+        // Close modal if clicked outside
+        window.addEventListener('click', function(event) {
+            if (event.target === resetModal) {
+                closeModal();
+            }
+        });
+        
+        // Proceed with reset
+        proceedResetBtn.addEventListener('click', function() {
+            resetForm.submit();
+        });
+    });
+</script>
+{% endblock %} 
