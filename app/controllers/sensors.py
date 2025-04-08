@@ -16,13 +16,18 @@ def index():
     ec_reading = SensorReading.get_latest('ec')
     temp_reading = SensorReading.get_latest('temp')
     
-    # Get target ranges
-    ph_min = Settings.get('ph_target_min')
-    ph_max = Settings.get('ph_target_max')
-    ec_min = Settings.get('ec_target_min')
-    ec_max = Settings.get('ec_target_max')
-    temp_min = Settings.get('temp_target_min')
-    temp_max = Settings.get('temp_target_max')
+    # Get target ranges using setpoint and buffer
+    ph_setpoint = Settings.get('ph_setpoint', 6.0)
+    ph_buffer = Settings.get('ph_buffer', 0.2)
+    ph_min = ph_setpoint - ph_buffer
+    ph_max = ph_setpoint + ph_buffer
+    
+    ec_setpoint = Settings.get('ec_setpoint', 1350)
+    ec_buffer = Settings.get('ec_buffer', 150)
+    ec_min = ec_setpoint - ec_buffer
+    ec_max = ec_setpoint + ec_buffer
+    
+    # No temperature control, so no min/max
     
     # Prepare status messages
     ph_status = "Normal"
@@ -43,10 +48,8 @@ def index():
             ec_status = "High"
     
     if temp_reading:
-        if temp_reading.value < temp_min:
-            temp_status = "Low"
-        elif temp_reading.value > temp_max:
-            temp_status = "High"
+        # No target ranges for temperature, just display the reading
+        temp_status = "Monitoring"
     
     return render_template(
         'sensors/index.html',
@@ -96,12 +99,17 @@ def history():
         })
     
     # Get target ranges for chart display
-    ph_min = Settings.get('ph_target_min')
-    ph_max = Settings.get('ph_target_max')
-    ec_min = Settings.get('ec_target_min')
-    ec_max = Settings.get('ec_target_max')
-    temp_min = Settings.get('temp_target_min')
-    temp_max = Settings.get('temp_target_max')
+    ph_setpoint = Settings.get('ph_setpoint', 6.0)
+    ph_buffer = Settings.get('ph_buffer', 0.2)
+    ph_min = ph_setpoint - ph_buffer
+    ph_max = ph_setpoint + ph_buffer
+    
+    ec_setpoint = Settings.get('ec_setpoint', 1350)
+    ec_buffer = Settings.get('ec_buffer', 150)
+    ec_min = ec_setpoint - ec_buffer
+    ec_max = ec_setpoint + ec_buffer
+    
+    # No temperature control ranges
     
     return render_template(
         'sensors/history.html',
@@ -111,9 +119,7 @@ def history():
         ph_min=ph_min,
         ph_max=ph_max,
         ec_min=ec_min,
-        ec_max=ec_max,
-        temp_min=temp_min,
-        temp_max=temp_max
+        ec_max=ec_max
     )
 
 @sensors_bp.route('/calibration')
@@ -186,13 +192,16 @@ def check_ranges():
         ec_reading = SensorReading.get_latest('ec')
         temp_reading = SensorReading.get_latest('temp')
         
-        # Get target ranges
-        ph_min = Settings.get('ph_target_min')
-        ph_max = Settings.get('ph_target_max')
-        ec_min = Settings.get('ec_target_min')
-        ec_max = Settings.get('ec_target_max')
-        temp_min = Settings.get('temp_target_min')
-        temp_max = Settings.get('temp_target_max')
+        # Get target ranges using setpoint and buffer
+        ph_setpoint = Settings.get('ph_setpoint', 6.0)
+        ph_buffer = Settings.get('ph_buffer', 0.2)
+        ph_min = ph_setpoint - ph_buffer
+        ph_max = ph_setpoint + ph_buffer
+        
+        ec_setpoint = Settings.get('ec_setpoint', 1350)
+        ec_buffer = Settings.get('ec_buffer', 150)
+        ec_min = ec_setpoint - ec_buffer
+        ec_max = ec_setpoint + ec_buffer
         
         notifications_sent = []
         

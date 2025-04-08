@@ -57,22 +57,20 @@ class Settings(db.Model):
         """Set default settings if they don't exist"""
         defaults = {
             # pH settings
-            'ph_target_min': 5.8,
-            'ph_target_max': 6.2,
+            'ph_setpoint': 6.0,
+            'ph_buffer': 0.2,
             'ph_check_interval': 300,  # seconds
             'ph_dose_amount': 1.0,     # ml
             'ph_dose_wait_time': 60,   # seconds to wait after dosing
             
             # EC settings
-            'ec_target_min': 1.2,
-            'ec_target_max': 1.5,
+            'ec_setpoint': 1350,
+            'ec_buffer': 150,
             'ec_check_interval': 300,  # seconds
             'ec_dose_amount': 5.0,     # ml
             'ec_dose_wait_time': 60,   # seconds to wait after dosing
             
             # Temperature settings
-            'temp_target_min': 18.0,
-            'temp_target_max': 24.0,
             'temp_check_interval': 300,  # seconds
             
             # Notification settings

@@ -247,9 +247,11 @@ def check_and_adjust_ph():
                 logger.warning("Cannot adjust pH: no pH reading available")
                 return
             
-            # Get target pH range
-            target_min = Settings.get('ph_target_min', 5.8)
-            target_max = Settings.get('ph_target_max', 6.2)
+            # Get target pH range using setpoint and buffer
+            setpoint = Settings.get('ph_setpoint', 6.0)
+            buffer = Settings.get('ph_buffer', 0.2)
+            target_min = setpoint - buffer
+            target_max = setpoint + buffer
             
             # Check if pH is out of range
             if current_ph < target_min:
@@ -324,9 +326,11 @@ def check_and_adjust_ec():
                 logger.warning("Cannot adjust EC: no EC reading available")
                 return
             
-            # Get target EC range
-            target_min = Settings.get('ec_target_min', 1.2)
-            target_max = Settings.get('ec_target_max', 1.5)
+            # Get target EC range using setpoint and buffer
+            setpoint = Settings.get('ec_setpoint', 1350)
+            buffer = Settings.get('ec_buffer', 150)
+            target_min = setpoint - buffer
+            target_max = setpoint + buffer
             
             # Check if EC is too low (we can only add nutrients, not remove them)
             if current_ec < target_min:

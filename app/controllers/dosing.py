@@ -245,15 +245,15 @@ def settings():
         night_mode = 'night_mode_enabled' in request.form
         
         # pH settings
-        ph_min = request.form.get('ph_target_min', type=float)
-        ph_max = request.form.get('ph_target_max', type=float)
+        ph_setpoint = request.form.get('ph_setpoint', type=float)
+        ph_buffer = request.form.get('ph_buffer', type=float)
         ph_dose = request.form.get('ph_dose_amount', type=float)
         ph_interval = request.form.get('ph_check_interval', type=int)
         ph_wait = request.form.get('ph_dose_wait_time', type=int)
         
         # EC settings
-        ec_min = request.form.get('ec_target_min', type=float)
-        ec_max = request.form.get('ec_target_max', type=float)
+        ec_setpoint = request.form.get('ec_setpoint', type=float)
+        ec_buffer = request.form.get('ec_buffer', type=float)
         ec_dose = request.form.get('ec_dose_amount', type=float)
         ec_interval = request.form.get('ec_check_interval', type=int)
         ec_wait = request.form.get('ec_dose_wait_time', type=int)
@@ -266,10 +266,10 @@ def settings():
         Settings.set('auto_dosing_enabled', auto_dosing)
         Settings.set('night_mode_enabled', night_mode)
         
-        if ph_min is not None:
-            Settings.set('ph_target_min', ph_min)
-        if ph_max is not None:
-            Settings.set('ph_target_max', ph_max)
+        if ph_setpoint is not None:
+            Settings.set('ph_setpoint', ph_setpoint)
+        if ph_buffer is not None:
+            Settings.set('ph_buffer', ph_buffer)
         if ph_dose is not None:
             Settings.set('ph_dose_amount', ph_dose)
         if ph_interval is not None:
@@ -277,10 +277,10 @@ def settings():
         if ph_wait is not None:
             Settings.set('ph_dose_wait_time', ph_wait)
         
-        if ec_min is not None:
-            Settings.set('ec_target_min', ec_min)
-        if ec_max is not None:
-            Settings.set('ec_target_max', ec_max)
+        if ec_setpoint is not None:
+            Settings.set('ec_setpoint', ec_setpoint)
+        if ec_buffer is not None:
+            Settings.set('ec_buffer', ec_buffer)
         if ec_dose is not None:
             Settings.set('ec_dose_amount', ec_dose)
         if ec_interval is not None:
@@ -303,13 +303,13 @@ def settings():
     settings = {
         'auto_dosing_enabled': Settings.get('auto_dosing_enabled', True),
         'night_mode_enabled': Settings.get('night_mode_enabled', False),
-        'ph_target_min': Settings.get('ph_target_min', 5.8),
-        'ph_target_max': Settings.get('ph_target_max', 6.2),
+        'ph_setpoint': Settings.get('ph_setpoint', 6.0),
+        'ph_buffer': Settings.get('ph_buffer', 0.2),
         'ph_dose_amount': Settings.get('ph_dose_amount', 1.0),
         'ph_check_interval': Settings.get('ph_check_interval', 300),
         'ph_dose_wait_time': Settings.get('ph_dose_wait_time', 60),
-        'ec_target_min': Settings.get('ec_target_min', 1.2),
-        'ec_target_max': Settings.get('ec_target_max', 1.5),
+        'ec_setpoint': Settings.get('ec_setpoint', 1350),
+        'ec_buffer': Settings.get('ec_buffer', 150),
         'ec_dose_amount': Settings.get('ec_dose_amount', 5.0),
         'ec_check_interval': Settings.get('ec_check_interval', 300),
         'ec_dose_wait_time': Settings.get('ec_dose_wait_time', 60),

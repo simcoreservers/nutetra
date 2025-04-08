@@ -19,13 +19,18 @@ def index():
     # Get recent dosing events
     recent_events = DosingEvent.get_recent(10)
     
-    # Get target ranges
-    ph_min = Settings.get('ph_target_min', 5.8)
-    ph_max = Settings.get('ph_target_max', 6.2)
-    ec_min = Settings.get('ec_target_min', 1.2)
-    ec_max = Settings.get('ec_target_max', 1.5)
-    temp_min = Settings.get('temp_target_min', 18.0)
-    temp_max = Settings.get('temp_target_max', 24.0)
+    # Get target ranges for the dashboard
+    ph_setpoint = Settings.get('ph_setpoint', 6.0)
+    ph_buffer = Settings.get('ph_buffer', 0.2)
+    ph_min = ph_setpoint - ph_buffer
+    ph_max = ph_setpoint + ph_buffer
+    
+    ec_setpoint = Settings.get('ec_setpoint', 1350)
+    ec_buffer = Settings.get('ec_buffer', 150)
+    ec_min = ec_setpoint - ec_buffer
+    ec_max = ec_setpoint + ec_buffer
+    
+    # No temperature control
     
     # Get historical data for charts
     ph_history = SensorReading.get_history('ph', 50)
@@ -66,8 +71,6 @@ def index():
         ph_max=ph_max,
         ec_min=ec_min,
         ec_max=ec_max,
-        temp_min=temp_min,
-        temp_max=temp_max,
         recent_events=recent_events,
         ph_chart_data=ph_chart_data,
         ec_chart_data=ec_chart_data,

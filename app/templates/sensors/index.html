@@ -27,7 +27,7 @@
                     {% set ph_reading = get_last_reading('ph') %}
                     <div class="reading-value" id="ph-value">{{ ph_reading|ph }}</div>
                     <div class="reading-range">
-                        Target: {{ settings.get('ph_target_min', 5.8)|ph }} - {{ settings.get('ph_target_max', 6.2)|ph }}
+                        Target: {{ (settings.get('ph_setpoint', 6.0) - settings.get('ph_buffer', 0.2))|ph }} - {{ (settings.get('ph_setpoint', 6.0) + settings.get('ph_buffer', 0.2))|ph }}
                     </div>
                     
                     <div class="action-buttons">
@@ -51,7 +51,7 @@
                     {% set ec_reading = get_last_reading('ec') %}
                     <div class="reading-value" id="ec-value">{{ ec_reading|ec }}</div>
                     <div class="reading-range">
-                        Target: {{ settings.get('ec_target_min', 1.2)|ec }} - {{ settings.get('ec_target_max', 1.5)|ec }}
+                        Target: {{ (settings.get('ec_setpoint', 1350) - settings.get('ec_buffer', 150))|ec }} - {{ (settings.get('ec_setpoint', 1350) + settings.get('ec_buffer', 150))|ec }}
                     </div>
                     
                     <div class="action-buttons">

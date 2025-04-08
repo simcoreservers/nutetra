@@ -91,12 +91,18 @@
                         {% set ec_reading = get_last_reading('ec') %}
                         {% set temp_reading = get_last_reading('temp') %}
                         
-                        {% set ph_min = settings.get('ph_target_min', 5.8) %}
-                        {% set ph_max = settings.get('ph_target_max', 6.2) %}
-                        {% set ec_min = settings.get('ec_target_min', 1.2) %}
-                        {% set ec_max = settings.get('ec_target_max', 1.5) %}
-                        {% set temp_min = settings.get('temp_target_min', 18.0) %}
-                        {% set temp_max = settings.get('temp_target_max', 24.0) %}
+                        <!-- Pass settings to chart JavaScript -->
+                        {% set settings = settings|default({}) %}
+                        <!-- Calculate min/max from setpoint and buffer -->
+                        {% set ph_setpoint = settings.get('ph_setpoint', 6.0) %}
+                        {% set ph_buffer = settings.get('ph_buffer', 0.2) %}
+                        {% set ph_min = ph_setpoint - ph_buffer %}
+                        {% set ph_max = ph_setpoint + ph_buffer %}
+                        
+                        {% set ec_setpoint = settings.get('ec_setpoint', 1350) %}
+                        {% set ec_buffer = settings.get('ec_buffer', 150) %}
+                        {% set ec_min = ec_setpoint - ec_buffer %}
+                        {% set ec_max = ec_setpoint + ec_buffer %}
                         
                         <div class="status-item {% if ph_reading and (ph_reading < ph_min or ph_reading > ph_max) %}alert{% endif %}">
                             <span class="label">pH</span>
