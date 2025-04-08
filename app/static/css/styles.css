@@ -411,6 +411,9 @@ input:focus, select:focus, textarea:focus {
 .reading-card.alert {
   border-color: var(--danger-color);
   background-color: rgba(244, 115, 107, 0.1);
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .reading-icon {
