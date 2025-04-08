@@ -744,4 +744,62 @@ def get_system_stats():
         return jsonify({
             'error': str(e),
             'status': 'error'
+        }), 500
+
+@api_bp.route('/test-notification', methods=['POST'])
+def test_notification():
+    """Send a test notification"""
+    try:
+        data = request.get_json()
+        notification_type = data.get('type', 'all')
+        destination = data.get('destination', '')
+        
+        # Import notification utilities
+        from app.utils.notification_manager import send_email, send_sms
+        
+        if notification_type == 'email':
+            # Test email notification
+            if not destination:
+                return jsonify({
+                    'success': False,
+                    'error': 'Email address is required'
+                }), 400
+            
+            send_email(
+                to=destination,
+                subject="Test Email from NuTetra Controller",
+                body="This is a test email from your NuTetra Controller system."
+            )
+            return jsonify({
+                'success': True,
+                'message': f'Test email sent to {destination}'
+            })
+            
+        elif notification_type == 'sms':
+            # Test SMS notification
+            if not destination:
+                return jsonify({
+                    'success': False,
+                    'error': 'Phone number is required'
+                }), 400
+                
+            send_sms(
+                to=destination,
+                message="Test SMS from NuTetra Controller: This is a test message."
+            )
+            return jsonify({
+                'success': True,
+                'message': f'Test SMS sent to {destination}'
+            })
+            
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Unknown notification type: {notification_type}'
+            }), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500 
