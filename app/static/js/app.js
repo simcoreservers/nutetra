@@ -15,36 +15,93 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup interval refresh if enabled
     setupDataRefresh();
+    
+    // Add mobile-specific enhancements
+    if (window.innerWidth <= 768) {
+        enhanceMobileInteraction();
+    }
 });
 
 /**
  * Initialize sidebar behavior
  */
 function initSidebar() {
+    const body = document.body;
+    const sidebar = document.querySelector('.sidebar');
+    
+    // Create backdrop element for mobile
+    const backdrop = document.createElement('div');
+    backdrop.className = 'sidebar-backdrop';
+    body.appendChild(backdrop);
+    
     // Toggle sidebar on mobile
     const sidebarToggle = document.getElementById('sidebar-toggle');
     if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('active');
+        sidebarToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+            backdrop.classList.toggle('active');
+            // Prevent body scrolling when sidebar is open
+            if (sidebar.classList.contains('active')) {
+                body.style.overflow = 'hidden';
+            } else {
+                body.style.overflow = '';
+            }
         });
     }
     
-    // Setup submenu toggles
+    // Close sidebar when clicking on backdrop
+    backdrop.addEventListener('click', function() {
+        sidebar.classList.remove('active');
+        backdrop.classList.remove('active');
+        body.style.overflow = '';
+    });
+    
+    // Setup submenu toggles with better touch support
     const menuItems = document.querySelectorAll('.sidebar-nav > ul > li');
     menuItems.forEach(item => {
         const submenu = item.querySelector('.submenu');
         if (submenu) {
-            item.querySelector('a').addEventListener('click', function(e) {
+            const link = item.querySelector('a');
+            
+            link.addEventListener('click', function(e) {
                 e.preventDefault();
+                // Close other open submenus
+                if (!item.classList.contains('active')) {
+                    menuItems.forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                        }
+                    });
+                }
+                
+                // Toggle current submenu
                 item.classList.toggle('active');
+            });
+            
+            // Make submenu items clickable without closing the sidebar
+            const submenuLinks = submenu.querySelectorAll('a');
+            submenuLinks.forEach(sublink => {
+                sublink.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // On mobile, close the sidebar after navigating
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('active');
+                        backdrop.classList.remove('active');
+                        body.style.overflow = '';
+                    }
+                });
             });
         }
     });
     
-    // Close sidebar when clicking outside on mobile
-    document.querySelector('.main-content').addEventListener('click', function() {
-        if (window.innerWidth <= 768) {
-            document.querySelector('.sidebar').classList.remove('active');
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            // Reset things when returning to desktop size
+            sidebar.classList.remove('active');
+            backdrop.classList.remove('active');
+            body.style.overflow = '';
         }
     });
 }
@@ -62,11 +119,17 @@ function initNotifications() {
         notificationBell.addEventListener('click', function(e) {
             e.stopPropagation();
             notificationsDrawer.classList.add('active');
+            
+            // Prevent scrolling when drawer is open on mobile
+            if (window.innerWidth <= 768) {
+                document.body.style.overflow = 'hidden';
+            }
         });
         
         // Close notifications drawer
         closeDrawerBtn.addEventListener('click', function() {
             notificationsDrawer.classList.remove('active');
+            document.body.style.overflow = '';
         });
         
         // Close drawer when clicking outside
@@ -75,6 +138,7 @@ function initNotifications() {
                 !notificationsDrawer.contains(e.target) && 
                 !notificationBell.contains(e.target)) {
                 notificationsDrawer.classList.remove('active');
+                document.body.style.overflow = '';
             }
         });
         
@@ -158,6 +222,14 @@ function setupDataRefresh() {
 function refreshSensorData() {
     // Only refresh if we have sensor display elements on the page
     if (document.getElementById('ph-value') || document.getElementById('ec-value') || document.getElementById('temp-value')) {
+        // On mobile, show a loading state
+        if (window.innerWidth <= 768) {
+            const statusItems = document.querySelectorAll('.status-item');
+            statusItems.forEach(item => {
+                item.classList.add('loading');
+            });
+        }
+        
         fetch('/api/sensors/read_now', {
             method: 'POST',
             headers: {
@@ -169,9 +241,17 @@ function refreshSensorData() {
             if (data.success) {
                 updateSensorDisplays(data.data);
             }
+            // Remove loading state
+            document.querySelectorAll('.status-item').forEach(item => {
+                item.classList.remove('loading');
+            });
         })
         .catch(error => {
             console.error('Error refreshing sensor data:', error);
+            // Remove loading state even on error
+            document.querySelectorAll('.status-item').forEach(item => {
+                item.classList.remove('loading');
+            });
         });
     }
 }
@@ -299,4 +379,41 @@ function updateStatusAlert(sensorType, indicator, value) {
             }
         }
     }
+}
+
+/**
+ * Enhance mobile interactions with better touch handling
+ */
+function enhanceMobileInteraction() {
+    // Add double tap protection for critical buttons
+    const criticalButtons = document.querySelectorAll('.btn-danger, [data-critical="true"]');
+    
+    criticalButtons.forEach(button => {
+        let tapped = false;
+        
+        button.addEventListener('click', function(e) {
+            if (!tapped) {
+                e.preventDefault();
+                tapped = true;
+                this.classList.add('confirm-action');
+                
+                // Show confirmation text
+                const originalText = this.textContent;
+                this.dataset.originalText = originalText;
+                this.textContent = "Tap again to confirm";
+                
+                // Reset after 3 seconds if not tapped again
+                setTimeout(() => {
+                    tapped = false;
+                    this.classList.remove('confirm-action');
+                    if (this.dataset.originalText) {
+                        this.textContent = this.dataset.originalText;
+                    }
+                }, 3000);
+            }
+        });
+    });
+    
+    // Improve scrolling on touch devices
+    document.addEventListener('touchstart', function() {}, {passive: true});
 } 
