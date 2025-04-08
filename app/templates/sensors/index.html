@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Sensors | NuTetra Controller{% endblock %}
+{% block page_title %}Sensor Management{% endblock %}
 
 {% block content %}
 <div class="page-content">
@@ -24,7 +25,7 @@
                     </div>
                     
                     {% set ph_reading = get_last_reading('ph') %}
-                    <div class="reading-value">{{ ph_reading|ph }}</div>
+                    <div class="reading-value" id="ph-value">{{ ph_reading|ph }}</div>
                     <div class="reading-range">
                         Target: {{ settings.get('ph_target_min', 5.8)|ph }} - {{ settings.get('ph_target_max', 6.2)|ph }}
                     </div>
@@ -48,7 +49,7 @@
                     </div>
                     
                     {% set ec_reading = get_last_reading('ec') %}
-                    <div class="reading-value">{{ ec_reading|ec }}</div>
+                    <div class="reading-value" id="ec-value">{{ ec_reading|ec }}</div>
                     <div class="reading-range">
                         Target: {{ settings.get('ec_target_min', 1.2)|ec }} - {{ settings.get('ec_target_max', 1.5)|ec }}
                     </div>
@@ -72,7 +73,7 @@
                     </div>
                     
                     {% set temp_reading = get_last_reading('temp') %}
-                    <div class="reading-value">{{ temp_reading|temp }}</div>
+                    <div class="reading-value" id="temp-value">{{ temp_reading|temp }}</div>
                     <div class="reading-range">
                         Target: {{ settings.get('temp_target_min', 18.0)|temp }} - {{ settings.get('temp_target_max', 24.0)|temp }}
                     </div>
@@ -186,4 +187,43 @@
         </form>
     </div>
 </div>
+
+<!-- Meta tags for sensor settings -->
+<meta name="refresh-interval" content="30">
+<meta name="ph-settings" content='{"min": {{ settings.get("ph_target_min", 5.8) }}, "max": {{ settings.get("ph_target_max", 6.2) }}}'>
+<meta name="ec-settings" content='{"min": {{ settings.get("ec_target_min", 1.2) }}, "max": {{ settings.get("ec_target_max", 1.5) }}}'>
+<meta name="temp-settings" content='{"min": {{ settings.get("temp_target_min", 18.0) }}, "max": {{ settings.get("temp_target_max", 24.0) }}}'>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Ensure reading cards are visible
+document.addEventListener('DOMContentLoaded', function() {
+    // Force reading cards to be visible and prevent opacity changes
+    const cards = document.querySelectorAll('.reading-card');
+    cards.forEach(card => {
+        card.style.opacity = '1';
+        card.style.transition = 'none';
+    });
+    
+    // Also ensure cards stay visible during any potential transitions
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            const target = mutation.target;
+            if (target.classList.contains('reading-card') && 
+                (target.style.opacity === '0' || parseFloat(target.style.opacity) < 1)) {
+                target.style.opacity = '1';
+            }
+        });
+    });
+    
+    // Observe all reading cards for style changes
+    cards.forEach(card => {
+        observer.observe(card, { 
+            attributes: true, 
+            attributeFilter: ['style', 'class'] 
+        });
+    });
+});
+</script>
 {% endblock %} 
