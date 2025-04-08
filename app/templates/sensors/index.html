@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ url_for('sensors.calibrate', sensor_type='ph') }}" class="btn btn-primary">Calibrate</a>
+                    <a href="{{ url_for('sensors.calibration', sensor_type='ph') }}" class="btn btn-primary">Calibrate</a>
                     <a href="{{ url_for('sensors.history', sensor_type='ph') }}" class="btn btn-outline-secondary">View History</a>
                 </div>
             </div>
@@ -60,7 +60,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ url_for('sensors.calibrate', sensor_type='ec') }}" class="btn btn-primary">Calibrate</a>
+                    <a href="{{ url_for('sensors.calibration', sensor_type='ec') }}" class="btn btn-primary">Calibrate</a>
                     <a href="{{ url_for('sensors.history', sensor_type='ec') }}" class="btn btn-outline-secondary">View History</a>
                 </div>
             </div>
@@ -87,7 +87,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ url_for('sensors.calibrate', sensor_type='temp') }}" class="btn btn-primary">Calibrate</a>
+                    <a href="{{ url_for('sensors.calibration', sensor_type='temp') }}" class="btn btn-primary">Calibrate</a>
                     <a href="{{ url_for('sensors.history', sensor_type='temp') }}" class="btn btn-outline-secondary">View History</a>
                 </div>
             </div>
