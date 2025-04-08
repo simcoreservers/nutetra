@@ -189,17 +189,25 @@ def activate_pump(pump_id, duration_ms, reason=None, sensor_before=None):
             )
             
             # Emit the dosing event through SocketIO for real-time updates
-            # Get socketio instance from current_app extensions
-            socketio = current_app.extensions.get('socketio')
-            if socketio:
-                socketio.emit('dosing_event', {
-                    'pump_id': pump_id,
-                    'pump_name': pump.name,
-                    'amount_ml': amount_ml,
-                    'duration_ms': duration_ms,
-                    'reason': reason or 'manual',
-                    'timestamp': time.time()
-                })
+            try:
+                # Try to get socketio from flask extensions
+                from flask import current_app
+                if hasattr(current_app, '_get_current_object'):
+                    # Get actual app instance if in Flask app context
+                    app = current_app._get_current_object()
+                    socketio = app.extensions.get('socketio')
+                    if socketio:
+                        socketio.emit('dosing_event', {
+                            'pump_id': pump_id,
+                            'pump_name': pump.name,
+                            'amount_ml': amount_ml,
+                            'duration_ms': duration_ms,
+                            'reason': reason or 'manual',
+                            'timestamp': time.time()
+                        })
+            except Exception as e:
+                # Don't let socketio errors interrupt the pump operation
+                logger.warning(f"Failed to emit dosing event: {e}")
             
             return True
             

@@ -31,10 +31,15 @@ app = create_app()
 # Initialize Socket.IO and attach it to the app
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Register Socket.IO event handlers
-from app.utils.socketio_manager import register_handlers, start_background_thread
-register_handlers(socketio)
-start_background_thread(socketio)
+# Manually register socketio in app.extensions for access elsewhere in the app
+if 'socketio' not in app.extensions:
+    app.extensions['socketio'] = socketio
+
+# Register Socket.IO event handlers within the app context
+with app.app_context():
+    from app.utils.socketio_manager import register_handlers, start_background_thread
+    register_handlers(socketio)
+    start_background_thread(socketio)
 
 if __name__ == '__main__':
     # Check if running on a Raspberry Pi

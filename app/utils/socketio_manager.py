@@ -12,26 +12,6 @@ import logging
 # Global variables for thread management
 broadcast_thread = None
 thread_stop_event = threading.Event()
-app = None
-
-def init_socketio(flask_app):
-    """
-    Initialize Socket.IO with the Flask app
-    Returns the socketio instance for use in the app
-    """
-    global app
-    app = flask_app
-    
-    # Create a new SocketIO instance
-    socketio_instance = SocketIO(app, cors_allowed_origins="*")
-    
-    # Register event handlers
-    register_handlers(socketio_instance)
-    
-    # Start the background thread for sensor updates
-    start_background_thread(socketio_instance)
-    
-    return socketio_instance
 
 def register_handlers(socketio_instance):
     """
@@ -67,9 +47,11 @@ def start_background_thread(socketio_instance):
     
     if broadcast_thread is None or not broadcast_thread.is_alive():
         thread_stop_event.clear()
+        from flask import current_app
+        flask_app = current_app._get_current_object()  # Get the actual app object, not the proxy
         broadcast_thread = threading.Thread(
             target=background_broadcaster,
-            args=(socketio_instance,)
+            args=(socketio_instance, flask_app)
         )
         broadcast_thread.daemon = True
         broadcast_thread.start()
@@ -83,14 +65,13 @@ def stop_background_thread():
     thread_stop_event.set()
     logging.info('Stopping Socket.IO background broadcast thread')
 
-def background_broadcaster(socketio_instance):
+def background_broadcaster(socketio_instance, flask_app):
     """
     Background thread function that sends sensor updates periodically
     """
-    global app
-    with app.app_context():
-        from ..models.settings import Settings
-        from ..models.sensor import SensorData
+    with flask_app.app_context():
+        from app.models.settings import Settings
+        from app.models.sensor import SensorData
         
         while not thread_stop_event.is_set():
             try:
