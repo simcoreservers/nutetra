@@ -130,11 +130,12 @@ def activate_pump(pump_id, duration_ms, reason=None, sensor_before=None):
                 return False
             
             # Check if we've dosed recently with this pump type
+            # But only apply this check for automatic dosing, not manual
             current_time = time.time()
             wait_time = Settings.get(f"{pump.type}_dose_wait_time", 60)
             
-            if current_time - last_dosing.get(pump.type, 0) < wait_time:
-                logger.info(f"Dosing skipped for pump {pump.name}: waiting period not elapsed")
+            if reason not in ['manual', 'test'] and current_time - last_dosing.get(pump.type, 0) < wait_time:
+                logger.info(f"Dosing skipped for pump {pump.name}: waiting period not elapsed (auto dosing)")
                 return False
             
             # Calculate the amount being dosed
