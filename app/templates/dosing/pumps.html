@@ -19,14 +19,14 @@
                 <div class="pump-header">
                     <h4>{{ pump.name }}</h4>
                     <div class="pump-status">
-                        <span class="status-indicator {% if pump.is_enabled %}success{% else %}danger{% endif %}"></span>
-                        <span class="status-text">{{ 'Enabled' if pump.is_enabled else 'Disabled' }}</span>
+                        <span class="status-indicator {% if pump.enabled %}success{% else %}danger{% endif %}"></span>
+                        <span class="status-text">{{ 'Enabled' if pump.enabled else 'Disabled' }}</span>
                     </div>
                 </div>
                 <div class="pump-details">
                     <div class="detail-row">
                         <span class="detail-label">Type:</span>
-                        <span class="detail-value">{{ pump.pump_type|replace('_', ' ')|title }}</span>
+                        <span class="detail-value">{{ pump.type|replace('_', ' ')|title }}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">GPIO Pin:</span>
@@ -34,7 +34,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Flow Rate:</span>
-                        <span class="detail-value">{{ pump.flow_rate }} ml/min</span>
+                        <span class="detail-value">{{ pump.flow_rate }} ml/s</span>
                     </div>
                 </div>
                 <div class="pump-actions">
@@ -44,9 +44,9 @@
                     <button class="action-button test-pump" data-pump-id="{{ pump.id }}">
                         <i class="fas fa-vial"></i> Test
                     </button>
-                    <button class="action-button {% if pump.is_enabled %}disable-pump{% else %}enable-pump{% endif %}" data-pump-id="{{ pump.id }}">
-                        <i class="fas {% if pump.is_enabled %}fa-toggle-off{% else %}fa-toggle-on{% endif %}"></i> 
-                        {{ 'Disable' if pump.is_enabled else 'Enable' }}
+                    <button class="action-button {% if pump.enabled %}disable-pump{% else %}enable-pump{% endif %}" data-pump-id="{{ pump.id }}">
+                        <i class="fas {% if pump.enabled %}fa-toggle-off{% else %}fa-toggle-on{% endif %}"></i> 
+                        {{ 'Disable' if pump.enabled else 'Enable' }}
                     </button>
                 </div>
             </div>
@@ -67,7 +67,7 @@
             <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body">
-            <form id="pump-form" method="post" action="{{ url_for('api.update_pump') }}">
+            <form id="pump-form" method="post">
                 <input type="hidden" id="pump-id" name="id" value="">
                 
                 <div class="form-group">
@@ -77,7 +77,7 @@
                 
                 <div class="form-group">
                     <label for="pump-type">Type</label>
-                    <select id="pump-type" name="pump_type" class="form-control" required>
+                    <select id="pump-type" name="type" class="form-control" required>
                         <option value="ph_up">pH Up</option>
                         <option value="ph_down">pH Down</option>
                         <option value="nutrient_a">Nutrient A</option>
@@ -164,6 +164,63 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Handle form submission
+    pumpForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const pumpId = document.getElementById('pump-id').value;
+        const formData = new FormData(pumpForm);
+        const data = {};
+        
+        // Convert FormData to JSON object
+        for (let [key, value] of formData.entries()) {
+            if (key === 'is_enabled') {
+                data['enabled'] = true;  // Checkbox is checked
+            } else if (key === 'id' && value === '') {
+                // Skip empty id
+            } else {
+                // Convert number fields to numbers
+                if (key === 'gpio_pin' || key === 'flow_rate') {
+                    data[key] = Number(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+        }
+        
+        // Add enabled: false if checkbox not checked
+        if (!formData.has('is_enabled')) {
+            data['enabled'] = false;
+        }
+        
+        // Determine if it's a new pump or updating an existing one
+        const url = pumpId ? `/api/pumps/${pumpId}` : '/api/pumps';
+        const method = pumpId ? 'PUT' : 'POST';
+        
+        // Send request to API
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Close modal and reload page to show changes
+                pumpModal.classList.remove('active');
+                window.location.reload();
+            } else {
+                alert('Error: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while saving pump data');
+        });
+    });
+    
     // Edit pump buttons
     document.querySelectorAll('.edit-pump').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -173,22 +230,22 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(`/api/pumps/${pumpId}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.status === 'ok') {
-                        const pump = data.pump;
+                    if (data.success) {
+                        const pump = data.data;
                         
                         // Populate form
                         document.getElementById('modal-title').textContent = 'Edit Pump';
                         document.getElementById('pump-id').value = pump.id;
                         document.getElementById('pump-name').value = pump.name;
-                        document.getElementById('pump-type').value = pump.pump_type;
+                        document.getElementById('pump-type').value = pump.type;
                         document.getElementById('gpio-pin').value = pump.gpio_pin;
                         document.getElementById('flow-rate').value = pump.flow_rate;
-                        document.getElementById('is-enabled').checked = pump.is_enabled;
+                        document.getElementById('is-enabled').checked = pump.enabled;
                         
                         // Show modal
                         pumpModal.classList.add('active');
                     } else {
-                        alert('Error loading pump data');
+                        alert('Error loading pump data: ' + data.error);
                     }
                 })
                 .catch(error => {
@@ -202,49 +259,61 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.test-pump').forEach(btn => {
         btn.addEventListener('click', function() {
             const pumpId = this.getAttribute('data-pump-id');
-            document.getElementById('run-test-btn').setAttribute('data-pump-id', pumpId);
+            // Store pump ID in test modal
+            testModal.setAttribute('data-pump-id', pumpId);
+            // Reset values
+            document.getElementById('test-amount').value = 1;
+            // Show modal
             testModal.classList.add('active');
         });
     });
     
-    // Run test button
-    document.getElementById('run-test-btn').addEventListener('click', function() {
-        const pumpId = this.getAttribute('data-pump-id');
-        const amount = document.getElementById('test-amount').value;
+    // Run pump test
+    const runTestBtn = document.getElementById('run-test-btn');
+    runTestBtn.addEventListener('click', function() {
+        const pumpId = testModal.getAttribute('data-pump-id');
+        const amount = parseFloat(document.getElementById('test-amount').value);
         
-        // Disable button during test
-        this.disabled = true;
-        this.textContent = 'Testing...';
+        if (!pumpId || isNaN(amount) || amount <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
         
-        // Send test request
-        fetch('/api/pumps/test', {
+        // Disable button while running
+        runTestBtn.disabled = true;
+        runTestBtn.textContent = 'Running...';
+        
+        // Call API to test pump
+        fetch(`/api/dosing/pump/${pumpId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                pump_id: pumpId,
-                amount: parseFloat(amount)
+                amount_ml: amount
             })
         })
         .then(response => response.json())
         .then(data => {
             // Re-enable button
-            this.disabled = false;
-            this.textContent = 'Run Test';
+            runTestBtn.disabled = false;
+            runTestBtn.textContent = 'Run Test';
             
-            if (data.status === 'ok') {
-                alert('Test completed successfully');
+            if (data.success) {
+                // Close modal and show success
                 testModal.classList.remove('active');
+                alert('Test completed successfully');
             } else {
-                alert('Error: ' + data.message);
+                alert('Error: ' + (data.error || 'Unknown error'));
             }
         })
         .catch(error => {
+            // Re-enable button
+            runTestBtn.disabled = false;
+            runTestBtn.textContent = 'Run Test';
+            
             console.error('Error:', error);
-            this.disabled = false;
-            this.textContent = 'Run Test';
-            alert('Error running test');
+            alert('An error occurred while testing the pump');
         });
     });
     
@@ -252,30 +321,42 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.enable-pump, .disable-pump').forEach(btn => {
         btn.addEventListener('click', function() {
             const pumpId = this.getAttribute('data-pump-id');
-            const enable = this.classList.contains('enable-pump');
+            const isCurrentlyEnabled = this.classList.contains('disable-pump');
             
-            fetch('/api/pumps/toggle', {
-                method: 'POST',
+            // Confirm action
+            if (!confirm(`Are you sure you want to ${isCurrentlyEnabled ? 'disable' : 'enable'} this pump?`)) {
+                return;
+            }
+            
+            // Disable button during operation
+            btn.disabled = true;
+            
+            // Call API to update pump
+            fetch(`/api/pumps/${pumpId}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    pump_id: pumpId,
-                    enabled: enable
+                    enabled: !isCurrentlyEnabled
                 })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'ok') {
-                    // Reload page to reflect changes
+                if (data.success) {
+                    // Reload page to show updated status
                     window.location.reload();
                 } else {
-                    alert('Error: ' + data.message);
+                    // Re-enable button and show error
+                    btn.disabled = false;
+                    alert('Error: ' + (data.error || 'Unknown error'));
                 }
             })
             .catch(error => {
+                // Re-enable button
+                btn.disabled = false;
                 console.error('Error:', error);
-                alert('Error updating pump');
+                alert('An error occurred while updating the pump');
             });
         });
     });

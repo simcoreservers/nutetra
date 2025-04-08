@@ -214,6 +214,59 @@ def get_pumps():
             'error': str(e)
         }), 500
 
+@api_bp.route('/pumps', methods=['POST'])
+def create_pump():
+    """Create a new pump"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': "No data provided"
+            }), 400
+        
+        # Validate required fields
+        required_fields = ['name', 'type', 'gpio_pin', 'flow_rate']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False,
+                    'error': f"Missing required field: {field}"
+                }), 400
+        
+        # Check if the GPIO pin is already in use
+        existing_pump = Pump.query.filter_by(gpio_pin=data['gpio_pin']).first()
+        if existing_pump:
+            return jsonify({
+                'success': False,
+                'error': f"GPIO pin {data['gpio_pin']} is already in use by pump '{existing_pump.name}'"
+            }), 400
+        
+        # Create new pump
+        new_pump = Pump(
+            name=data['name'],
+            type=data['type'],
+            gpio_pin=data['gpio_pin'],
+            flow_rate=data['flow_rate'],
+            enabled=data.get('is_enabled', True)
+        )
+        
+        # Save to database
+        from app import db
+        db.session.add(new_pump)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': "Pump created successfully",
+            'data': new_pump.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @api_bp.route('/pumps/<int:pump_id>', methods=['PUT'])
 def update_pump(pump_id):
     """Update a pump's configuration"""
