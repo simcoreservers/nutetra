@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Pumps | NuTetra Controller{% endblock %}
+{% block page_title %}Pump Management{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>Pumps Configuration</h3>
+            <button id="add-pump-btn" class="button">
+                <i class="fas fa-plus"></i> Add Pump
+            </button>
+        </div>
+
+        <div class="pump-grid">
+            {% for pump in pumps %}
+            <div class="pump-card">
+                <div class="pump-header">
+                    <h4>{{ pump.name }}</h4>
+                    <div class="pump-status">
+                        <span class="status-indicator {% if pump.is_enabled %}success{% else %}danger{% endif %}"></span>
+                        <span class="status-text">{{ 'Enabled' if pump.is_enabled else 'Disabled' }}</span>
+                    </div>
+                </div>
+                <div class="pump-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value">{{ pump.pump_type|replace('_', ' ')|title }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">GPIO Pin:</span>
+                        <span class="detail-value">{{ pump.gpio_pin }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Flow Rate:</span>
+                        <span class="detail-value">{{ pump.flow_rate }} ml/min</span>
+                    </div>
+                </div>
+                <div class="pump-actions">
+                    <button class="action-button edit-pump" data-pump-id="{{ pump.id }}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="action-button test-pump" data-pump-id="{{ pump.id }}">
+                        <i class="fas fa-vial"></i> Test
+                    </button>
+                    <button class="action-button {% if pump.is_enabled %}disable-pump{% else %}enable-pump{% endif %}" data-pump-id="{{ pump.id }}">
+                        <i class="fas {% if pump.is_enabled %}fa-toggle-off{% else %}fa-toggle-on{% endif %}"></i> 
+                        {{ 'Disable' if pump.is_enabled else 'Enable' }}
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No pumps configured. Add your first pump to get started.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Pump Modal -->
+<div class="modal" id="pump-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Add Pump</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="pump-form" method="post" action="{{ url_for('api.update_pump') }}">
+                <input type="hidden" id="pump-id" name="id" value="">
+                
+                <div class="form-group">
+                    <label for="pump-name">Name</label>
+                    <input type="text" id="pump-name" name="name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pump-type">Type</label>
+                    <select id="pump-type" name="pump_type" class="form-control" required>
+                        <option value="ph_up">pH Up</option>
+                        <option value="ph_down">pH Down</option>
+                        <option value="nutrient_a">Nutrient A</option>
+                        <option value="nutrient_b">Nutrient B</option>
+                        <option value="nutrient_c">Nutrient C</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="gpio-pin">GPIO Pin</label>
+                    <input type="number" id="gpio-pin" name="gpio_pin" class="form-control" min="0" max="40" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="flow-rate">Flow Rate (ml/min)</label>
+                    <input type="number" id="flow-rate" name="flow_rate" class="form-control" min="0.1" step="0.1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="switch">
+                        <input type="checkbox" id="is-enabled" name="is_enabled" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="switch-label">Enabled</span>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="button">Save Pump</button>
+                    <button type="button" class="button cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Test Pump Modal -->
+<div class="modal" id="test-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Test Pump</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Dispense a small amount to test this pump. Make sure the pump is properly connected and has fluid.</p>
+            
+            <div class="form-group">
+                <label for="test-amount">Amount (ml)</label>
+                <input type="number" id="test-amount" class="form-control" min="0.1" max="10" step="0.1" value="1">
+            </div>
+            
+            <div class="form-actions">
+                <button id="run-test-btn" class="button">Run Test</button>
+                <button class="button cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add pump button
+    const addPumpBtn = document.getElementById('add-pump-btn');
+    const pumpModal = document.getElementById('pump-modal');
+    const pumpForm = document.getElementById('pump-form');
+    const closeModalBtns = document.querySelectorAll('.close-modal, .cancel-btn');
+    const testModal = document.getElementById('test-modal');
+    
+    // Open add pump modal
+    addPumpBtn.addEventListener('click', function() {
+        // Reset form for adding a new pump
+        document.getElementById('modal-title').textContent = 'Add Pump';
+        document.getElementById('pump-id').value = '';
+        pumpForm.reset();
+        pumpModal.classList.add('active');
+    });
+    
+    // Close modals
+    closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            pumpModal.classList.remove('active');
+            testModal.classList.remove('active');
+        });
+    });
+    
+    // Edit pump buttons
+    document.querySelectorAll('.edit-pump').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pumpId = this.getAttribute('data-pump-id');
+            
+            // Fetch pump data from API
+            fetch(`/api/pumps/${pumpId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        const pump = data.pump;
+                        
+                        // Populate form
+                        document.getElementById('modal-title').textContent = 'Edit Pump';
+                        document.getElementById('pump-id').value = pump.id;
+                        document.getElementById('pump-name').value = pump.name;
+                        document.getElementById('pump-type').value = pump.pump_type;
+                        document.getElementById('gpio-pin').value = pump.gpio_pin;
+                        document.getElementById('flow-rate').value = pump.flow_rate;
+                        document.getElementById('is-enabled').checked = pump.is_enabled;
+                        
+                        // Show modal
+                        pumpModal.classList.add('active');
+                    } else {
+                        alert('Error loading pump data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading pump data');
+                });
+        });
+    });
+    
+    // Test pump buttons
+    document.querySelectorAll('.test-pump').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pumpId = this.getAttribute('data-pump-id');
+            document.getElementById('run-test-btn').setAttribute('data-pump-id', pumpId);
+            testModal.classList.add('active');
+        });
+    });
+    
+    // Run test button
+    document.getElementById('run-test-btn').addEventListener('click', function() {
+        const pumpId = this.getAttribute('data-pump-id');
+        const amount = document.getElementById('test-amount').value;
+        
+        // Disable button during test
+        this.disabled = true;
+        this.textContent = 'Testing...';
+        
+        // Send test request
+        fetch('/api/pumps/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                pump_id: pumpId,
+                amount: parseFloat(amount)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Re-enable button
+            this.disabled = false;
+            this.textContent = 'Run Test';
+            
+            if (data.status === 'ok') {
+                alert('Test completed successfully');
+                testModal.classList.remove('active');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.disabled = false;
+            this.textContent = 'Run Test';
+            alert('Error running test');
+        });
+    });
+    
+    // Enable/Disable pump buttons
+    document.querySelectorAll('.enable-pump, .disable-pump').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pumpId = this.getAttribute('data-pump-id');
+            const enable = this.classList.contains('enable-pump');
+            
+            fetch('/api/pumps/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    pump_id: pumpId,
+                    enabled: enable
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    // Reload page to reflect changes
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating pump');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.pump-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.pump-card {
+    background-color: var(--bg-color-lighter);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.pump-header {
+    background-color: var(--bg-color-light);
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pump-header h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.pump-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-indicator.success {
+    background-color: var(--success-color);
+}
+
+.status-indicator.danger {
+    background-color: var(--danger-color);
+}
+
+.pump-details {
+    padding: var(--spacing-md);
+    flex: 1;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+}
+
+.detail-label {
+    color: var(--text-color-muted);
+}
+
+.detail-value {
+    font-weight: 500;
+}
+
+.pump-actions {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+}
+
+.switch-label {
+    margin-left: var(--spacing-sm);
+    vertical-align: middle;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-color-muted);
+}
+</style>
+{% endblock %} 
