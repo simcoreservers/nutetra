@@ -7,7 +7,8 @@ Launch the NuTetra Controller application
 import os
 import sys
 import logging
-from app import create_app, socketio
+from app import create_app
+from flask_socketio import SocketIO
 
 # Create logs directory if it doesn't exist
 logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -27,8 +28,13 @@ logging.basicConfig(
 # Create Flask app
 app = create_app()
 
-# There's no need to initialize Socket.IO here since it's now
-# properly initialized in the create_app function
+# Initialize Socket.IO and attach it to the app
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Register Socket.IO event handlers
+from app.utils.socketio_manager import register_handlers, start_background_thread
+register_handlers(socketio)
+start_background_thread(socketio)
 
 if __name__ == '__main__':
     # Check if running on a Raspberry Pi
