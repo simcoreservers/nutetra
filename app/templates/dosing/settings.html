@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Dosing Settings | NuTetra Controller{% endblock %}
+{% block page_title %}Dosing Settings{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>Dosing Configuration</h3>
+        </div>
+        
+        <form id="dosing-settings-form" method="post" action="{{ url_for('dosing.settings') }}">
+            <div class="settings-grid">
+                <!-- General Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h4>General Settings</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="switch-container">
+                                <span class="label">Auto-Dosing</span>
+                                <label class="switch">
+                                    <input type="checkbox" name="auto_dosing_enabled" {% if settings.auto_dosing_enabled %}checked{% endif %}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </label>
+                            <p class="helper-text">Enable automatic dosing based on sensor readings</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="switch-container">
+                                <span class="label">Night Mode</span>
+                                <label class="switch">
+                                    <input type="checkbox" name="night_mode_enabled" {% if settings.night_mode_enabled %}checked{% endif %}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </label>
+                            <p class="helper-text">Pause dosing during night hours</p>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="night-start">Night Start</label>
+                                <input type="time" id="night-start" name="night_mode_start" class="form-control" value="{{ settings.night_mode_start }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="night-end">Night End</label>
+                                <input type="time" id="night-end" name="night_mode_end" class="form-control" value="{{ settings.night_mode_end }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- pH Dosing Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h4>pH Dosing Settings</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ph-target-min">Target Minimum</label>
+                                <input type="number" id="ph-target-min" name="ph_target_min" class="form-control" 
+                                       min="4.0" max="8.0" step="0.1" value="{{ settings.ph_target_min }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="ph-target-max">Target Maximum</label>
+                                <input type="number" id="ph-target-max" name="ph_target_max" class="form-control" 
+                                       min="5.0" max="9.0" step="0.1" value="{{ settings.ph_target_max }}">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ph-dose-amount">Dose Amount (ml)</label>
+                            <input type="number" id="ph-dose-amount" name="ph_dose_amount" class="form-control" 
+                                   min="0.1" max="10.0" step="0.1" value="{{ settings.ph_dose_amount }}">
+                            <p class="helper-text">Amount to dispense in each dosing cycle</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ph-check-interval">Check Interval (seconds)</label>
+                            <input type="number" id="ph-check-interval" name="ph_check_interval" class="form-control" 
+                                   min="30" max="3600" step="30" value="{{ settings.ph_check_interval }}">
+                            <p class="helper-text">How often to check pH levels</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ph-dose-wait-time">Wait Time (seconds)</label>
+                            <input type="number" id="ph-dose-wait-time" name="ph_dose_wait_time" class="form-control" 
+                                   min="10" max="3600" step="10" value="{{ settings.ph_dose_wait_time }}">
+                            <p class="helper-text">Minimum time between doses</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- EC Dosing Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h4>EC Dosing Settings</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ec-target-min">Target Minimum</label>
+                                <input type="number" id="ec-target-min" name="ec_target_min" class="form-control" 
+                                       min="0.1" max="3.0" step="0.1" value="{{ settings.ec_target_min }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="ec-target-max">Target Maximum</label>
+                                <input type="number" id="ec-target-max" name="ec_target_max" class="form-control" 
+                                       min="0.5" max="3.5" step="0.1" value="{{ settings.ec_target_max }}">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ec-dose-amount">Dose Amount (ml)</label>
+                            <input type="number" id="ec-dose-amount" name="ec_dose_amount" class="form-control" 
+                                   min="0.1" max="20.0" step="0.1" value="{{ settings.ec_dose_amount }}">
+                            <p class="helper-text">Amount to dispense in each dosing cycle</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ec-check-interval">Check Interval (seconds)</label>
+                            <input type="number" id="ec-check-interval" name="ec_check_interval" class="form-control" 
+                                   min="30" max="3600" step="30" value="{{ settings.ec_check_interval }}">
+                            <p class="helper-text">How often to check EC levels</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ec-dose-wait-time">Wait Time (seconds)</label>
+                            <input type="number" id="ec-dose-wait-time" name="ec_dose_wait_time" class="form-control" 
+                                   min="10" max="3600" step="10" value="{{ settings.ec_dose_wait_time }}">
+                            <p class="helper-text">Minimum time between doses</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="button primary-button">Save Settings</button>
+                <a href="{{ url_for('dosing.index') }}" class="button">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .settings-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .form-row {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .switch-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .helper-text {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+        margin-top: 0.25rem;
+        margin-bottom: 0;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+    }
+    
+    .primary-button {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.getElementById('dosing-settings-form');
+        
+        form.addEventListener('submit', function(e) {
+            // Validate pH range
+            const phMin = parseFloat(document.getElementById('ph-target-min').value);
+            const phMax = parseFloat(document.getElementById('ph-target-max').value);
+            
+            if (phMin >= phMax) {
+                e.preventDefault();
+                alert('pH target minimum must be less than maximum');
+                return;
+            }
+            
+            // Validate EC range
+            const ecMin = parseFloat(document.getElementById('ec-target-min').value);
+            const ecMax = parseFloat(document.getElementById('ec-target-max').value);
+            
+            if (ecMin >= ecMax) {
+                e.preventDefault();
+                alert('EC target minimum must be less than maximum');
+                return;
+            }
+            
+            // Validate night mode times if enabled
+            const nightModeEnabled = document.querySelector('input[name="night_mode_enabled"]').checked;
+            
+            if (nightModeEnabled) {
+                const nightStart = document.getElementById('night-start').value;
+                const nightEnd = document.getElementById('night-end').value;
+                
+                if (!nightStart || !nightEnd) {
+                    e.preventDefault();
+                    alert('Please set both night start and end times');
+                    return;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 
