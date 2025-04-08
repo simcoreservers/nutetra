@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Recipe | NuTetra Controller{% endblock %}
+{% block page_title %}Edit Recipe{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>Edit Nutrient Recipe</h3>
+            <div class="section-actions">
+                <a href="{{ url_for('recipes.index') }}" class="button">
+                    <i class="fas fa-arrow-left"></i> Back to Recipes
+                </a>
+            </div>
+        </div>
+        
+        <div class="recipe-form-container">
+            <!-- Recipe Details Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h4>Recipe Details</h4>
+                </div>
+                
+                <div class="card-body">
+                    <form id="recipe-form" method="post" action="{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}">
+                        <div class="form-group">
+                            <label for="name">Recipe Name</label>
+                            <input type="text" id="name" name="name" class="form-control" value="{{ recipe.name }}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" class="form-control" rows="3">{{ recipe.description }}</textarea>
+                            <p class="helper-text">Describe what this recipe is ideal for (e.g., "Leafy Greens", "Fruiting Plants")</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="switch-container">
+                                <span class="label">Active</span>
+                                <label class="switch">
+                                    <input type="checkbox" name="is_active" {% if recipe.is_active %}checked{% endif %}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </label>
+                            <p class="helper-text">Available for activation (inactive recipes cannot be used)</p>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="button primary-button">Save Recipe</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Recipe Components -->
+            <div class="card">
+                <div class="card-header">
+                    <h4>Recipe Components</h4>
+                </div>
+                
+                <div class="card-body">
+                    <p class="intro-text">
+                        Define which nutrients make up this recipe and their ratios. The system will dose these nutrients 
+                        proportionally to maintain the EC target level.
+                    </p>
+                    
+                    <div class="component-section">
+                        <h5>Current Components</h5>
+                        {% if recipe.components %}
+                            <div class="component-table-container">
+                                <table class="component-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Pump</th>
+                                            <th>Ratio</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for component in recipe.components %}
+                                            <tr>
+                                                <td>{{ component.name or component.pump.name }}</td>
+                                                <td>{{ component.pump.name }}</td>
+                                                <td>{{ component.ratio|round(1) }}</td>
+                                                <td class="actions-cell">
+                                                    <button type="button" class="button small-button" 
+                                                            onclick="editComponent({{ component.id }}, '{{ component.name or '' }}', {{ component.ratio }})">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    
+                                                    <form action="{{ url_for('recipes.delete_component', component_id=component.id) }}" method="post" class="inline-form">
+                                                        <button type="submit" class="button small-button danger-button" data-critical="true"
+                                                                onclick="return confirm('Are you sure you want to remove this component?')">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="no-components">No components added yet</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="component-section">
+                        <h5>Add Component</h5>
+                        <form id="add-component-form" method="post" action="{{ url_for('recipes.add_component', recipe_id=recipe.id) }}">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="pump_id">Nutrient Pump</label>
+                                    <select id="pump_id" name="pump_id" class="form-control" required>
+                                        <option value="">Select a pump</option>
+                                        {% for pump in nutrient_pumps %}
+                                            <option value="{{ pump.id }}">{{ pump.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="component_name">Component Name</label>
+                                    <input type="text" id="component_name" name="component_name" class="form-control">
+                                    <p class="helper-text">Optional. Will use pump name if left blank.</p>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="ratio">Ratio</label>
+                                    <input type="number" id="ratio" name="ratio" class="form-control" value="1.0" min="0.1" step="0.1" required>
+                                    <p class="helper-text">Relative amount to dose compared to other components</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="button primary-button">Add Component</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions final-actions">
+                <a href="{{ url_for('recipes.index') }}" class="button">Cancel</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Component Modal -->
+<div id="edit-component-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4>Edit Component</h4>
+            <button type="button" class="close-btn" onclick="closeEditModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <form id="edit-component-form" method="post" action="">
+                <div class="form-group">
+                    <label for="edit_component_name">Component Name</label>
+                    <input type="text" id="edit_component_name" name="component_name" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_ratio">Ratio</label>
+                    <input type="number" id="edit_ratio" name="ratio" class="form-control" min="0.1" step="0.1" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="button primary-button">Save Changes</button>
+                    <button type="button" class="button" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recipe-form-container {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .component-section {
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .component-section h5 {
+        margin-bottom: var(--spacing-sm);
+        font-size: 1rem;
+    }
+    
+    .component-table-container {
+        overflow-x: auto;
+    }
+    
+    .component-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .component-table th,
+    .component-table td {
+        padding: var(--spacing-sm);
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .component-table th {
+        background-color: var(--bg-color-light);
+        font-weight: 600;
+    }
+    
+    .actions-cell {
+        white-space: nowrap;
+        text-align: right;
+    }
+    
+    .small-button {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.7rem;
+    }
+    
+    .danger-button {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .no-components {
+        color: var(--text-color-muted);
+        font-style: italic;
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+    }
+    
+    .inline-form {
+        display: inline;
+    }
+    
+    .intro-text {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .final-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        overflow: auto;
+    }
+    
+    .modal-content {
+        background-color: var(--bg-color);
+        margin: 10% auto;
+        width: 90%;
+        max-width: 500px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-header {
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-light);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h4 {
+        margin: 0;
+    }
+    
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+    
+    .close-btn {
+        font-size: 1.5rem;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--text-color);
+    }
+    
+    @media (max-width: 768px) {
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .section-actions {
+            margin-top: var(--spacing-sm);
+        }
+        
+        .form-row {
+            flex-direction: column;
+        }
+        
+        .modal-content {
+            margin: 20% auto;
+            width: 95%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Edit component modal functionality
+    function editComponent(componentId, name, ratio) {
+        // Set form action
+        const form = document.getElementById('edit-component-form');
+        form.action = '{{ url_for("recipes.edit_component", component_id=0) }}'.replace('0', componentId);
+        
+        // Fill values
+        document.getElementById('edit_component_name').value = name;
+        document.getElementById('edit_ratio').value = ratio;
+        
+        // Show modal
+        document.getElementById('edit-component-modal').style.display = 'block';
+    }
+    
+    function closeEditModal() {
+        document.getElementById('edit-component-modal').style.display = 'none';
+    }
+    
+    // Close modal if clicked outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('edit-component-modal');
+        if (event.target == modal) {
+            closeEditModal();
+        }
+    }
+    
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const addComponentForm = document.getElementById('add-component-form');
+        addComponentForm.addEventListener('submit', function(e) {
+            const ratio = parseFloat(document.getElementById('ratio').value);
+            if (ratio <= 0) {
+                e.preventDefault();
+                alert('Ratio must be greater than 0');
+            }
+        });
+        
+        const editComponentForm = document.getElementById('edit-component-form');
+        editComponentForm.addEventListener('submit', function(e) {
+            const ratio = parseFloat(document.getElementById('edit_ratio').value);
+            if (ratio <= 0) {
+                e.preventDefault();
+                alert('Ratio must be greater than 0');
+            }
+        });
+    });
+</script>
+{% endblock %} 

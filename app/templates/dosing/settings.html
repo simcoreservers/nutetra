@@ -98,27 +98,27 @@
                 <!-- EC Dosing Settings -->
                 <div class="settings-card">
                     <div class="card-header">
-                        <h4>EC Dosing Settings</h4>
+                        <h4>Nutrient Dosing Settings</h4>
                     </div>
                     <div class="card-body">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="ec-setpoint">Setpoint</label>
+                                <label for="ec-setpoint">EC Setpoint</label>
                                 <input type="number" id="ec-setpoint" name="ec_setpoint" class="form-control" 
                                        min="0.5" max="3.0" step="0.1" value="{{ settings.ec_setpoint }}">
                             </div>
                             <div class="form-group">
-                                <label for="ec-buffer">Buffer Range</label>
+                                <label for="ec-buffer">EC Buffer Range</label>
                                 <input type="number" id="ec-buffer" name="ec_buffer" class="form-control" 
                                        min="0.1" max="0.5" step="0.1" value="{{ settings.ec_buffer }}">
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label for="ec-dose-amount">Dose Amount (ml)</label>
+                            <label for="ec-dose-amount">Nutrient Dose Amount (ml)</label>
                             <input type="number" id="ec-dose-amount" name="ec_dose_amount" class="form-control" 
                                    min="0.1" max="20.0" step="0.1" value="{{ settings.ec_dose_amount }}">
-                            <p class="helper-text">Amount to dispense in each dosing cycle</p>
+                            <p class="helper-text">Amount of nutrient solution to dispense in each dosing cycle</p>
                         </div>
                         
                         <div class="form-group">
@@ -133,6 +133,13 @@
                             <input type="number" id="ec-dose-wait-time" name="ec_dose_wait_time" class="form-control" 
                                    min="10" max="3600" step="10" value="{{ settings.ec_dose_wait_time }}">
                             <p class="helper-text">Minimum time between doses</p>
+                        </div>
+                        
+                        <div class="recipe-link-container">
+                            <a href="{{ url_for('recipes.index') }}" class="recipe-link">
+                                <i class="fas fa-flask"></i> Manage Nutrient Recipes
+                            </a>
+                            <p class="helper-text">Configure which nutrients and ratios to use when dosing</p>
                         </div>
                     </div>
                 </div>
@@ -215,6 +222,33 @@
     .primary-button {
         background-color: var(--primary-color);
         color: #fff;
+    }
+    
+    .recipe-link-container {
+        margin-top: var(--spacing-lg);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .recipe-link {
+        display: inline-flex;
+        align-items: center;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background-color: var(--primary-color-light);
+        color: var(--primary-color);
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .recipe-link:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .recipe-link i {
+        margin-right: var(--spacing-sm);
     }
 </style>
 {% endblock %}

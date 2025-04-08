@@ -336,30 +336,14 @@ def check_and_adjust_ec():
             if current_ec < target_min:
                 logger.info(f"EC is low ({current_ec}), adding nutrients")
                 
-                # Add nutrients in sequence (A, B, C)
-                for nutrient_type in ['nutrient_a', 'nutrient_b', 'nutrient_c']:
-                    pumps = Pump.get_by_type(nutrient_type)
-                    if not pumps:
-                        logger.debug(f"No {nutrient_type} pumps configured")
-                        continue
-                    
-                    # Use the first available pump of this type
-                    pump = pumps[0]
-                    
-                    # Calculate dose amount and duration
-                    amount_ml = calculate_dose_amount(nutrient_type)
-                    duration_ms = pump.calculate_dosing_time(amount_ml)
-                    
-                    # Activate the pump
-                    activate_pump(
-                        pump_id=pump.id,
-                        duration_ms=duration_ms,
-                        reason='ec_low',
-                        sensor_before=current_ec
-                    )
-                    
-                    # Wait between nutrient additions to prevent precipitation
-                    time.sleep(5)
+                # Get the configured dose amount
+                amount_ml = Settings.get('ec_dose_amount', 5.0)
+                
+                # Use the recipe-based dosing function
+                success = dose_nutrients(amount_ml)
+                
+                if not success:
+                    logger.warning("Failed to dose nutrients for EC adjustment")
             else:
                 logger.debug(f"EC is within range ({current_ec}), no adjustment needed")
                 
@@ -373,4 +357,57 @@ def cleanup():
         try:
             lgpio.gpiochip_close(chip)
         except Exception as e:
-            logger.error(f"Error closing GPIO chip: {e}") 
+            logger.error(f"Error closing GPIO chip: {e}")
+
+def dose_nutrients(amount_ml=None):
+    """Dose nutrients to raise EC level"""
+    # If no amount specified, use the configured amount
+    if amount_ml is None:
+        amount_ml = Settings.get('ec_dose_amount', 5.0)
+    
+    # Get active recipe
+    recipe_id = Settings.get('active_recipe_id')
+    
+    if recipe_id:
+        # Use the active recipe for dosing
+        from app.models.nutrient_recipe import NutrientRecipe, RecipeComponent
+        recipe = NutrientRecipe.query.get(recipe_id)
+        
+        if recipe and recipe.components:
+            # Calculate the sum of all ratios
+            total_ratio = sum(component.ratio for component in recipe.components)
+            
+            # Dose each component according to its ratio
+            for component in recipe.components:
+                # Calculate the amount for this component based on its ratio
+                component_amount = (component.ratio / total_ratio) * amount_ml
+                
+                # Activate the pump
+                if component_amount > 0:
+                    success = activate_pump(
+                        pump_id=component.pump_id,
+                        amount_ml=component_amount,
+                        reason='ec_adjustment'
+                    )
+                    
+                    # If any component fails, return False
+                    if not success:
+                        return False
+            
+            # All components dosed successfully
+            return True
+    
+    # No active recipe or recipe has no components - use old logic (find nutrient pumps directly)
+    nutrient_pumps = Pump.get_by_type('nutrient_a') + Pump.get_by_type('nutrient_b') + Pump.get_by_type('nutrient_c')
+    
+    if not nutrient_pumps:
+        return False  # No nutrient pumps available
+    
+    # Use the first available nutrient pump for backward compatibility
+    success = activate_pump(
+        pump_id=nutrient_pumps[0].id,
+        amount_ml=amount_ml,
+        reason='ec_adjustment'
+    )
+    
+    return success 
