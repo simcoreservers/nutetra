@@ -12,7 +12,7 @@
 
         <div class="readings-grid">
             <!-- pH Sensor Card -->
-            <div class="reading-card {% if get_sensor_status('ph') != 'connected' %}alert{% endif %}" id="ph-sensor-card">
+            <div class="reading-card {% if get_sensor_status('ph') != 'connected' %}alert{% endif %}">
                 <div class="reading-icon">
                     <i class="fas fa-tint"></i>
                 </div>
@@ -24,7 +24,7 @@
                     </div>
                     
                     {% set ph_reading = get_last_reading('ph') %}
-                    <div class="reading-value" id="ph-value">{% if ph_reading %}{{ ph_reading|ph }}{% else %}N/A{% endif %}</div>
+                    <div class="reading-value">{{ ph_reading|ph }}</div>
                     <div class="reading-range">
                         Target: {{ settings.get('ph_target_min', 5.8)|ph }} - {{ settings.get('ph_target_max', 6.2)|ph }}
                     </div>
@@ -36,7 +36,7 @@
             </div>
             
             <!-- EC Sensor Card -->
-            <div class="reading-card {% if get_sensor_status('ec') != 'connected' %}alert{% endif %}" id="ec-sensor-card">
+            <div class="reading-card {% if get_sensor_status('ec') != 'connected' %}alert{% endif %}">
                 <div class="reading-icon">
                     <i class="fas fa-bolt"></i>
                 </div>
@@ -48,7 +48,7 @@
                     </div>
                     
                     {% set ec_reading = get_last_reading('ec') %}
-                    <div class="reading-value" id="ec-value">{% if ec_reading %}{{ ec_reading|ec }}{% else %}N/A{% endif %}</div>
+                    <div class="reading-value">{{ ec_reading|ec }}</div>
                     <div class="reading-range">
                         Target: {{ settings.get('ec_target_min', 1.2)|ec }} - {{ settings.get('ec_target_max', 1.5)|ec }}
                     </div>
@@ -60,7 +60,7 @@
             </div>
             
             <!-- Temperature Sensor Card -->
-            <div class="reading-card {% if get_sensor_status('temp') != 'connected' %}alert{% endif %}" id="temp-sensor-card">
+            <div class="reading-card {% if get_sensor_status('temp') != 'connected' %}alert{% endif %}">
                 <div class="reading-icon">
                     <i class="fas fa-thermometer-half"></i>
                 </div>
@@ -72,7 +72,7 @@
                     </div>
                     
                     {% set temp_reading = get_last_reading('temp') %}
-                    <div class="reading-value" id="temp-value">{% if temp_reading %}{{ temp_reading|temp }}{% else %}N/A{% endif %}</div>
+                    <div class="reading-value">{{ temp_reading|temp }}</div>
                     <div class="reading-range">
                         Target: {{ settings.get('temp_target_min', 18.0)|temp }} - {{ settings.get('temp_target_max', 24.0)|temp }}
                     </div>
@@ -186,9 +186,4 @@
         </form>
     </div>
 </div>
-
-{% endblock %}
-
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/sensors.js') }}"></script>
 {% endblock %} 

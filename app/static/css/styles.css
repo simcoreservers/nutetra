@@ -399,20 +399,13 @@ input:focus, select:focus, textarea:focus {
   gap: var(--spacing-md);
 }
 
-/* Force cards to be visible in all states */
-.reading-card,
-.reading-card.alert,
-div.reading-card,
-div.reading-card.alert {
-  display: flex !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  position: relative !important;
+.reading-card {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md);
   background-color: var(--bg-color-lighter);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  align-items: center;
-  padding: var(--spacing-md);
 }
 
 .reading-card.alert {
@@ -523,7 +516,7 @@ div.reading-card.alert {
   position: relative;
 }
 
-.chart-panel {
+.chart-panels .chart-panel {
   position: absolute;
   top: 0;
   left: 0;
@@ -534,7 +527,7 @@ div.reading-card.alert {
   transition: opacity 0.3s ease;
 }
 
-.chart-panel.active {
+.chart-panels .chart-panel.active {
   opacity: 1;
   pointer-events: auto;
 }
