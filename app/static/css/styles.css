@@ -413,6 +413,17 @@ input:focus, select:focus, textarea:focus {
   z-index: 1;
 }
 
+/* Special override for sensor cards to ensure they remain visible */
+.sensor-card {
+  opacity: 1 !important;
+  visibility: visible !important; 
+  display: flex !important;
+  position: relative !important;
+  z-index: 10 !important;
+  animation: none !important;
+  pointer-events: auto !important;
+}
+
 .reading-card.alert {
   border-color: var(--danger-color);
   background-color: rgba(244, 115, 107, 0.1);

@@ -13,7 +13,7 @@
 
         <div class="readings-grid">
             <!-- pH Sensor Card -->
-            <div class="reading-card {% if get_sensor_status('ph') != 'connected' %}alert{% endif %}">
+            <div class="reading-card sensor-card {% if get_sensor_status('ph') != 'connected' %}alert{% endif %}">
                 <div class="reading-icon">
                     <i class="fas fa-tint"></i>
                 </div>
@@ -37,7 +37,7 @@
             </div>
             
             <!-- EC Sensor Card -->
-            <div class="reading-card {% if get_sensor_status('ec') != 'connected' %}alert{% endif %}">
+            <div class="reading-card sensor-card {% if get_sensor_status('ec') != 'connected' %}alert{% endif %}">
                 <div class="reading-icon">
                     <i class="fas fa-bolt"></i>
                 </div>
@@ -61,7 +61,7 @@
             </div>
             
             <!-- Temperature Sensor Card -->
-            <div class="reading-card {% if get_sensor_status('temp') != 'connected' %}alert{% endif %}">
+            <div class="reading-card sensor-card {% if get_sensor_status('temp') != 'connected' %}alert{% endif %}">
                 <div class="reading-icon">
                     <i class="fas fa-thermometer-half"></i>
                 </div>
@@ -197,33 +197,69 @@
 
 {% block extra_js %}
 <script>
-// Ensure reading cards are visible
+// More comprehensive fix for disappearing sensor cards
 document.addEventListener('DOMContentLoaded', function() {
-    // Force reading cards to be visible and prevent opacity changes
-    const cards = document.querySelectorAll('.reading-card');
-    cards.forEach(card => {
-        card.style.opacity = '1';
-        card.style.transition = 'none';
-    });
+    // Ensure sensor cards maintain visibility
+    const cards = document.querySelectorAll('.sensor-card');
     
-    // Also ensure cards stay visible during any potential transitions
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            const target = mutation.target;
-            if (target.classList.contains('reading-card') && 
-                (target.style.opacity === '0' || parseFloat(target.style.opacity) < 1)) {
-                target.style.opacity = '1';
+    // Apply inline styles to force visibility regardless of CSS transitions or animations
+    function forceCardVisibility() {
+        cards.forEach(card => {
+            // Force card to be visible with highest stacking order
+            card.style.cssText = `
+                opacity: 1 !important;
+                visibility: visible !important;
+                display: flex !important;
+                position: relative !important;
+                z-index: 999 !important;
+                transition: none !important;
+                animation: none !important;
+            `;
+        });
+    }
+    
+    // Apply styles immediately
+    forceCardVisibility();
+    
+    // Create more persistent observer that watches for style or class changes
+    const observer = new MutationObserver((mutations) => {
+        let needsUpdate = false;
+        
+        mutations.forEach(mutation => {
+            if (mutation.type === 'attributes' && 
+                (mutation.attributeName === 'style' || 
+                 mutation.attributeName === 'class')) {
+                needsUpdate = true;
             }
         });
+        
+        if (needsUpdate) {
+            // Re-apply visibility force
+            forceCardVisibility();
+        }
     });
     
-    // Observe all reading cards for style changes
+    // Observe each card for attribute changes
     cards.forEach(card => {
-        observer.observe(card, { 
-            attributes: true, 
-            attributeFilter: ['style', 'class'] 
+        observer.observe(card, {
+            attributes: true,
+            attributeFilter: ['style', 'class']
         });
     });
+    
+    // Check every 1 second and ensure cards are visible (backup solution)
+    const visibilityInterval = setInterval(forceCardVisibility, 1000);
+    
+    // Make sure the cards stay visible even after automatic sensor data refresh
+    const originalUpdateFn = window.updateSensorDisplays;
+    if (typeof originalUpdateFn === 'function') {
+        window.updateSensorDisplays = function(data) {
+            // Call the original function
+            originalUpdateFn(data);
+            // Force cards to be visible afterward
+            forceCardVisibility();
+        };
+    }
 });
 </script>
 {% endblock %} 
