@@ -125,8 +125,10 @@ def create_app(test_config=None):
     from app.utils.socketio_manager import init_socketio
     socketio = init_socketio(app)
     
-    # Start the scheduler
+    # Start the scheduler with Flask app context
     if not scheduler.running:
+        # Store app reference for scheduled tasks to use
+        scheduler._app = app
         scheduler.start()
 
     # Register blueprints
@@ -154,4 +156,12 @@ def create_app(test_config=None):
     # Register the database command
     app.cli.add_command(init_db_command)
 
+    # Add application teardown handler to clean up scheduler
+    @app.teardown_appcontext
+    def shutdown_scheduler(exception=None):
+        if scheduler.running:
+            # Only shutdown when the application is terminating
+            if app.config.get('ENV') != 'development' and exception is None:
+                scheduler.shutdown()
+    
     return app 

@@ -219,127 +219,135 @@ def calculate_dose_amount(pump_type):
 
 def check_and_adjust_ph():
     """Check pH level and dose if needed"""
-    # Skip if auto-dosing is disabled
-    if not Settings.get('auto_dosing_enabled', True):
-        return
+    # We need to use Flask's app context for database operations
+    from flask import current_app
     
-    try:
-        # Get current pH
-        current_ph = get_last_reading('ph')
-        if current_ph is None:
-            logger.warning("Cannot adjust pH: no pH reading available")
+    with current_app.app_context():
+        # Skip if auto-dosing is disabled
+        if not Settings.get('auto_dosing_enabled', True):
             return
         
-        # Get target pH range
-        target_min = Settings.get('ph_target_min', 5.8)
-        target_max = Settings.get('ph_target_max', 6.2)
-        
-        # Check if pH is out of range
-        if current_ph < target_min:
-            # pH is too low, need to add pH Up
-            logger.info(f"pH is low ({current_ph}), adding pH Up")
-            
-            # Get pH Up pumps
-            ph_up_pumps = Pump.get_by_type('ph_up')
-            if not ph_up_pumps:
-                logger.warning("Cannot adjust pH: no pH Up pumps configured")
+        try:
+            # Get current pH
+            current_ph = get_last_reading('ph')
+            if current_ph is None:
+                logger.warning("Cannot adjust pH: no pH reading available")
                 return
             
-            # Use the first available pH Up pump
-            pump = ph_up_pumps[0]
+            # Get target pH range
+            target_min = Settings.get('ph_target_min', 5.8)
+            target_max = Settings.get('ph_target_max', 6.2)
             
-            # Calculate dose amount and duration
-            amount_ml = calculate_dose_amount('ph_up')
-            duration_ms = pump.calculate_dosing_time(amount_ml)
-            
-            # Activate the pump
-            activate_pump(
-                pump_id=pump.id,
-                duration_ms=duration_ms,
-                reason='ph_low',
-                sensor_before=current_ph
-            )
-            
-        elif current_ph > target_max:
-            # pH is too high, need to add pH Down
-            logger.info(f"pH is high ({current_ph}), adding pH Down")
-            
-            # Get pH Down pumps
-            ph_down_pumps = Pump.get_by_type('ph_down')
-            if not ph_down_pumps:
-                logger.warning("Cannot adjust pH: no pH Down pumps configured")
-                return
-            
-            # Use the first available pH Down pump
-            pump = ph_down_pumps[0]
-            
-            # Calculate dose amount and duration
-            amount_ml = calculate_dose_amount('ph_down')
-            duration_ms = pump.calculate_dosing_time(amount_ml)
-            
-            # Activate the pump
-            activate_pump(
-                pump_id=pump.id,
-                duration_ms=duration_ms,
-                reason='ph_high',
-                sensor_before=current_ph
-            )
-        else:
-            logger.debug(f"pH is within range ({current_ph}), no adjustment needed")
-            
-    except Exception as e:
-        logger.error(f"Error in pH adjustment: {e}")
-
-def check_and_adjust_ec():
-    """Check EC level and dose if needed"""
-    # Skip if auto-dosing is disabled
-    if not Settings.get('auto_dosing_enabled', True):
-        return
-    
-    try:
-        # Get current EC
-        current_ec = get_last_reading('ec')
-        if current_ec is None:
-            logger.warning("Cannot adjust EC: no EC reading available")
-            return
-        
-        # Get target EC range
-        target_min = Settings.get('ec_target_min', 1.2)
-        target_max = Settings.get('ec_target_max', 1.5)
-        
-        # Check if EC is too low (we can only add nutrients, not remove them)
-        if current_ec < target_min:
-            logger.info(f"EC is low ({current_ec}), adding nutrients")
-            
-            # Add nutrients in sequence (A, B, C)
-            for nutrient_type in ['nutrient_a', 'nutrient_b', 'nutrient_c']:
-                pumps = Pump.get_by_type(nutrient_type)
-                if not pumps:
-                    logger.debug(f"No {nutrient_type} pumps configured")
-                    continue
+            # Check if pH is out of range
+            if current_ph < target_min:
+                # pH is too low, need to add pH Up
+                logger.info(f"pH is low ({current_ph}), adding pH Up")
                 
-                # Use the first available pump of this type
-                pump = pumps[0]
+                # Get pH Up pumps
+                ph_up_pumps = Pump.get_by_type('ph_up')
+                if not ph_up_pumps:
+                    logger.warning("Cannot adjust pH: no pH Up pumps configured")
+                    return
+                
+                # Use the first available pH Up pump
+                pump = ph_up_pumps[0]
                 
                 # Calculate dose amount and duration
-                amount_ml = calculate_dose_amount(nutrient_type)
+                amount_ml = calculate_dose_amount('ph_up')
                 duration_ms = pump.calculate_dosing_time(amount_ml)
                 
                 # Activate the pump
                 activate_pump(
                     pump_id=pump.id,
                     duration_ms=duration_ms,
-                    reason='ec_low',
-                    sensor_before=current_ec
+                    reason='ph_low',
+                    sensor_before=current_ph
                 )
                 
-                # Wait between nutrient additions to prevent precipitation
-                time.sleep(5)
-        else:
-            logger.debug(f"EC is within range ({current_ec}), no adjustment needed")
+            elif current_ph > target_max:
+                # pH is too high, need to add pH Down
+                logger.info(f"pH is high ({current_ph}), adding pH Down")
+                
+                # Get pH Down pumps
+                ph_down_pumps = Pump.get_by_type('ph_down')
+                if not ph_down_pumps:
+                    logger.warning("Cannot adjust pH: no pH Down pumps configured")
+                    return
+                
+                # Use the first available pH Down pump
+                pump = ph_down_pumps[0]
+                
+                # Calculate dose amount and duration
+                amount_ml = calculate_dose_amount('ph_down')
+                duration_ms = pump.calculate_dosing_time(amount_ml)
+                
+                # Activate the pump
+                activate_pump(
+                    pump_id=pump.id,
+                    duration_ms=duration_ms,
+                    reason='ph_high',
+                    sensor_before=current_ph
+                )
+            else:
+                logger.debug(f"pH is within range ({current_ph}), no adjustment needed")
+                
+        except Exception as e:
+            logger.error(f"Error in pH adjustment: {e}")
+
+def check_and_adjust_ec():
+    """Check EC level and dose if needed"""
+    # We need to use Flask's app context for database operations
+    from flask import current_app
+    
+    with current_app.app_context():
+        # Skip if auto-dosing is disabled
+        if not Settings.get('auto_dosing_enabled', True):
+            return
+        
+        try:
+            # Get current EC
+            current_ec = get_last_reading('ec')
+            if current_ec is None:
+                logger.warning("Cannot adjust EC: no EC reading available")
+                return
             
-    except Exception as e:
-        logger.error(f"Error in EC adjustment: {e}")
+            # Get target EC range
+            target_min = Settings.get('ec_target_min', 1.2)
+            target_max = Settings.get('ec_target_max', 1.5)
+            
+            # Check if EC is too low (we can only add nutrients, not remove them)
+            if current_ec < target_min:
+                logger.info(f"EC is low ({current_ec}), adding nutrients")
+                
+                # Add nutrients in sequence (A, B, C)
+                for nutrient_type in ['nutrient_a', 'nutrient_b', 'nutrient_c']:
+                    pumps = Pump.get_by_type(nutrient_type)
+                    if not pumps:
+                        logger.debug(f"No {nutrient_type} pumps configured")
+                        continue
+                    
+                    # Use the first available pump of this type
+                    pump = pumps[0]
+                    
+                    # Calculate dose amount and duration
+                    amount_ml = calculate_dose_amount(nutrient_type)
+                    duration_ms = pump.calculate_dosing_time(amount_ml)
+                    
+                    # Activate the pump
+                    activate_pump(
+                        pump_id=pump.id,
+                        duration_ms=duration_ms,
+                        reason='ec_low',
+                        sensor_before=current_ec
+                    )
+                    
+                    # Wait between nutrient additions to prevent precipitation
+                    time.sleep(5)
+            else:
+                logger.debug(f"EC is within range ({current_ec}), no adjustment needed")
+                
+        except Exception as e:
+            logger.error(f"Error in EC adjustment: {e}")
 
 def cleanup():
     """Clean up GPIO resources"""

@@ -186,23 +186,28 @@ def read_response(address):
 
 def read_and_log_sensor(sensor_type):
     """Read a sensor and log the value to the database"""
-    try:
-        value = read_sensor(sensor_type)
-        SensorReading.add_reading(sensor_type, value)
-        logger.debug(f"Recorded {sensor_type} reading: {value}")
-        
-        # Emit the reading through SocketIO for real-time updates
-        from app import socketio
-        socketio.emit('sensor_update', {
-            'sensor_type': sensor_type,
-            'value': value,
-            'timestamp': time.time()
-        })
-        
-        return value
-    except Exception as e:
-        logger.error(f"Failed to read and log {sensor_type} sensor: {e}")
-        return None
+    # Import Flask's current_app to get the application context
+    from flask import current_app
+    
+    # Use the app context for database operations
+    with current_app.app_context():
+        try:
+            value = read_sensor(sensor_type)
+            SensorReading.add_reading(sensor_type, value)
+            logger.debug(f"Recorded {sensor_type} reading: {value}")
+            
+            # Emit the reading through SocketIO for real-time updates
+            from app import socketio
+            socketio.emit('sensor_update', {
+                'sensor_type': sensor_type,
+                'value': value,
+                'timestamp': time.time()
+            })
+            
+            return value
+        except Exception as e:
+            logger.error(f"Failed to read and log {sensor_type} sensor: {e}")
+            return None
 
 def read_all_sensors():
     """Read all sensors and return the values"""
