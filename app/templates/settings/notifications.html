@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Notification Settings | NuTetra Controller{% endblock %}
+{% block page_title %}Notification Settings{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>Configure Notifications</h3>
+        </div>
+        
+        <form method="post" action="{{ url_for('settings.notifications') }}" id="notification-settings-form">
+            <div class="settings-grid">
+                <!-- General Notification Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-bell"></i> General Settings</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group switch-container">
+                            <label for="notifications-enabled">Enable Notifications</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="notifications-enabled" name="notifications_enabled" 
+                                       {% if settings.notifications_enabled %}checked{% endif %}>
+                                <label for="notifications-enabled"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="notification-level">Notification Level</label>
+                            <select id="notification-level" name="notification_level" class="form-control">
+                                <option value="info" {% if settings.notification_level == 'info' %}selected{% endif %}>All Events (Info)</option>
+                                <option value="warning" {% if settings.notification_level == 'warning' %}selected{% endif %}>Warnings and Critical</option>
+                                <option value="critical" {% if settings.notification_level == 'critical' %}selected{% endif %}>Critical Only</option>
+                            </select>
+                            <p class="helper-text">Determines which events will trigger notifications</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Email Notification Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-envelope"></i> Email Notifications</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group switch-container">
+                            <label for="email-notifications">Enable Email Notifications</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="email-notifications" name="email_notifications" 
+                                       {% if settings.email_notifications %}checked{% endif %}>
+                                <label for="email-notifications"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email-address">Email Address</label>
+                            <input type="email" id="email-address" name="email_address" class="form-control" 
+                                   value="{{ settings.email_address }}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email-frequency">Email Frequency</label>
+                            <select id="email-frequency" name="email_frequency" class="form-control">
+                                <option value="immediate" {% if settings.email_frequency == 'immediate' %}selected{% endif %}>Immediate</option>
+                                <option value="hourly" {% if settings.email_frequency == 'hourly' %}selected{% endif %}>Hourly Digest</option>
+                                <option value="daily" {% if settings.email_frequency == 'daily' %}selected{% endif %}>Daily Digest</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" id="test-email-btn" class="button secondary-button">
+                            <i class="fas fa-paper-plane"></i> Send Test Email
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- SMS Notification Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-mobile-alt"></i> SMS Notifications</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group switch-container">
+                            <label for="sms-notifications">Enable SMS Notifications</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="sms-notifications" name="sms_notifications" 
+                                       {% if settings.sms_notifications %}checked{% endif %}>
+                                <label for="sms-notifications"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone-number">Phone Number</label>
+                            <input type="tel" id="phone-number" name="phone_number" class="form-control" 
+                                   value="{{ settings.phone_number }}" placeholder="+1234567890">
+                            <p class="helper-text">Include country code (e.g., +1 for US)</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sms-frequency">SMS Frequency</label>
+                            <select id="sms-frequency" name="sms_frequency" class="form-control">
+                                <option value="critical" {% if settings.sms_frequency == 'critical' %}selected{% endif %}>Critical Events Only</option>
+                                <option value="hourly" {% if settings.sms_frequency == 'hourly' %}selected{% endif %}>Hourly Digest</option>
+                                <option value="daily" {% if settings.sms_frequency == 'daily' %}selected{% endif %}>Daily Digest</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" id="test-sms-btn" class="button secondary-button">
+                            <i class="fas fa-comment-alt"></i> Send Test SMS
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Notification Events Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Notification Events</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group switch-container">
+                            <label for="notify-ph">pH out of range</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="notify-ph" name="notify_ph" 
+                                       {% if settings.notify_ph %}checked{% endif %}>
+                                <label for="notify-ph"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group switch-container">
+                            <label for="notify-ec">EC out of range</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="notify-ec" name="notify_ec" 
+                                       {% if settings.notify_ec %}checked{% endif %}>
+                                <label for="notify-ec"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group switch-container">
+                            <label for="notify-temp">Temperature out of range</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="notify-temp" name="notify_temp" 
+                                       {% if settings.notify_temp %}checked{% endif %}>
+                                <label for="notify-temp"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group switch-container">
+                            <label for="notify-dosing">Dosing events</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="notify-dosing" name="notify_dosing" 
+                                       {% if settings.notify_dosing %}checked{% endif %}>
+                                <label for="notify-dosing"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group switch-container">
+                            <label for="notify-system">System events</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="notify-system" name="notify_system" 
+                                       {% if settings.notify_system %}checked{% endif %}>
+                                <label for="notify-system"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="button primary-button">Save Settings</button>
+                <a href="{{ url_for('settings.index') }}" class="button">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .settings-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .card-header i {
+        margin-right: var(--spacing-sm);
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .switch-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-switch label {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-color-light);
+        border-radius: 24px;
+        transition: .4s;
+    }
+    
+    .toggle-switch label:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: var(--text-color);
+        border-radius: 50%;
+        transition: .4s;
+    }
+    
+    .toggle-switch input:checked + label {
+        background-color: var(--primary-color);
+    }
+    
+    .toggle-switch input:checked + label:before {
+        transform: translateX(26px);
+        background-color: white;
+    }
+    
+    .helper-text {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+        margin-top: 0.25rem;
+        margin-bottom: 0;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+    }
+    
+    .primary-button {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+    
+    .secondary-button {
+        background-color: var(--bg-color-light);
+        color: var(--text-color);
+        margin-top: var(--spacing-sm);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Email toggle functionality
+        const emailToggle = document.getElementById('email-notifications');
+        const emailFields = document.getElementById('email-address');
+        const emailFrequency = document.getElementById('email-frequency');
+        const testEmailBtn = document.getElementById('test-email-btn');
+        
+        function updateEmailFields() {
+            const isEnabled = emailToggle.checked;
+            emailFields.disabled = !isEnabled;
+            emailFrequency.disabled = !isEnabled;
+            testEmailBtn.disabled = !isEnabled;
+        }
+        
+        emailToggle.addEventListener('change', updateEmailFields);
+        updateEmailFields();
+        
+        // SMS toggle functionality
+        const smsToggle = document.getElementById('sms-notifications');
+        const phoneField = document.getElementById('phone-number');
+        const smsFrequency = document.getElementById('sms-frequency');
+        const testSmsBtn = document.getElementById('test-sms-btn');
+        
+        function updateSmsFields() {
+            const isEnabled = smsToggle.checked;
+            phoneField.disabled = !isEnabled;
+            smsFrequency.disabled = !isEnabled;
+            testSmsBtn.disabled = !isEnabled;
+        }
+        
+        smsToggle.addEventListener('change', updateSmsFields);
+        updateSmsFields();
+        
+        // Test email button
+        testEmailBtn.addEventListener('click', function() {
+            const email = emailFields.value.trim();
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+            
+            fetch('/api/test-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: 'email',
+                    destination: email
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Test email sent successfully');
+                } else {
+                    alert('Failed to send test email: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        });
+        
+        // Test SMS button
+        testSmsBtn.addEventListener('click', function() {
+            const phone = phoneField.value.trim();
+            if (!phone) {
+                alert('Please enter a phone number');
+                return;
+            }
+            
+            fetch('/api/test-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: 'sms',
+                    destination: phone
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Test SMS sent successfully');
+                } else {
+                    alert('Failed to send test SMS: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        });
+    });
+</script>
+{% endblock %} 
