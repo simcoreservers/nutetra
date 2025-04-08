@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app.models.settings import Settings
+from app.models.pump import Pump
+from app.models.dosing_event import DosingEvent
 from app.utils.notification_manager import send_notification
 from app import db
 import os
@@ -199,8 +201,6 @@ def backup():
                 
                 # Restore pumps
                 if 'pumps' in backup_data:
-                    from app.models.pump import Pump
-                    
                     # Clear existing pumps
                     Pump.query.delete()
                     
@@ -223,8 +223,6 @@ def backup():
             return redirect(url_for('settings.backup'))
     
     # Create backup data for download
-    from app.models.pump import Pump
-    
     backup_data = {
         'settings': Settings.get_all(),
         'pumps': [pump.to_dict() for pump in Pump.query.all()]
@@ -260,7 +258,6 @@ def reset():
         
         elif reset_type == 'pumps':
             # Reset all pumps to defaults
-            from app.models.pump import Pump
             Pump.query.delete()
             db.session.commit()
             

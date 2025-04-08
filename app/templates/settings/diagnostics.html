@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}System Diagnostics | NuTetra Controller{% endblock %}
+{% block page_title %}System Diagnostics{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>System Information</h3>
+            <button id="refresh-btn" class="button">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-danger">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+        
+        <div class="diagnostics-grid">
+            <!-- System Info Card -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-server"></i> System</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">OS:</span>
+                            <span class="info-value">{{ system_info.os_name }} {{ system_info.os_version }}</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Hostname:</span>
+                            <span class="info-value">{{ system_info.hostname }}</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Python:</span>
+                            <span class="info-value">{{ system_info.python_version }}</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Uptime:</span>
+                            <span class="info-value">{{ system_info.uptime }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Hardware Info Card -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-microchip"></i> Hardware</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">CPU:</span>
+                            <span class="info-value">{{ hardware_info.cpu_model }}</span>
+                        </li>
+                        <li>
+                            <span class="info-label">CPU Usage:</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: {{ hardware_info.cpu_percent }}%"></div>
+                                <span class="progress-text">{{ hardware_info.cpu_percent }}%</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="info-label">Memory:</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: {{ hardware_info.memory_percent }}%"></div>
+                                <span class="progress-text">{{ hardware_info.memory_percent }}% ({{ hardware_info.memory_used }} / {{ hardware_info.memory_total }})</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="info-label">Disk:</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: {{ hardware_info.disk_percent }}%"></div>
+                                <span class="progress-text">{{ hardware_info.disk_percent }}% ({{ hardware_info.disk_used }} / {{ hardware_info.disk_total }})</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="info-label">Temperature:</span>
+                            <span class="info-value">{{ hardware_info.temperature }}°C</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Sensor Status Card -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-thermometer-half"></i> Sensors</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">I2C Devices:</span>
+                            <span class="info-value">{{ i2c_devices|join(', ') or 'None detected' }}</span>
+                        </li>
+                        
+                        <li>
+                            <span class="info-label">pH Sensor:</span>
+                            <span class="status-badge {{ 'connected' if sensor_status.ph.connected else 'disconnected' }}">
+                                {{ 'Connected' if sensor_status.ph.connected else 'Disconnected' }}
+                            </span>
+                            <span class="info-value">
+                                {% if sensor_status.ph.last_reading %}
+                                Last: {{ sensor_status.ph.last_reading.value|round(2) }} ({{ sensor_status.ph.last_reading.timestamp|datetime }})
+                                {% endif %}
+                            </span>
+                        </li>
+                        
+                        <li>
+                            <span class="info-label">EC Sensor:</span>
+                            <span class="status-badge {{ 'connected' if sensor_status.ec.connected else 'disconnected' }}">
+                                {{ 'Connected' if sensor_status.ec.connected else 'Disconnected' }}
+                            </span>
+                            <span class="info-value">
+                                {% if sensor_status.ec.last_reading %}
+                                Last: {{ sensor_status.ec.last_reading.value|round(0) }} μS/cm ({{ sensor_status.ec.last_reading.timestamp|datetime }})
+                                {% endif %}
+                            </span>
+                        </li>
+                        
+                        <li>
+                            <span class="info-label">Temp Sensor:</span>
+                            <span class="status-badge {{ 'connected' if sensor_status.temp.connected else 'disconnected' }}">
+                                {{ 'Connected' if sensor_status.temp.connected else 'Disconnected' }}
+                            </span>
+                            <span class="info-value">
+                                {% if sensor_status.temp.last_reading %}
+                                Last: {{ sensor_status.temp.last_reading.value|round(1) }}°C ({{ sensor_status.temp.last_reading.timestamp|datetime }})
+                                {% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Database Stats Card -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-database"></i> Database</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">Sensor Readings:</span>
+                            <span class="info-value">{{ db_stats.sensor_readings }}</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Dosing Events:</span>
+                            <span class="info-value">{{ db_stats.dosing_events }}</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Settings:</span>
+                            <span class="info-value">{{ db_stats.settings }}</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Pumps:</span>
+                            <span class="info-value">{{ db_stats.pumps }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-actions">
+            <a href="{{ url_for('settings.index') }}" class="button">Back to Settings</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .diagnostics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .info-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .card-header i {
+        margin-right: var(--spacing-sm);
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .info-list li {
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: var(--text-color-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-family: var(--font-mono);
+    }
+    
+    .progress-bar {
+        height: 8px;
+        background-color: var(--bg-color-light);
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        margin-top: 0.25rem;
+    }
+    
+    .progress {
+        height: 100%;
+        background-color: var(--primary-color);
+        transition: width 0.5s ease-in-out;
+    }
+    
+    .progress-text {
+        position: absolute;
+        right: 0;
+        top: -18px;
+        font-size: 0.75rem;
+        color: var(--text-color-muted);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin-right: var(--spacing-sm);
+    }
+    
+    .status-badge.connected {
+        background-color: var(--success-color-light);
+        color: var(--success-color);
+    }
+    
+    .status-badge.disconnected {
+        background-color: var(--danger-color-light);
+        color: var(--danger-color);
+    }
+    
+    .section-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: var(--spacing-md);
+    }
+    
+    @media (max-width: 768px) {
+        .info-list li {
+            margin-bottom: var(--spacing-md);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add refresh button functionality
+        document.getElementById('refresh-btn').addEventListener('click', function() {
+            window.location.reload();
+        });
+    });
+</script>
+{% endblock %} 
