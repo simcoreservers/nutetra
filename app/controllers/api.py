@@ -312,6 +312,27 @@ def update_pump(pump_id):
             'error': str(e)
         }), 500
 
+@api_bp.route('/pumps/<int:pump_id>', methods=['GET'])
+def get_pump(pump_id):
+    """Get a single pump by ID"""
+    try:
+        pump = Pump.query.get(pump_id)
+        if not pump:
+            return jsonify({
+                'success': False,
+                'error': f"Pump with ID {pump_id} not found"
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'data': pump.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @api_bp.route('/calibration/ph', methods=['POST'])
 def calibrate_ph_endpoint():
     """Calibrate the pH sensor"""
