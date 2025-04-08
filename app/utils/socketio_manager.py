@@ -9,8 +9,7 @@ import time
 import threading
 import logging
 
-# Global SocketIO instance
-socketio = None
+# Global variables for thread management
 broadcast_thread = None
 thread_stop_event = threading.Event()
 app = None
@@ -18,33 +17,35 @@ app = None
 def init_socketio(flask_app):
     """
     Initialize Socket.IO with the Flask app
+    Returns the socketio instance for use in the app
     """
-    global socketio, app
+    global app
     app = flask_app
-    socketio = SocketIO(app, cors_allowed_origins="*")
-    register_handlers()
+    
+    # Create a new SocketIO instance
+    socketio_instance = SocketIO(app, cors_allowed_origins="*")
+    
+    # Register event handlers
+    register_handlers(socketio_instance)
     
     # Start the background thread for sensor updates
-    start_background_thread()
+    start_background_thread(socketio_instance)
     
-    return socketio
+    return socketio_instance
 
-def register_handlers():
+def register_handlers(socketio_instance):
     """
     Register Socket.IO event handlers
     """
-    if not socketio:
-        return
-    
-    @socketio.on('connect')
+    @socketio_instance.on('connect')
     def handle_connect():
         logging.info('Client connected to Socket.IO')
     
-    @socketio.on('disconnect')
+    @socketio_instance.on('disconnect')
     def handle_disconnect():
         logging.info('Client disconnected from Socket.IO')
     
-    @socketio.on('subscribe')
+    @socketio_instance.on('subscribe')
     def handle_subscribe(data):
         """
         Handle client subscription to different channels
@@ -58,7 +59,7 @@ def register_handlers():
         join_room(channel)
         logging.info(f'Client subscribed to channel: {channel}')
 
-def start_background_thread():
+def start_background_thread(socketio_instance):
     """
     Start background thread for broadcasting sensor updates
     """
@@ -66,7 +67,10 @@ def start_background_thread():
     
     if broadcast_thread is None or not broadcast_thread.is_alive():
         thread_stop_event.clear()
-        broadcast_thread = threading.Thread(target=background_broadcaster)
+        broadcast_thread = threading.Thread(
+            target=background_broadcaster,
+            args=(socketio_instance,)
+        )
         broadcast_thread.daemon = True
         broadcast_thread.start()
         logging.info('Started Socket.IO background broadcast thread')
@@ -79,7 +83,7 @@ def stop_background_thread():
     thread_stop_event.set()
     logging.info('Stopping Socket.IO background broadcast thread')
 
-def background_broadcaster():
+def background_broadcaster(socketio_instance):
     """
     Background thread function that sends sensor updates periodically
     """
@@ -98,7 +102,7 @@ def background_broadcaster():
                 
                 if sensor_data:
                     # Broadcast update to clients
-                    emit_sensor_update(sensor_data)
+                    emit_sensor_update(socketio_instance, sensor_data)
                 
                 # Sleep for the refresh interval
                 time.sleep(refresh_interval)
@@ -106,11 +110,11 @@ def background_broadcaster():
                 logging.error(f'Error in Socket.IO broadcaster: {e}')
                 time.sleep(10)  # Sleep on error to prevent high CPU usage
 
-def emit_sensor_update(sensor_data):
+def emit_sensor_update(socketio_instance, sensor_data):
     """
     Emit sensor update to connected clients
     """
-    if not socketio or not sensor_data:
+    if not socketio_instance or not sensor_data:
         return
     
     # Prepare data
@@ -127,13 +131,13 @@ def emit_sensor_update(sensor_data):
     }
     
     # Emit to the sensor channel
-    socketio.emit('sensor_update', data, room='sensors')
+    socketio_instance.emit('sensor_update', data, room='sensors')
 
-def emit_notification(notification):
+def emit_notification(socketio_instance, notification):
     """
     Emit a new notification to connected clients
     """
-    if not socketio or not notification:
+    if not socketio_instance or not notification:
         return
     
     # Prepare data
@@ -146,13 +150,13 @@ def emit_notification(notification):
     }
     
     # Emit to the notifications channel
-    socketio.emit('new_notification', data, room='notifications')
+    socketio_instance.emit('new_notification', data, room='notifications')
 
-def emit_dosing_event(pump, amount_ml):
+def emit_dosing_event(socketio_instance, pump, amount_ml):
     """
     Emit a dosing event to connected clients
     """
-    if not socketio or not pump:
+    if not socketio_instance or not pump:
         return
     
     # Prepare data
@@ -164,13 +168,13 @@ def emit_dosing_event(pump, amount_ml):
     }
     
     # Emit to the dosing channel
-    socketio.emit('dosing_event', data, room='dosing')
+    socketio_instance.emit('dosing_event', data, room='dosing')
 
-def emit_system_alert(message, level='info'):
+def emit_system_alert(socketio_instance, message, level='info'):
     """
     Emit a system alert to connected clients
     """
-    if not socketio:
+    if not socketio_instance:
         return
     
     # Prepare data
@@ -181,4 +185,4 @@ def emit_system_alert(message, level='info'):
     }
     
     # Emit to the system channel
-    socketio.emit('system_alert', data, room='system') 
+    socketio_instance.emit('system_alert', data, room='system') 

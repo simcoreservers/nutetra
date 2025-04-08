@@ -8,6 +8,7 @@ import click
 # Initialize extensions
 db = SQLAlchemy()
 scheduler = BackgroundScheduler()
+socketio = None  # Will be initialized in create_app
 
 # Import Flask CLI command for database initialization
 @click.command('init-db')
@@ -123,6 +124,7 @@ def create_app(test_config=None):
     
     # Initialize Socket.IO with our custom manager
     from app.utils.socketio_manager import init_socketio
+    global socketio
     socketio = init_socketio(app)
     
     # Start the scheduler with Flask app context
