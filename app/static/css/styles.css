@@ -199,21 +199,27 @@ input:focus, select:focus, textarea:focus {
 }
 
 .sidebar-nav li {
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
 }
 
 .sidebar-nav a {
   display: flex;
   align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md);
   color: var(--text-color);
   font-weight: 500;
   transition: all 0.2s ease;
-  min-height: 44px; /* Better touch target size */
+  min-height: 54px; /* Increased height for better touch targets */
+  font-size: 1rem;
 }
 
 .sidebar-nav a:hover {
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-nav a:active {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(1px);
 }
 
 .sidebar-nav li.active > a {
@@ -224,9 +230,9 @@ input:focus, select:focus, textarea:focus {
 
 .sidebar-nav i {
   margin-right: var(--spacing-md);
-  width: 20px;
+  width: 22px;
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .sidebar-footer {
@@ -240,22 +246,55 @@ input:focus, select:focus, textarea:focus {
   margin-top: var(--spacing-xs);
 }
 
-/* Submenu */
+/* Submenu toggle indicator */
+.sidebar-nav li > a {
+  position: relative;
+}
+
+.sidebar-nav li > a:after {
+  content: '\f105'; /* FontAwesome chevron-right */
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  position: absolute;
+  right: var(--spacing-md);
+  transition: transform 0.3s ease;
+}
+
+.sidebar-nav li.active > a:after {
+  transform: rotate(90deg);
+}
+
+/* Only add chevron to items with submenus */
+.sidebar-nav li:not(:has(.submenu)) > a:after {
+  display: none;
+}
+
+/* Submenu transition */
 .submenu {
   padding-left: var(--spacing-lg);
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height 0.3s ease, padding 0.2s ease;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .active .submenu {
   max-height: 500px;
+  padding-top: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
 }
 
 .submenu a {
   padding: var(--spacing-sm) var(--spacing-md);
   padding-left: var(--spacing-lg);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  min-height: 48px; /* Better touch target for submenu items */
+}
+
+/* Improved touch targets for submenu items */
+.submenu li {
+  margin-bottom: var(--spacing-xs);
 }
 
 /* Mobile sidebar */
@@ -288,6 +327,62 @@ input:focus, select:focus, textarea:focus {
   
   .sidebar-backdrop.active {
     display: block;
+  }
+  
+  /* Increased spacing between items on mobile */
+  .sidebar-nav li {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .submenu li {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  /* Even larger touch targets on mobile */
+  .sidebar-nav a {
+    padding: var(--spacing-md) var(--spacing-md);
+    min-height: 60px;
+    font-size: 1.05rem;
+  }
+  
+  .sidebar-nav i {
+    font-size: 1.3rem;
+  }
+  
+  .submenu a {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    min-height: 54px;
+    font-size: 1rem;
+  }
+  
+  /* Better touch feedback on mobile */
+  .sidebar-nav a:active {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(0.98);
+  }
+  
+  /* More prominent active state on mobile */
+  .sidebar-nav li.active > a {
+    background-color: var(--primary-color-light);
+    color: var(--primary-color);
+    border-left: 4px solid var(--primary-color);
+    font-weight: 600;
+  }
+  
+  /* Larger toggle indicator on mobile */
+  .sidebar-nav li > a:after {
+    font-size: 1.2rem;
+    right: var(--spacing-lg);
+  }
+  
+  /* Smoother submenu animation on mobile */
+  .submenu {
+    transition: max-height 0.4s ease-in-out, padding 0.3s ease;
+  }
+  
+  .active .submenu {
+    padding-top: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
   }
 }
 
