@@ -399,21 +399,25 @@ input:focus, select:focus, textarea:focus {
   gap: var(--spacing-md);
 }
 
-.reading-card {
-  display: flex;
-  align-items: center;
-  padding: var(--spacing-md);
+/* Force cards to be visible in all states */
+.reading-card,
+.reading-card.alert,
+div.reading-card,
+div.reading-card.alert {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
   background-color: var(--bg-color-lighter);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
+  align-items: center;
+  padding: var(--spacing-md);
 }
 
 .reading-card.alert {
   border-color: var(--danger-color);
   background-color: rgba(244, 115, 107, 0.1);
-  display: flex !important;
-  opacity: 1 !important;
-  visibility: visible !important;
 }
 
 .reading-icon {

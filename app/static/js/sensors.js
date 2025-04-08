@@ -4,80 +4,54 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    initSensorPage();
+    // Make sure this file only runs on the sensor page
+    if (document.querySelector('.reading-card')) {
+        initSensorPage();
+    }
 });
 
 /**
  * Initialize the sensor page components
  */
 function initSensorPage() {
-    // Initialize Socket.IO for real-time updates
-    initSocketIO();
+    console.log("Initializing sensor page...");
     
-    // Initialize the sensor cards to ensure they're always visible
-    ensureSensorCardsVisible();
+    // Force all sensor cards to stay visible at all times
+    forceSensorCardsVisible();
     
-    // Add event listeners for settings form
+    // Set up a recurring check to ensure cards remain visible
+    setInterval(forceSensorCardsVisible, 1000);
+    
+    // Initialize the settings form
     initSettingsForm();
 }
 
 /**
- * Initialize Socket.IO connection and event handlers
+ * Force sensor cards to always be visible regardless of their state
  */
-function initSocketIO() {
-    // Check if socket is already defined (might be defined in global scope)
-    if (typeof socket === 'undefined') {
-        // Connect to Socket.IO server
-        socket = io();
-        
-        // Connection events
-        socket.on('connect', function() {
-            console.log('Connected to NuTetra Controller');
-            
-            // Subscribe to sensors channel
-            socket.emit('subscribe', { channel: 'sensors' });
-        });
-    }
-    
-    // Sensor update event
-    socket.on('sensor_update', function(data) {
-        updateSensorReadings(data);
-    });
-}
-
-/**
- * Make sure all sensor cards are visible, regardless of their status
- */
-function ensureSensorCardsVisible() {
+function forceSensorCardsVisible() {
     const sensorCards = document.querySelectorAll('.reading-card');
     
-    // Ensure all cards have display: flex and are visible
     sensorCards.forEach(card => {
-        // Add inline styles to override any CSS that might hide the card
-        card.style.display = 'flex';
-        card.style.opacity = '1';
-        card.style.visibility = 'visible';
+        // Force directly applied inline styles to ensure visibility
+        // These will override any CSS rules regardless of specificity
+        card.style.setProperty('display', 'flex', 'important');
+        card.style.setProperty('opacity', '1', 'important');
+        card.style.setProperty('visibility', 'visible', 'important');
+        card.style.setProperty('position', 'relative', 'important');
+        card.style.removeProperty('display', 'none');
         
-        // Monitor for DOM changes that might affect visibility
-        const observer = new MutationObserver(function(mutations) {
-            // Force card to be visible regardless of class changes
-            card.style.display = 'flex';
-            card.style.opacity = '1';
-            card.style.visibility = 'visible';
-        });
-        
-        // Observe class changes that might trigger CSS hiding the card
-        observer.observe(card, { 
-            attributes: true, 
-            attributeFilter: ['class'] 
-        });
+        // Ensure cards with alert class remain visible
+        if (card.classList.contains('alert')) {
+            card.style.setProperty('display', 'flex', 'important');
+        }
     });
 }
 
 /**
- * Update sensor readings and statuses in the UI
+ * Socket.IO update handler (for custom implementations)
  */
-function updateSensorReadings(data) {
+function handleSensorUpdate(data) {
     // Extract values or set to null if not present
     const phValue = data.ph !== undefined ? data.ph : null;
     const ecValue = data.ec !== undefined ? data.ec : null;
@@ -90,29 +64,44 @@ function updateSensorReadings(data) {
         temp: tempValue === null ? 'disconnected' : 'connected'
     };
     
-    // Update sensor cards with new data
-    updateSensorCard('ph', phValue, sensorStatus.ph);
-    updateSensorCard('ec', ecValue, sensorStatus.ec);
-    updateSensorCard('temp', tempValue, sensorStatus.temp);
+    // Update card values
+    updateSensorDisplay('ph', phValue, sensorStatus.ph);
+    updateSensorDisplay('ec', ecValue, sensorStatus.ec);
+    updateSensorDisplay('temp', tempValue, sensorStatus.temp);
+    
+    // Force cards to remain visible
+    forceSensorCardsVisible();
 }
 
 /**
- * Update a specific sensor card with new data
+ * Update sensor display values and status
  */
-function updateSensorCard(sensorType, value, status) {
-    // Find the card
-    const cards = document.querySelectorAll('.reading-card');
-    let card = null;
-    
-    cards.forEach(c => {
-        if (c.querySelector('h4').textContent.toLowerCase().includes(sensorType)) {
-            card = c;
-        }
-    });
-    
+function updateSensorDisplay(sensorType, value, status) {
+    // Get card elements
+    const card = document.getElementById(`${sensorType}-sensor-card`);
     if (!card) return;
     
-    // Update sensor status
+    // Always keep card visible
+    card.style.setProperty('display', 'flex', 'important');
+    
+    // Update reading value
+    const valueElement = document.getElementById(`${sensorType}-value`);
+    if (valueElement) {
+        if (value !== null) {
+            // Format the value based on sensor type
+            if (sensorType === 'ph') {
+                valueElement.textContent = parseFloat(value).toFixed(2);
+            } else if (sensorType === 'ec') {
+                valueElement.textContent = parseFloat(value).toFixed(0) + ' μS/cm';
+            } else if (sensorType === 'temp') {
+                valueElement.textContent = parseFloat(value).toFixed(1) + ' °C';
+            }
+        } else {
+            valueElement.textContent = 'N/A';
+        }
+    }
+    
+    // Update status
     const statusText = card.querySelector('.status-text');
     const statusIndicator = card.querySelector('.status-indicator');
     
@@ -129,49 +118,6 @@ function updateSensorCard(sensorType, value, status) {
             statusIndicator.classList.remove('success');
         }
     }
-    
-    // Update reading value
-    const readingValue = card.querySelector('.reading-value');
-    if (readingValue) {
-        if (value !== null) {
-            // Format the value based on sensor type
-            if (sensorType === 'ph') {
-                readingValue.textContent = parseFloat(value).toFixed(2);
-            } else if (sensorType === 'ec') {
-                readingValue.textContent = parseFloat(value).toFixed(0) + ' μS/cm';
-            } else if (sensorType === 'temp') {
-                readingValue.textContent = parseFloat(value).toFixed(1) + ' °C';
-            }
-        } else {
-            readingValue.textContent = 'N/A';
-        }
-    }
-    
-    // Update card alert status
-    if (status === 'connected') {
-        // Check if value is in target range
-        const rangeText = card.querySelector('.reading-range').textContent;
-        const matches = rangeText.match(/Target: ([\d\.]+) - ([\d\.]+)/);
-        
-        if (matches && matches.length === 3 && value !== null) {
-            const min = parseFloat(matches[1]);
-            const max = parseFloat(matches[2]);
-            
-            if (value < min || value > max) {
-                card.classList.add('alert');
-            } else {
-                card.classList.remove('alert');
-            }
-        }
-    } else {
-        // For disconnected sensors, keep the alert class
-        card.classList.add('alert');
-    }
-    
-    // Always make sure card remains visible
-    card.style.display = 'flex';
-    card.style.opacity = '1';
-    card.style.visibility = 'visible';
 }
 
 /**
@@ -228,4 +174,18 @@ function showToast(message, type = 'info') {
         // Simple alert fallback
         alert(message);
     }
-} 
+}
+
+// Make sure DOM mutation events don't hide cards
+const observer = new MutationObserver(function(mutations) {
+    forceSensorCardsVisible();
+});
+
+// Start observing once DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true
+    });
+}); 
