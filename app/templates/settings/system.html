@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings | NuTetra Controller{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>System Configuration</h3>
+        </div>
+        
+        <form id="system-settings-form" method="post" action="{{ url_for('settings.system') }}">
+            <div class="settings-card">
+                <div class="card-header">
+                    <h4>Display Settings</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="switch-container">
+                            <span class="label">Dark Mode</span>
+                            <label class="switch">
+                                <input type="checkbox" name="dark_mode" {% if settings.dark_mode %}checked{% endif %}>
+                                <span class="slider round"></span>
+                            </label>
+                        </label>
+                        <p class="helper-text">Enable dark color scheme for the interface</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="refresh-interval">Refresh Interval (seconds)</label>
+                        <input type="number" id="refresh-interval" name="refresh_interval" class="form-control" 
+                               min="2" max="60" step="1" value="{{ settings.refresh_interval }}">
+                        <p class="helper-text">How often to refresh data in the interface</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="chart-points">Chart Data Points</label>
+                        <input type="number" id="chart-points" name="chart_points" class="form-control" 
+                               min="10" max="500" step="10" value="{{ settings.chart_points }}">
+                        <p class="helper-text">Number of data points to display on charts</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-card mt-4">
+                <div class="card-header">
+                    <h4>Data Collection</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="logging-interval">Logging Interval (seconds)</label>
+                        <input type="number" id="logging-interval" name="logging_interval" class="form-control" 
+                               min="30" max="3600" step="30" value="{{ settings.logging_interval }}">
+                        <p class="helper-text">How often to record sensor readings to the database</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="button primary-button">Save Settings</button>
+                <a href="{{ url_for('settings.index') }}" class="button">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .switch-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .helper-text {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+        margin-top: 0.25rem;
+        margin-bottom: 0;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+    }
+    
+    .primary-button {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle dark mode immediately when checkbox changes
+        const darkModeToggle = document.querySelector('input[name="dark_mode"]');
+        
+        darkModeToggle.addEventListener('change', function() {
+            document.body.classList.toggle('dark-mode', this.checked);
+        });
+        
+        // Form validation
+        const form = document.getElementById('system-settings-form');
+        
+        form.addEventListener('submit', function(e) {
+            // Validate numeric inputs
+            const refreshInterval = parseInt(document.getElementById('refresh-interval').value);
+            const chartPoints = parseInt(document.getElementById('chart-points').value);
+            const loggingInterval = parseInt(document.getElementById('logging-interval').value);
+            
+            // Check refresh interval
+            if (isNaN(refreshInterval) || refreshInterval < 2 || refreshInterval > 60) {
+                e.preventDefault();
+                alert('Refresh interval must be between 2 and 60 seconds');
+                return;
+            }
+            
+            // Check chart points
+            if (isNaN(chartPoints) || chartPoints < 10 || chartPoints > 500) {
+                e.preventDefault();
+                alert('Chart data points must be between 10 and 500');
+                return;
+            }
+            
+            // Check logging interval
+            if (isNaN(loggingInterval) || loggingInterval < 30 || loggingInterval > 3600) {
+                e.preventDefault();
+                alert('Logging interval must be between 30 and 3600 seconds');
+                return;
+            }
+        });
+    });
+</script>
+{% endblock %} 
