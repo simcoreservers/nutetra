@@ -197,67 +197,42 @@
 
 {% block extra_js %}
 <script>
-// More comprehensive fix for disappearing sensor cards
+// Lightweight solution that won't freeze the browser
 document.addEventListener('DOMContentLoaded', function() {
-    // Ensure sensor cards maintain visibility
-    const cards = document.querySelectorAll('.sensor-card');
+    // Apply CSS once and don't use continuous monitoring
+    const sensorCards = document.querySelectorAll('.sensor-card, .reading-card');
     
-    // Apply inline styles to force visibility regardless of CSS transitions or animations
-    function forceCardVisibility() {
-        cards.forEach(card => {
-            // Force card to be visible with highest stacking order
-            card.style.cssText = `
-                opacity: 1 !important;
-                visibility: visible !important;
-                display: flex !important;
-                position: relative !important;
-                z-index: 999 !important;
-                transition: none !important;
-                animation: none !important;
-            `;
-        });
-    }
-    
-    // Apply styles immediately
-    forceCardVisibility();
-    
-    // Create more persistent observer that watches for style or class changes
-    const observer = new MutationObserver((mutations) => {
-        let needsUpdate = false;
-        
-        mutations.forEach(mutation => {
-            if (mutation.type === 'attributes' && 
-                (mutation.attributeName === 'style' || 
-                 mutation.attributeName === 'class')) {
-                needsUpdate = true;
-            }
-        });
-        
-        if (needsUpdate) {
-            // Re-apply visibility force
-            forceCardVisibility();
-        }
+    // One-time style application
+    sensorCards.forEach(card => {
+        // Use direct property assignment instead of setAttribute for better performance
+        card.style.opacity = '1';
+        card.style.visibility = 'visible';
+        card.style.display = 'flex';
     });
     
-    // Observe each card for attribute changes
-    cards.forEach(card => {
-        observer.observe(card, {
-            attributes: true,
-            attributeFilter: ['style', 'class']
-        });
-    });
-    
-    // Check every 1 second and ensure cards are visible (backup solution)
-    const visibilityInterval = setInterval(forceCardVisibility, 1000);
-    
-    // Make sure the cards stay visible even after automatic sensor data refresh
-    const originalUpdateFn = window.updateSensorDisplays;
-    if (typeof originalUpdateFn === 'function') {
+    // Replace the original update function with a lightweight version if it exists
+    if (typeof window.updateSensorDisplays === 'function') {
+        const originalUpdate = window.updateSensorDisplays;
+        
         window.updateSensorDisplays = function(data) {
             // Call the original function
-            originalUpdateFn(data);
-            // Force cards to be visible afterward
-            forceCardVisibility();
+            originalUpdate(data);
+            
+            // Just ensure values are updated but don't manipulate styles heavily
+            if (data.ph !== null && data.ph !== undefined) {
+                const phValue = document.getElementById('ph-value');
+                if (phValue) phValue.textContent = parseFloat(data.ph).toFixed(2);
+            }
+            
+            if (data.ec !== null && data.ec !== undefined) {
+                const ecValue = document.getElementById('ec-value');
+                if (ecValue) ecValue.textContent = parseFloat(data.ec).toFixed(2);
+            }
+            
+            if (data.temp !== null && data.temp !== undefined) {
+                const tempValue = document.getElementById('temp-value');
+                if (tempValue) tempValue.textContent = parseFloat(data.temp).toFixed(1) + '°C';
+            }
         };
     }
 });

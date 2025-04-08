@@ -414,10 +414,10 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* Special override for sensor cards to ensure they remain visible */
-.sensor-card {
-  opacity: 1 !important;
-  visibility: visible !important; 
-  display: flex !important;
+.sensor-card, .reading-card {
+  opacity: 1;
+  visibility: visible; 
+  display: flex;
 }
 
 .reading-card.alert {
