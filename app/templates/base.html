@@ -114,7 +114,7 @@
                             <span class="value">{{ ec_reading|round(2) if ec_reading else '--' }}</span>
                         </div>
                         
-                        <div class="status-item {% if temp_reading and (temp_reading < temp_min or temp_reading > temp_max) %}alert{% endif %}">
+                        <div class="status-item">
                             <span class="label">Temp</span>
                             <span class="value">{{ temp_reading|round(1) if temp_reading else '--' }}°C</span>
                         </div>

@@ -60,8 +60,6 @@ def index():
         ph_max=ph_max,
         ec_min=ec_min,
         ec_max=ec_max,
-        temp_min=temp_min,
-        temp_max=temp_max,
         ph_status=ph_status,
         ec_status=ec_status,
         temp_status=temp_status
@@ -215,10 +213,7 @@ def check_ranges():
             notify_out_of_range('ec', ec_reading.value, ec_min, ec_max)
             notifications_sent.append('EC')
         
-        # Check temperature
-        if temp_reading and (temp_reading.value < temp_min or temp_reading.value > temp_max):
-            notify_out_of_range('temp', temp_reading.value, temp_min, temp_max)
-            notifications_sent.append('Temperature')
+        # Temperature is monitoring only, no range checks
         
         if notifications_sent:
             return jsonify({
