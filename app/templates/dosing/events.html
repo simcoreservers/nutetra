@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Dosing Events | NuTetra Controller{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>Dosing History</h3>
+            
+            <div class="filter-controls">
+                <form id="filter-form" method="get" action="{{ url_for('dosing.events') }}">
+                    <div class="filter-group">
+                        <label for="pump-filter">Filter by Pump:</label>
+                        <select id="pump-filter" name="pump_id" class="form-control">
+                            <option value="">All Pumps</option>
+                            {% for pump in pumps %}
+                            <option value="{{ pump.id }}" {% if selected_pump_id == pump.id %}selected{% endif %}>
+                                {{ pump.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="button">Apply</button>
+                        {% if selected_pump_id %}
+                        <a href="{{ url_for('dosing.events') }}" class="button">Clear Filter</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="events-table-container">
+            {% if events %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Pump</th>
+                        <th>Amount</th>
+                        <th>Reason</th>
+                        <th>Before</th>
+                        <th>After</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.timestamp|datetime }}</td>
+                        <td>{{ event.pump.name }}</td>
+                        <td>{{ event.amount_ml|round(2) }} ml</td>
+                        <td>
+                            <span class="event-reason {{ event.reason }}">
+                                {% if event.reason == 'manual' %}
+                                <i class="fas fa-hand-pointer"></i> Manual
+                                {% elif event.reason == 'test' %}
+                                <i class="fas fa-vial"></i> Test
+                                {% elif event.reason == 'ph_high' %}
+                                <i class="fas fa-arrow-down"></i> pH High
+                                {% elif event.reason == 'ph_low' %}
+                                <i class="fas fa-arrow-up"></i> pH Low
+                                {% elif event.reason == 'ec_low' %}
+                                <i class="fas fa-plus"></i> EC Low
+                                {% else %}
+                                {{ event.reason|replace('_', ' ')|title }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if event.sensor_before is not none %}
+                                {% if event.reason in ['ph_high', 'ph_low'] %}
+                                    {{ event.sensor_before|round(2) }} pH
+                                {% elif event.reason in ['ec_low'] %}
+                                    {{ event.sensor_before|round(0) }} μS/cm
+                                {% else %}
+                                    {{ event.sensor_before|round(2) }}
+                                {% endif %}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if event.sensor_after is not none %}
+                                {% if event.reason in ['ph_high', 'ph_low'] %}
+                                    {{ event.sensor_after|round(2) }} pH
+                                {% elif event.reason in ['ec_low'] %}
+                                    {{ event.sensor_after|round(0) }} μS/cm
+                                {% else %}
+                                    {{ event.sensor_after|round(2) }}
+                                {% endif %}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if event.sensor_before is not none and event.sensor_after is not none %}
+                                {% set change = event.sensor_after - event.sensor_before %}
+                                <span class="{% if change > 0 %}positive{% elif change < 0 %}negative{% endif %}">
+                                    {{ change|round(2) }}
+                                    {% if change > 0 %}▲{% elif change < 0 %}▼{% endif %}
+                                </span>
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <p>No dosing events recorded yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-controls {
+        display: flex;
+        align-items: center;
+    }
+    
+    .filter-group {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+    }
+    
+    .filter-group label {
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+    
+    .events-table-container {
+        margin-top: var(--spacing-md);
+        overflow-x: auto;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--border-color);
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: var(--spacing-sm);
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .data-table th {
+        background-color: var(--bg-color-light);
+        font-weight: 600;
+    }
+    
+    .data-table tr:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .event-reason {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 8px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+    }
+    
+    .event-reason.manual {
+        background-color: var(--info-color-light);
+        color: var(--info-color);
+    }
+    
+    .event-reason.test {
+        background-color: var(--purple-light);
+        color: var(--purple);
+    }
+    
+    .event-reason.ph_high {
+        background-color: var(--danger-color-light);
+        color: var(--danger-color);
+    }
+    
+    .event-reason.ph_low {
+        background-color: var(--success-color-light);
+        color: var(--success-color);
+    }
+    
+    .event-reason.ec_low {
+        background-color: var(--warning-color-light);
+        color: var(--warning-color);
+    }
+    
+    .positive {
+        color: var(--success-color);
+    }
+    
+    .negative {
+        color: var(--danger-color);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-color-muted);
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-submit the form when the filter dropdown changes
+        document.getElementById('pump-filter').addEventListener('change', function() {
+            document.getElementById('filter-form').submit();
+        });
+    });
+</script>
+{% endblock %} 
