@@ -40,6 +40,13 @@
                         </a>
                     </li>
                     
+                    <li class="{% if '/recipes' in request.path %}active{% endif %}">
+                        <a href="{{ url_for('recipes.index') }}">
+                            <i class="fas fa-flask"></i>
+                            <span>Nutrient Recipes</span>
+                        </a>
+                    </li>
+                    
                     <li class="{% if '/dosing' in request.path %}active{% endif %}">
                         <a href="{{ url_for('dosing.index') }}">
                             <i class="fas fa-tint"></i>
@@ -47,7 +54,6 @@
                         </a>
                         <ul class="submenu">
                             <li><a href="{{ url_for('dosing.pumps') }}">Pumps</a></li>
-                            <li><a href="{{ url_for('recipes.index') }}">Nutrient Recipes</a></li>
                             <li><a href="{{ url_for('dosing.events') }}">Events</a></li>
                             <li><a href="{{ url_for('dosing.settings') }}">Settings</a></li>
                         </ul>
