@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Create Nutrient Recipe | NuTetra Controller{% endblock %}
+{% block page_title %}Create Nutrient Recipe{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>New Recipe</h3>
+        </div>
+        
+        <form action="{{ url_for('recipes.save_recipe') }}" method="post" class="recipe-form">
+            <div class="form-container">
+                <div class="form-section">
+                    <h4 class="section-title">Recipe Details</h4>
+                    <div class="form-card">
+                        <div class="form-group">
+                            <label for="recipe_name">Recipe Name</label>
+                            <input type="text" id="recipe_name" name="name" required placeholder="e.g., Leafy Greens Mix" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="recipe_description">Description (optional)</label>
+                            <textarea id="recipe_description" name="description" placeholder="Describe what this recipe is best for..." class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4 class="section-title">Target Parameters</h4>
+                    <div class="form-card">
+                        <div class="parameters-grid">
+                            <div class="form-group">
+                                <label for="target_ec">Target EC (μS/cm)</label>
+                                <input type="number" id="target_ec" name="target_ec" required min="0" step="0.1" placeholder="1200" class="form-control">
+                                <div class="form-help">Recommended: 800-1800 μS/cm depending on plant type</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="target_ph">Target pH</label>
+                                <input type="number" id="target_ph" name="target_ph" required min="0" max="14" step="0.1" placeholder="6.0" class="form-control">
+                                <div class="form-help">Recommended: 5.5-6.5 for most plants</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4 class="section-title">Recipe Status</h4>
+                    <div class="form-card">
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="recipe_active" name="is_active" class="form-control-checkbox">
+                            <label for="recipe_active">Set as active recipe</label>
+                            <div class="form-help">If checked, this recipe will be used for automatic dosing. This will deactivate any currently active recipe.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('recipes.index') }}" class="button">Cancel</a>
+                <button type="submit" class="button primary-button">Save Recipe</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Form container layout */
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xl);
+        margin-top: var(--spacing-md);
+    }
+    
+    /* Form sections */
+    .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .section-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+    
+    /* Form cards */
+    .form-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        padding: var(--spacing-md);
+    }
+    
+    /* Form groups */
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: var(--spacing-xs);
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.7rem;
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+    
+    .form-help {
+        margin-top: var(--spacing-xs);
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+    }
+    
+    /* Checkbox styling */
+    .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .form-control-checkbox {
+        margin-top: 0.25rem;
+        margin-right: var(--spacing-sm);
+    }
+    
+    .checkbox-group label {
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    /* Parameters grid */
+    .parameters-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    /* Form actions */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-xl);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .parameters-grid {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .form-actions .button {
+            width: 100%;
+            text-align: center;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .form-actions .button:last-child {
+            margin-bottom: 0;
+        }
+    }
+</style>
+{% endblock %} 

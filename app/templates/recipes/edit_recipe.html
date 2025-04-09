@@ -1,189 +1,87 @@
 {% extends "base.html" %}
 
 {% block title %}Edit Recipe | NuTetra Controller{% endblock %}
-{% block page_title %}Edit Recipe{% endblock %}
+{% block page_title %}Edit Nutrient Recipe{% endblock %}
 
 {% block content %}
 <div class="page-content">
     <div class="dashboard-section">
         <div class="section-header">
-            <h3>Edit Nutrient Recipe</h3>
-            <div class="section-actions">
-                <a href="{{ url_for('recipes.index') }}" class="button">
-                    <i class="fas fa-arrow-left"></i> Back to Recipes
-                </a>
-            </div>
+            <h3>Edit Recipe: {{ recipe.name }}</h3>
+            <a href="{{ url_for('recipes.index') }}" class="button secondary-button">
+                <i class="fas fa-arrow-left"></i> Back to Recipes
+            </a>
         </div>
         
-        <div class="recipe-editor">
-            <form id="recipe-form" method="post" action="{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}">
-                <!-- Recipe Info Panel -->
-                <div class="recipe-panel info-panel">
-                    <div class="panel-header">
-                        <h4><i class="fas fa-flask"></i> Recipe Details</h4>
-                    </div>
-                    <div class="panel-body">
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}" method="post" id="recipeForm">
+                    <div class="form-section">
+                        <h4 class="section-title">Recipe Details</h4>
+                        <p class="helper-text">Update the basic information about your nutrient recipe.</p>
+                        
                         <div class="form-group">
-                            <label for="name">Recipe Name</label>
-                            <input type="text" id="name" name="name" class="form-control" value="{{ recipe.name }}" required>
+                            <label for="recipeName">Recipe Name</label>
+                            <input type="text" id="recipeName" name="name" required 
+                                   class="form-control" value="{{ recipe.name }}" 
+                                   placeholder="E.g., Lettuce Nutrients">
                         </div>
                         
                         <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea id="description" name="description" class="form-control" rows="3">{{ recipe.description }}</textarea>
-                            <p class="helper-text">Describe what this recipe is ideal for (e.g., "Leafy Greens", "Fruiting Plants")</p>
-                        </div>
-                        
-                        <div class="form-group switch-group">
-                            <label class="switch-container">
-                                <span class="label">Active</span>
-                                <label class="switch">
-                                    <input type="checkbox" name="is_active" {% if recipe.is_active %}checked{% endif %}>
-                                    <span class="slider round"></span>
-                                </label>
-                            </label>
-                            <p class="helper-text">Available for activation (inactive recipes cannot be used)</p>
-                        </div>
-                    </div>
-                </div>
-            
-                <!-- Components Panel -->
-                <div class="recipe-panel components-panel">
-                    <div class="panel-header">
-                        <h4><i class="fas fa-vial"></i> Recipe Components</h4>
-                        <div class="panel-actions">
-                            <button type="button" id="add-component-toggle" class="button small-button">
-                                <i class="fas fa-plus-circle"></i> Add Component
-                            </button>
+                            <label for="recipeDescription">Description (Optional)</label>
+                            <textarea id="recipeDescription" name="description" 
+                                      class="form-control" rows="3" 
+                                      placeholder="Brief description of this recipe, plants it's for, etc.">{{ recipe.description }}</textarea>
                         </div>
                     </div>
                     
-                    <div class="panel-body">
-                        <!-- Add Component Form (initially hidden) -->
-                        <div id="add-component-container" class="add-component-container" style="display: none;">
-                            <form id="add-component-form" method="post" action="{{ url_for('recipes.add_component', recipe_id=recipe.id) }}">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="pump_id">Nutrient Pump</label>
-                                        <select id="pump_id" name="pump_id" class="form-control" required>
-                                            <option value="">Select a pump</option>
-                                            {% for pump in nutrient_pumps %}
-                                                <option value="{{ pump.id }}">{{ pump.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="component_name">Component Name <span class="optional-label">(Optional)</span></label>
-                                        <input type="text" id="component_name" name="component_name" class="form-control" placeholder="Uses pump name if blank">
-                                    </div>
-                                    
-                                    <div class="form-group ratio-group">
-                                        <label for="ratio">Ratio</label>
-                                        <input type="number" id="ratio" name="ratio" class="form-control" value="1.0" min="0.1" step="0.1" required>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-actions">
-                                    <button type="submit" class="button primary-button">
-                                        <i class="fas fa-plus-circle"></i> Add Component
-                                    </button>
-                                    <button type="button" id="cancel-add" class="button">
-                                        <i class="fas fa-times"></i> Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                    <div class="form-section">
+                        <h4 class="section-title">Target Parameters</h4>
+                        <p class="helper-text">Update the target EC and pH values for this recipe.</p>
                         
-                        <!-- Components List -->
-                        <div class="components-list-container">
-                            {% if recipe.components %}
-                                <div class="components-grid">
-                                    {% for component in recipe.components %}
-                                        <div class="component-card">
-                                            <div class="component-header">
-                                                <span class="component-name">{{ component.name or component.pump.name }}</span>
-                                                <span class="component-pump">{{ component.pump.name }}</span>
-                                            </div>
-                                            <div class="component-body">
-                                                <div class="ratio-display">
-                                                    <div class="ratio-label">Ratio</div>
-                                                    <div class="ratio-value">{{ component.ratio|round(1) }}</div>
-                                                </div>
-                                            </div>
-                                            <div class="component-footer">
-                                                <button type="button" class="button small-button edit-component-btn"
-                                                        data-id="{{ component.id }}" 
-                                                        data-name="{{ component.name or '' }}" 
-                                                        data-ratio="{{ component.ratio }}">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                
-                                                <form action="{{ url_for('recipes.delete_component', component_id=component.id) }}" method="post" class="inline-form">
-                                                    <button type="submit" class="button small-button danger-button" data-critical="true"
-                                                            onclick="return confirm('Are you sure you want to remove this component?')">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="empty-state">
-                                    <i class="fas fa-flask empty-icon"></i>
-                                    <p>No components added to this recipe yet.</p>
-                                    <p>Add components to define which nutrients make up this recipe.</p>
-                                </div>
-                            {% endif %}
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="targetEC">Target EC (μS/cm)</label>
+                                <input type="number" id="targetEC" name="target_ec" 
+                                       class="form-control" step="0.1" min="0.1" 
+                                       value="{{ recipe.target_ec }}"
+                                       placeholder="E.g., 1500" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="targetPH">Target pH</label>
+                                <input type="number" id="targetPH" name="target_ph" 
+                                       class="form-control" step="0.1" min="5.0" max="8.0" 
+                                       value="{{ recipe.target_ph }}"
+                                       placeholder="E.g., 6.0" required>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="recipe-actions">
-                    <button type="submit" form="recipe-form" class="button primary-button">
-                        <i class="fas fa-save"></i> Save Recipe
-                    </button>
-                    <a href="{{ url_for('recipes.index') }}" class="button">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Component Modal -->
-<div id="edit-component-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h4><i class="fas fa-edit"></i> Edit Component</h4>
-            <button type="button" class="close-btn" onclick="closeEditModal()">&times;</button>
-        </div>
-        
-        <div class="modal-body">
-            <form id="edit-component-form" method="post" action="">
-                <div class="form-group">
-                    <label for="edit_component_name">Component Name <span class="optional-label">(Optional)</span></label>
-                    <input type="text" id="edit_component_name" name="component_name" class="form-control" placeholder="Uses pump name if blank">
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit_ratio">Ratio</label>
-                    <input type="number" id="edit_ratio" name="ratio" class="form-control" min="0.1" step="0.1" required>
-                    <p class="helper-text">Relative proportion of this component in the recipe</p>
-                </div>
-                
-                <div class="form-actions modal-actions">
-                    <button type="submit" class="button primary-button">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                    <button type="button" class="button" onclick="closeEditModal()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                </div>
-            </form>
+                    
+                    <div class="form-section">
+                        <h4 class="section-title">Recipe Status</h4>
+                        <p class="helper-text">Set this recipe as active to use it for automated nutrient dosing.</p>
+                        
+                        <div class="form-group">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="isActive" name="is_active" 
+                                      {% if recipe.is_active %}checked{% endif %}>
+                                <label for="isActive" class="checkbox-label">Set as active recipe</label>
+                            </div>
+                            <p class="note">Note: Setting this recipe as active will deactivate any other active recipe.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="button primary-button">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('recipes.index') }}" class="button">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -191,557 +89,168 @@
 
 {% block extra_css %}
 <style>
-    /* Main recipe editor layout */
-    .recipe-editor {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: 1fr;
-        grid-gap: var(--spacing-lg);
-    }
-    
-    /* Panel styling */
-    .recipe-panel {
+    /* Card styling */
+    .card {
         background-color: var(--bg-color-lighter);
         border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
-        overflow: hidden;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin-bottom: var(--spacing-lg);
     }
     
-    .panel-header {
-        background-color: var(--bg-color-light);
-        padding: var(--spacing-md);
+    .card-body {
+        padding: var(--spacing-lg);
+    }
+    
+    /* Form sections */
+    .form-section {
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-lg);
         border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
     }
     
-    .panel-header h4 {
-        margin: 0;
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .section-title {
+        margin-top: 0;
+        margin-bottom: var(--spacing-xs);
         font-size: 1.1rem;
-        display: flex;
-        align-items: center;
     }
     
-    .panel-header h4 i {
-        margin-right: var(--spacing-sm);
-        color: var(--primary-color);
+    .helper-text {
+        margin-top: 0;
+        margin-bottom: var(--spacing-md);
+        color: var(--text-color-muted);
+        font-size: 0.9rem;
     }
     
-    .panel-body {
-        padding: var(--spacing-md);
-    }
-    
-    .panel-actions {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-    
-    /* Form elements */
+    /* Form layout */
     .form-group {
         margin-bottom: var(--spacing-md);
     }
     
     .form-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--spacing-md);
-    }
-    
-    .form-row .form-group {
-        flex: 1 1 250px;
-        min-width: 0;
-    }
-    
-    .ratio-group {
-        flex: 0 0 150px;
-    }
-    
-    .switch-group {
-        margin-top: var(--spacing-lg);
-    }
-    
-    /* Add component section */
-    .add-component-container {
-        background-color: var(--bg-color-light);
-        padding: var(--spacing-md);
-        border-radius: var(--border-radius);
-        margin-bottom: var(--spacing-md);
-        border: 1px solid var(--border-color);
-    }
-    
-    /* Components grid */
-    .components-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: var(--spacing-md);
     }
     
-    .component-card {
-        background-color: var(--bg-color);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-        overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .component-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    
-    .component-header {
-        background-color: var(--bg-color-light);
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-    }
-    
-    .component-name {
+    label {
+        display: block;
+        margin-bottom: var(--spacing-xs);
         font-weight: 500;
     }
     
-    .component-pump {
-        font-size: 0.85rem;
-        color: var(--text-color-muted);
-    }
-    
-    .component-body {
-        padding: var(--spacing-md);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .ratio-display {
-        text-align: center;
-    }
-    
-    .ratio-label {
-        font-size: 0.85rem;
-        color: var(--text-color-muted);
-        margin-bottom: var(--spacing-xs);
-    }
-    
-    .ratio-value {
-        font-size: 2rem;
-        font-weight: 600;
-        color: var(--primary-color);
-    }
-    
-    .component-footer {
-        padding: var(--spacing-sm) var(--spacing-md);
-        background-color: var(--bg-color-light);
-        border-top: 1px solid var(--border-color);
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--spacing-sm);
-    }
-    
-    /* Empty state */
-    .empty-state {
-        text-align: center;
-        padding: var(--spacing-lg);
-        color: var(--text-color-muted);
-    }
-    
-    .empty-icon {
-        font-size: 3rem;
-        margin-bottom: var(--spacing-md);
-    }
-    
-    /* Recipe actions */
-    .recipe-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--spacing-md);
-        padding: var(--spacing-md);
-        background-color: var(--bg-color-lighter);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-    }
-    
-    .recipe-actions .button {
-        min-width: 120px;
+    .checkbox-container {
         display: flex;
         align-items: center;
-        justify-content: center;
+        gap: var(--spacing-xs);
     }
     
-    .recipe-actions .button i,
-    .form-actions .button i {
-        margin-right: 0.5rem;
-    }
-    
-    /* Helper elements */
-    .helper-text {
-        font-size: 0.85rem;
-        color: var(--text-color-muted);
-        margin-top: 0.25rem;
+    .checkbox-label {
         margin-bottom: 0;
     }
     
-    .optional-label {
-        font-size: 0.8rem;
+    .note {
+        margin-top: var(--spacing-xs);
         color: var(--text-color-muted);
-        font-weight: normal;
+        font-size: 0.85rem;
+        font-style: italic;
     }
     
-    .inline-form {
-        display: inline;
-    }
-    
-    /* Form controls */
     .form-control {
         width: 100%;
-        padding: 0.5rem 0.75rem;
-        background-color: var(--input-bg);
+        padding: 0.6rem 0.75rem;
+        background-color: var(--bg-color);
         border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
         color: var(--text-color);
-        transition: border-color 0.2s, box-shadow 0.2s;
+        transition: border-color 0.2s;
     }
     
     .form-control:focus {
         border-color: var(--primary-color);
         outline: none;
-        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
     }
     
-    select.form-control {
-        appearance: none;
-        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 0.75rem center;
-        background-size: 16px;
-        padding-right: 2.5rem;
-    }
-    
-    /* Input placeholders */
-    ::placeholder {
-        color: var(--text-color-muted);
-        opacity: 0.6;
-    }
-    
-    /* Buttons */
-    .small-button {
-        font-size: 0.85rem;
-        padding: 0.35rem 0.7rem;
-    }
-    
-    .danger-button {
-        background-color: var(--danger-color);
-        color: white;
-    }
-    
-    /* Modal styles */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        z-index: 1000;
-        overflow: auto;
-    }
-    
-    .modal-content {
-        background-color: var(--bg-color);
-        margin: 10% auto;
-        width: 90%;
-        max-width: 500px;
-        border-radius: var(--border-radius);
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    }
-    
-    .modal-header {
-        padding: var(--spacing-md);
-        background-color: var(--bg-color-light);
-        border-bottom: 1px solid var(--border-color);
+    /* Form actions */
+    .form-actions {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .modal-header h4 {
-        margin: 0;
-        display: flex;
-        align-items: center;
-    }
-    
-    .modal-header h4 i {
-        margin-right: 0.5rem;
-    }
-    
-    .modal-body {
-        padding: var(--spacing-md);
-    }
-    
-    .close-btn {
-        font-size: 1.5rem;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        color: var(--text-color);
-    }
-    
-    .modal-actions {
-        display: flex;
-        gap: var(--spacing-md);
         justify-content: flex-end;
+        gap: var(--spacing-md);
         margin-top: var(--spacing-lg);
     }
     
-    /* Switch styling */
-    .switch-container {
-        display: flex;
-        justify-content: space-between;
+    /* Buttons */
+    .button {
+        display: inline-flex;
         align-items: center;
-    }
-    
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 50px;
-        height: 24px;
-    }
-    
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-    
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
         background-color: var(--bg-color);
-        transition: .4s;
         border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        cursor: pointer;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: background-color 0.2s, border-color 0.2s;
     }
     
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 16px;
-        width: 16px;
-        left: 4px;
-        bottom: 3px;
-        background-color: var(--text-color-muted);
-        transition: .4s;
+    .button:hover {
+        background-color: var(--bg-color-dark);
     }
     
-    input:checked + .slider {
+    .primary-button {
         background-color: var(--primary-color);
         border-color: var(--primary-color);
+        color: white;
     }
     
-    input:checked + .slider:before {
-        transform: translateX(26px);
-        background-color: white;
+    .primary-button:hover {
+        background-color: var(--primary-color-dark);
     }
     
-    .slider.round {
-        border-radius: 24px;
+    .secondary-button {
+        background-color: var(--bg-color-light);
+        border-color: var(--border-color);
     }
     
-    .slider.round:before {
-        border-radius: 50%;
+    .secondary-button:hover {
+        background-color: var(--bg-color-dark);
     }
     
     /* Responsive styles */
-    @media (max-width: 992px) {
-        .recipe-editor {
-            padding: 0 var(--spacing-sm);
-        }
-    }
-    
     @media (max-width: 768px) {
+        .card-body {
+            padding: var(--spacing-md);
+        }
+        
         .section-header {
             flex-direction: column;
             align-items: flex-start;
         }
         
-        .section-actions {
+        .section-header a {
             margin-top: var(--spacing-sm);
-            width: 100%;
-        }
-        
-        .section-actions .button {
             width: 100%;
             text-align: center;
         }
         
-        .panel-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .panel-actions {
-            margin-top: var(--spacing-sm);
-            width: 100%;
-        }
-        
-        .panel-actions .button {
-            width: 100%;
-        }
-        
         .form-row {
-            flex-direction: column;
-            gap: var(--spacing-sm);
-        }
-        
-        .component-header {
-            flex-direction: column;
-        }
-        
-        .component-name {
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .components-grid {
             grid-template-columns: 1fr;
         }
         
-        .recipe-actions {
+        .form-actions {
             flex-direction: column;
-            padding: var(--spacing-sm);
         }
         
-        .recipe-actions .button {
+        .form-actions .button {
             width: 100%;
-            margin-bottom: var(--spacing-sm);
-        }
-        
-        .recipe-actions .button:last-child {
-            margin-bottom: 0;
-        }
-        
-        .modal-content {
-            margin: 20% auto;
-            width: 95%;
-        }
-        
-        .modal-actions {
-            flex-direction: column;
-            gap: var(--spacing-sm);
-        }
-        
-        .modal-actions .button {
-            width: 100%;
+            justify-content: center;
         }
     }
-    
-    @media (max-width: 480px) {
-        .panel-body {
-            padding: var(--spacing-sm);
-        }
-        
-        .form-control {
-            padding: 0.6rem 0.5rem;
-            font-size: 16px; /* Prevents zoom on iOS */
-        }
-        
-        .component-body {
-            padding: var(--spacing-sm);
-        }
-        
-        .ratio-value {
-            font-size: 1.5rem;
-        }
-    }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Add component toggle
-    document.addEventListener('DOMContentLoaded', function() {
-        const addComponentToggle = document.getElementById('add-component-toggle');
-        const addComponentContainer = document.getElementById('add-component-container');
-        const cancelAddBtn = document.getElementById('cancel-add');
-        
-        if (addComponentToggle && addComponentContainer) {
-            addComponentToggle.addEventListener('click', function() {
-                addComponentContainer.style.display = 'block';
-                addComponentToggle.style.display = 'none';
-            });
-            
-            if (cancelAddBtn) {
-                cancelAddBtn.addEventListener('click', function() {
-                    addComponentContainer.style.display = 'none';
-                    addComponentToggle.style.display = 'inline-flex';
-                });
-            }
-        }
-        
-        // Edit component buttons
-        document.querySelectorAll('.edit-component-btn').forEach(function(button) {
-            button.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                const name = this.getAttribute('data-name');
-                const ratio = this.getAttribute('data-ratio');
-                editComponent(id, name, ratio);
-            });
-        });
-        
-        // Form validation
-        const addComponentForm = document.getElementById('add-component-form');
-        if (addComponentForm) {
-            addComponentForm.addEventListener('submit', function(e) {
-                const ratio = parseFloat(document.getElementById('ratio').value);
-                if (ratio <= 0) {
-                    e.preventDefault();
-                    alert('Ratio must be greater than 0');
-                }
-            });
-        }
-        
-        const editComponentForm = document.getElementById('edit-component-form');
-        if (editComponentForm) {
-            editComponentForm.addEventListener('submit', function(e) {
-                const ratio = parseFloat(document.getElementById('edit_ratio').value);
-                if (ratio <= 0) {
-                    e.preventDefault();
-                    alert('Ratio must be greater than 0');
-                }
-            });
-        }
-    });
-
-    // Edit component modal functionality
-    function editComponent(componentId, name, ratio) {
-        // Set form action
-        const form = document.getElementById('edit-component-form');
-        form.action = '{{ url_for("recipes.edit_component", component_id=0) }}'.replace('0', componentId);
-        
-        // Fill values
-        document.getElementById('edit_component_name').value = name;
-        document.getElementById('edit_ratio').value = ratio;
-        
-        // Show modal
-        document.getElementById('edit-component-modal').style.display = 'block';
-    }
-    
-    function closeEditModal() {
-        document.getElementById('edit-component-modal').style.display = 'none';
-    }
-    
-    // Close modal if clicked outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('edit-component-modal');
-        if (event.target == modal) {
-            closeEditModal();
-        }
-    }
-</script>
-{% endblock %} 
+</style> 

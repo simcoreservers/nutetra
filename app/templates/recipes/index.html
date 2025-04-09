@@ -7,89 +7,76 @@
 <div class="page-content">
     <div class="dashboard-section">
         <div class="section-header">
-            <h3>Nutrient Recipe Management</h3>
-            <div class="section-actions">
-                <a href="{{ url_for('recipes.add_recipe') }}" class="button primary-button">
-                    <i class="fas fa-plus"></i> New Recipe
-                </a>
-            </div>
+            <h3>Recipes Management</h3>
+            <a href="{{ url_for('recipes.create_recipe') }}" class="button primary-button">
+                <i class="fas fa-plus"></i> New Recipe
+            </a>
         </div>
         
-        <div class="card">
-            <div class="card-body">
-                <p class="intro-text">
-                    Create and manage nutrient recipes for your hydroponic system. A recipe defines which nutrients 
-                    to dose and in what ratio when auto-dosing is maintaining EC levels.
-                </p>
+        <div class="recipe-grid">
+            {% for recipe in recipes %}
+            <div class="recipe-card {% if recipe.is_active %}active-recipe{% endif %}">
+                <div class="recipe-header">
+                    <h4>{{ recipe.name }}</h4>
+                    {% if recipe.is_active %}
+                    <span class="status-badge active">Active</span>
+                    {% else %}
+                    <span class="status-badge inactive">Inactive</span>
+                    {% endif %}
+                </div>
                 
-                {% if recipes %}
-                    <div class="recipe-list">
-                        {% for recipe in recipes %}
-                            <div class="recipe-card {% if active_recipe and active_recipe.id == recipe.id %}active{% endif %}">
-                                <div class="recipe-card-header">
-                                    <h4>{{ recipe.name }}</h4>
-                                    {% if active_recipe and active_recipe.id == recipe.id %}
-                                        <span class="active-badge">Active</span>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="recipe-card-body">
-                                    {% if recipe.description %}
-                                        <p class="recipe-description">{{ recipe.description }}</p>
-                                    {% endif %}
-                                    
-                                    <div class="recipe-components">
-                                        <h5>Components:</h5>
-                                        {% if recipe.components %}
-                                            <ul class="component-list">
-                                                {% for component in recipe.components %}
-                                                    <li>
-                                                        <span class="component-name">{{ component.name or component.pump.name }}</span>
-                                                        <span class="component-ratio">Ratio: {{ component.ratio|round(1) }}</span>
-                                                    </li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% else %}
-                                            <p class="no-components">No components defined</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                
-                                <div class="recipe-card-footer">
-                                    <div class="button-group">
-                                        <a href="{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}" class="button small-button">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </a>
-                                        
-                                        {% if not (active_recipe and active_recipe.id == recipe.id) and recipe.components %}
-                                            <form action="{{ url_for('recipes.set_active_recipe', recipe_id=recipe.id) }}" method="post" class="inline-form">
-                                                <button type="submit" class="button small-button primary-button">
-                                                    <i class="fas fa-check-circle"></i> Set Active
-                                                </button>
-                                            </form>
-                                        {% endif %}
-                                        
-                                        {% if not (active_recipe and active_recipe.id == recipe.id) %}
-                                            <form action="{{ url_for('recipes.delete_recipe', recipe_id=recipe.id) }}" method="post" class="inline-form">
-                                                <button type="submit" class="button small-button danger-button" data-critical="true" onclick="return confirm('Are you sure you want to delete this recipe?')">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </button>
-                                            </form>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
+                <div class="recipe-details">
+                    {% if recipe.description %}
+                    <div class="description">
+                        <p>{{ recipe.description }}</p>
                     </div>
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-flask empty-icon"></i>
-                        <h4>No Recipes Yet</h4>
-                        <p>You haven't created any nutrient recipes yet.</p>
-                        <a href="{{ url_for('recipes.add_recipe') }}" class="button primary-button">Create First Recipe</a>
+                    {% endif %}
+                    
+                    <div class="target-parameters">
+                        <div class="parameter">
+                            <div class="parameter-label">Target EC</div>
+                            <div class="parameter-value">{{ recipe.target_ec }} μS/cm</div>
+                        </div>
+                        <div class="parameter">
+                            <div class="parameter-label">Target pH</div>
+                            <div class="parameter-value">{{ recipe.target_ph }}</div>
+                        </div>
                     </div>
-                {% endif %}
+                    
+                    <div class="components-summary">
+                        <div class="summary-label">Components:</div>
+                        <div class="component-count">{{ recipe.components|length }}</div>
+                    </div>
+                </div>
+                
+                <div class="recipe-actions">
+                    <a href="{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}" class="button">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    {% if not recipe.is_active %}
+                    <form action="{{ url_for('recipes.activate_recipe', recipe_id=recipe.id) }}" method="post" class="inline-form">
+                        <button type="submit" class="button secondary-button">
+                            <i class="fas fa-check-circle"></i> Activate
+                        </button>
+                    </form>
+                    {% endif %}
+                    <form action="{{ url_for('recipes.delete_recipe', recipe_id=recipe.id) }}" method="post" class="inline-form">
+                        <button type="submit" class="button danger-button" onclick="return confirm('Are you sure you want to delete this recipe? This cannot be undone.')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
             </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-flask fa-3x"></i>
+                <h4>No Recipes Yet</h4>
+                <p>You haven't created any nutrient recipes yet. Create your first recipe to get started with automated nutrient dosing.</p>
+                <a href="{{ url_for('recipes.create_recipe') }}" class="button primary-button">
+                    <i class="fas fa-plus"></i> Create First Recipe
+                </a>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -97,142 +84,238 @@
 
 {% block extra_css %}
 <style>
-    .recipe-list {
+    /* Recipe grid layout */
+    .recipe-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: var(--spacing-md);
         margin-top: var(--spacing-md);
     }
     
+    /* Recipe card styling */
     .recipe-card {
         background-color: var(--bg-color-lighter);
         border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
+        transition: box-shadow 0.3s, transform 0.2s;
         overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
     }
     
     .recipe-card:hover {
-        transform: translateY(-3px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
     }
     
-    .recipe-card.active {
+    .active-recipe {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 1px var(--primary-color);
     }
     
-    .recipe-card-header {
-        background-color: var(--bg-color-light);
+    .recipe-header {
         padding: var(--spacing-md);
+        background-color: var(--bg-color-light);
         border-bottom: 1px solid var(--border-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
     
-    .recipe-card-header h4 {
+    .recipe-header h4 {
         margin: 0;
         font-size: 1.1rem;
+        font-weight: 600;
     }
     
-    .active-badge {
-        background-color: var(--primary-color);
-        color: white;
-        font-size: 0.8rem;
+    .status-badge {
         padding: 0.25rem 0.5rem;
         border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
     }
     
-    .recipe-card-body {
+    .status-badge.active {
+        background-color: var(--success-color);
+        color: white;
+    }
+    
+    .status-badge.inactive {
+        background-color: var(--bg-color);
+        color: var(--text-color-muted);
+    }
+    
+    .recipe-details {
         padding: var(--spacing-md);
     }
     
-    .recipe-description {
-        margin-top: 0;
+    .description {
         margin-bottom: var(--spacing-md);
-        color: var(--text-color-muted);
+        color: var(--text-color);
         font-size: 0.9rem;
     }
     
-    .recipe-components h5 {
-        margin-top: 0;
-        margin-bottom: var(--spacing-sm);
-        font-size: 0.95rem;
-    }
-    
-    .component-list {
-        list-style: none;
-        padding: 0;
+    .description p {
         margin: 0;
     }
     
-    .component-list li {
+    .target-parameters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .parameter {
+        background-color: var(--bg-color);
+        padding: var(--spacing-sm);
+        border-radius: var(--border-radius);
+        text-align: center;
+    }
+    
+    .parameter-label {
+        font-size: 0.8rem;
+        color: var(--text-color-muted);
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .parameter-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .components-summary {
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border-color-light);
+        padding: var(--spacing-sm);
+        background-color: var(--bg-color);
+        border-radius: var(--border-radius);
     }
     
-    .component-list li:last-child {
-        border-bottom: none;
-    }
-    
-    .component-ratio {
+    .summary-label {
         font-size: 0.85rem;
         color: var(--text-color-muted);
     }
     
-    .no-components {
-        color: var(--text-color-muted);
-        font-style: italic;
-        font-size: 0.9rem;
+    .component-count {
+        font-size: 1rem;
+        font-weight: 600;
+        background-color: var(--primary-color);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
-    .recipe-card-footer {
-        padding: var(--spacing-sm) var(--spacing-md);
+    .recipe-actions {
+        display: flex;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm);
         background-color: var(--bg-color-light);
         border-top: 1px solid var(--border-color);
     }
     
-    .button-group {
-        display: flex;
-        gap: var(--spacing-sm);
-        justify-content: flex-end;
+    .recipe-actions .button {
+        flex: 1;
+        justify-content: center;
+        padding: 0.5rem;
+        font-size: 0.85rem;
     }
     
-    .small-button {
-        font-size: 0.85rem;
-        padding: 0.35rem 0.7rem;
+    .inline-form {
+        flex: 1;
+    }
+    
+    .inline-form .button {
+        width: 100%;
     }
     
     .danger-button {
         background-color: var(--danger-color);
+        border-color: var(--danger-color);
         color: white;
     }
     
-    .inline-form {
-        display: inline;
+    .danger-button:hover {
+        background-color: var(--danger-color-dark);
+        border-color: var(--danger-color-dark);
     }
     
+    /* Empty state styling */
     .empty-state {
+        grid-column: 1 / -1;
         text-align: center;
-        padding: var(--spacing-lg) var(--spacing-md);
+        padding: var(--spacing-xl) var(--spacing-md);
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px dashed var(--border-color);
     }
     
-    .empty-icon {
-        font-size: 3rem;
+    .empty-state i {
         color: var(--text-color-muted);
         margin-bottom: var(--spacing-md);
     }
     
-    .intro-text {
-        margin-bottom: var(--spacing-md);
-        max-width: 800px;
+    .empty-state h4 {
+        margin-top: 0;
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.2rem;
     }
     
+    .empty-state p {
+        margin-bottom: var(--spacing-lg);
+        color: var(--text-color-muted);
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    /* Button styles */
+    .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        cursor: pointer;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    
+    .button:hover {
+        background-color: var(--bg-color-dark);
+    }
+    
+    .primary-button {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    .primary-button:hover {
+        background-color: var(--primary-color-dark);
+        border-color: var(--primary-color-dark);
+    }
+    
+    .secondary-button {
+        background-color: var(--bg-color-light);
+        border-color: var(--border-color);
+    }
+    
+    .secondary-button:hover {
+        background-color: var(--bg-color-dark);
+    }
+    
+    /* Responsive styles */
     @media (max-width: 768px) {
-        .recipe-list {
+        .recipe-grid {
             grid-template-columns: 1fr;
         }
         
@@ -241,8 +324,24 @@
             align-items: flex-start;
         }
         
-        .section-actions {
+        .section-header a {
             margin-top: var(--spacing-sm);
+            width: 100%;
+        }
+        
+        .recipe-actions {
+            flex-wrap: wrap;
+        }
+        
+        .recipe-actions .button,
+        .recipe-actions .inline-form {
+            flex: 1 0 100%;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .recipe-actions .button:last-child,
+        .recipe-actions .inline-form:last-child .button {
+            margin-bottom: 0;
         }
     }
 </style>

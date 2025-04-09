@@ -323,11 +323,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const pumpId = this.getAttribute('data-pump-id');
             const isCurrentlyEnabled = this.classList.contains('disable-pump');
             
-            // Confirm action
-            if (!confirm(`Are you sure you want to ${isCurrentlyEnabled ? 'disable' : 'enable'} this pump?`)) {
-                return;
-            }
-            
             // Disable button during operation
             btn.disabled = true;
             
