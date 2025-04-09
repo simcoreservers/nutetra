@@ -122,20 +122,20 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="component_name">Component Name</label>
-                                    <input type="text" id="component_name" name="component_name" class="form-control">
-                                    <p class="helper-text">Optional. Will use pump name if left blank.</p>
+                                    <label for="component_name">Component Name <span class="optional-label">(Optional)</span></label>
+                                    <input type="text" id="component_name" name="component_name" class="form-control" placeholder="Uses pump name if blank">
                                 </div>
                                 
-                                <div class="form-group">
+                                <div class="form-group ratio-group">
                                     <label for="ratio">Ratio</label>
                                     <input type="number" id="ratio" name="ratio" class="form-control" value="1.0" min="0.1" step="0.1" required>
-                                    <p class="helper-text">Relative amount to dose compared to other components</p>
                                 </div>
                             </div>
                             
                             <div class="form-actions">
-                                <button type="submit" class="button primary-button">Add Component</button>
+                                <button type="submit" class="button primary-button">
+                                    <i class="fas fa-plus-circle"></i> Add Component
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -153,25 +153,30 @@
 <div id="edit-component-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h4>Edit Component</h4>
+            <h4><i class="fas fa-edit"></i> Edit Component</h4>
             <button type="button" class="close-btn" onclick="closeEditModal()">&times;</button>
         </div>
         
         <div class="modal-body">
             <form id="edit-component-form" method="post" action="">
                 <div class="form-group">
-                    <label for="edit_component_name">Component Name</label>
-                    <input type="text" id="edit_component_name" name="component_name" class="form-control">
+                    <label for="edit_component_name">Component Name <span class="optional-label">(Optional)</span></label>
+                    <input type="text" id="edit_component_name" name="component_name" class="form-control" placeholder="Uses pump name if blank">
                 </div>
                 
                 <div class="form-group">
                     <label for="edit_ratio">Ratio</label>
                     <input type="number" id="edit_ratio" name="ratio" class="form-control" min="0.1" step="0.1" required>
+                    <p class="helper-text">Relative proportion of this component in the recipe</p>
                 </div>
                 
-                <div class="form-actions">
-                    <button type="submit" class="button primary-button">Save Changes</button>
-                    <button type="button" class="button" onclick="closeEditModal()">Cancel</button>
+                <div class="form-actions modal-actions">
+                    <button type="submit" class="button primary-button">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button type="button" class="button" onclick="closeEditModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                 </div>
             </form>
         </div>
@@ -185,6 +190,8 @@
         display: flex;
         flex-direction: column;
         gap: var(--spacing-md);
+        max-width: 1200px;
+        margin: 0 auto;
     }
     
     .component-section {
@@ -300,6 +307,32 @@
         color: var(--text-color);
     }
     
+    /* Improved responsive styles */
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+    
+    .form-row .form-group {
+        flex: 1 1 250px;
+        min-width: 0;
+    }
+    
+    @media (max-width: 992px) {
+        .recipe-form-container {
+            padding: 0 var(--spacing-sm);
+        }
+        
+        .card {
+            overflow: hidden;
+        }
+        
+        .card-body {
+            padding: var(--spacing-md) var(--spacing-sm);
+        }
+    }
+    
     @media (max-width: 768px) {
         .section-header {
             flex-direction: column;
@@ -308,16 +341,160 @@
         
         .section-actions {
             margin-top: var(--spacing-sm);
+            width: 100%;
+        }
+        
+        .section-actions .button {
+            width: 100%;
+            text-align: center;
         }
         
         .form-row {
             flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        
+        .component-table th:nth-child(2),
+        .component-table td:nth-child(2) {
+            display: none; /* Hide the pump column on small screens */
+        }
+        
+        .component-table {
+            font-size: 0.9rem;
+        }
+        
+        .actions-cell {
+            padding-left: 0;
+        }
+        
+        .actions-cell .button {
+            padding: 0.25rem 0.5rem;
         }
         
         .modal-content {
             margin: 20% auto;
             width: 95%;
         }
+        
+        .final-actions {
+            margin-top: var(--spacing-sm);
+        }
+        
+        .final-actions .button {
+            width: 100%;
+        }
+        
+        .ratio-group {
+            flex: 1 1 100%;
+        }
+        
+        #add-component-form .form-actions {
+            margin-top: var(--spacing-sm);
+        }
+        
+        #add-component-form .button {
+            width: 100%;
+        }
+        
+        .modal-actions {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        
+        .modal-actions .button {
+            width: 100%;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .component-table {
+            table-layout: fixed;
+        }
+        
+        .component-table th, 
+        .component-table td {
+            padding: var(--spacing-xs) var(--spacing-sm);
+        }
+        
+        .component-table th:first-child,
+        .component-table td:first-child {
+            width: 45%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .component-table th:nth-child(3),
+        .component-table td:nth-child(3) {
+            width: 20%;
+        }
+        
+        .card-header h4 {
+            font-size: 1rem;
+        }
+        
+        .form-actions button, 
+        .form-actions a {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .form-control {
+            padding: 0.6rem 0.5rem;
+            font-size: 16px; /* Prevents zoom on iOS */
+        }
+    }
+    
+    /* Component form enhancements */
+    .optional-label {
+        font-size: 0.8rem;
+        color: var(--text-color-muted);
+        font-weight: normal;
+    }
+    
+    .ratio-group {
+        flex: 0 0 150px;
+    }
+    
+    .form-actions .button .fas {
+        margin-right: 0.5rem;
+    }
+    
+    /* Input placeholders */
+    ::placeholder {
+        color: var(--text-color-muted);
+        opacity: 0.6;
+    }
+    
+    /* Form layouts */
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+    }
+    
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px;
+        padding-right: 2.5rem;
+    }
+    
+    /* Modal enhancements */
+    .modal-actions {
+        display: flex;
+        gap: var(--spacing-md);
+        justify-content: flex-end;
+        margin-top: var(--spacing-lg);
+    }
+    
+    .modal-header i {
+        margin-right: 0.5rem;
     }
 </style>
 {% endblock %}
