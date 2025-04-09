@@ -8,14 +8,9 @@
     <div class="dashboard-section">
         <div class="section-header">
             <h3>Pumps Configuration</h3>
-            <div class="header-actions">
-                <button id="migrate-pumps-btn" class="button button-secondary" title="Convert old nutrient types (A, B, C) to generic nutrient type">
-                    <i class="fas fa-exchange-alt"></i> Standardize Pumps
-                </button>
-                <button id="add-pump-btn" class="button">
-                    <i class="fas fa-plus"></i> Add Pump
-                </button>
-            </div>
+            <button id="add-pump-btn" class="button">
+                <i class="fas fa-plus"></i> Add Pump
+            </button>
         </div>
 
         <div class="pump-grid">
@@ -42,7 +37,7 @@
                         <span class="detail-value">{{ pump.flow_rate }} ml/s</span>
                     </div>
                     
-                    {% if pump.type == 'nutrient' or pump.type.startswith('nutrient_') and pump.nutrient_name %}
+                    {% if pump.type == 'nutrient' and pump.nutrient_name %}
                     <div class="nutrient-info">
                         <div class="detail-row">
                             <span class="detail-label">Nutrient:</span>
@@ -223,7 +218,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Add pump button
     const addPumpBtn = document.getElementById('add-pump-btn');
-    const migratePumpsBtn = document.getElementById('migrate-pumps-btn');
     const pumpModal = document.getElementById('pump-modal');
     const pumpForm = document.getElementById('pump-form');
     const closeModalBtns = document.querySelectorAll('.close-modal, .cancel-btn');
@@ -441,27 +435,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('pump-id').value = pump.id;
                         document.getElementById('pump-name').value = pump.name;
                         
-                        // For any nutrient type, use the generic 'nutrient' type
-                        if (pump.type.startsWith('nutrient_')) {
-                            pumpTypeSelect.value = 'nutrient';
-                        } else {
-                            pumpTypeSelect.value = pump.type;
-                        }
+                        // Set the pump type
+                        pumpTypeSelect.value = pump.type;
                         
                         document.getElementById('gpio-pin').value = pump.gpio_pin;
                         document.getElementById('flow-rate').value = pump.flow_rate;
                         document.getElementById('is-enabled').checked = pump.enabled;
                         
-                        // Show/hide nutrient section based on pump type
+                        // Show nutrient section for nutrient pumps
                         const pumpType = pump.type;
                         const nutrientSection = document.getElementById('nutrient-section');
-                        if (pumpType === 'nutrient' || pumpType.startsWith('nutrient_')) {
+                        if (pumpType === 'nutrient') {
                             nutrientSection.style.display = 'block';
-                            
-                            // If this is an old nutrient type (nutrient_a, nutrient_b, etc.), update the select
-                            if (pumpType.startsWith('nutrient_')) {
-                                pumpTypeSelect.value = 'nutrient';
-                            }
                             
                             // If the pump has nutrient info, select it
                             if (pump.nutrient_brand) {
@@ -631,40 +616,6 @@ document.addEventListener('DOMContentLoaded', function() {
             this.disabled = false;
             this.textContent = 'Delete Pump';
         });
-    });
-    
-    // Migrate pumps button
-    migratePumpsBtn.addEventListener('click', function() {
-        if (confirm("Convert all nutrient pumps to use the standard type? This will not change their functionality but will standardize their configuration.")) {
-            // Disable the button while processing
-            this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            
-            // Call the migration API
-            fetch('/api/pumps/migrate-types', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert(result.message);
-                    // Reload the page to reflect changes
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + (result.error || 'Unknown error'));
-                    // Re-enable the button
-                    this.disabled = false;
-                    this.innerHTML = '<i class="fas fa-exchange-alt"></i> Standardize Pumps';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while migrating pump types');
-                // Re-enable the button
-                this.disabled = false;
-                this.innerHTML = '<i class="fas fa-exchange-alt"></i> Standardize Pumps';
-            });
-        }
     });
     
     // Function to load nutrient brands

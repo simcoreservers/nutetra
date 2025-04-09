@@ -70,9 +70,9 @@ class Pump(db.Model):
         # Only add other default pumps if no pumps exist at all
         if Pump.query.count() == 0:
             default_nutrient_pumps = [
-                Pump(name="Nutrient A", type="nutrient", gpio_pin=22, flow_rate=1.0),
-                Pump(name="Nutrient B", type="nutrient", gpio_pin=23, flow_rate=1.0),
-                Pump(name="Nutrient C", type="nutrient", gpio_pin=24, flow_rate=1.0)
+                Pump(name="Grow Nutrient", type="nutrient", gpio_pin=22, flow_rate=1.0),
+                Pump(name="Bloom Nutrient", type="nutrient", gpio_pin=23, flow_rate=1.0),
+                Pump(name="Micro Nutrient", type="nutrient", gpio_pin=24, flow_rate=1.0)
             ]
             
             for pump in default_nutrient_pumps:

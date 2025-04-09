@@ -316,15 +316,10 @@ def update_pump(pump_id):
         if 'name' in data:
             pump.name = data['name']
         if 'type' in data:
-            # Convert any non-pH nutrient type to the generic 'nutrient' type
-            if data['type'].startswith('nutrient_') and data['type'] not in ['ph_up', 'ph_down']:
-                pump.type = 'nutrient'
-            else:
-                pump.type = data['type']
-        elif pump.type.startswith('nutrient_') and pump.type not in ['ph_up', 'ph_down']:
-            # Always convert old nutrient types to the generic 'nutrient' type
-            pump.type = 'nutrient'
-            
+            # Ensure type is valid (only 'nutrient', 'ph_up', or 'ph_down')
+            if data['type'] not in ['nutrient', 'ph_up', 'ph_down']:
+                data['type'] = 'nutrient'
+            pump.type = data['type']
         if 'gpio_pin' in data:
             # Check if the new GPIO pin is already in use by another pump
             if data['gpio_pin'] != pump.gpio_pin:
