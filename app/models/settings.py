@@ -253,12 +253,22 @@ class Settings(db.Model):
                       'flower' in pump_name_lower or 'flower' in nutrient_name_lower):
                     nutrient_type = 'bloom'
                 
+                # Set dosing order based on nutrient type
+                dosing_order = {
+                    'calmag': 1,  # Cal-mag supplements go first
+                    'micro': 2,   # Micro/trace nutrients second
+                    'grow': 3,    # Grow nutrients third
+                    'bloom': 4,   # Bloom nutrients last
+                    'other': 5    # Anything else at the end
+                }.get(nutrient_type, 5)
+                
                 # Add the component
                 new_components.append({
                     'pump_id': pump.id,
-                    'name': pump.name,
+                    'pump_name': pump.name,
                     'nutrient_type': nutrient_type,
-                    'ml_per_liter': 1.0  # Default dosage
+                    'dosing_order': dosing_order,
+                    'ratio': 1.0  # Default ratio
                 })
             
             # Check if components need updating
@@ -281,21 +291,29 @@ class Settings(db.Model):
                         break
                         
                     current_comp = current_comp_map[pump_id]
-                    # Check if name or nutrient_type has changed
-                    if (current_comp.get('name') != new_comp.get('name') or 
+                    # Check if pump_name or nutrient_type has changed
+                    if (current_comp.get('pump_name') != new_comp.get('pump_name') or 
                         current_comp.get('nutrient_type') != new_comp.get('nutrient_type')):
                         components_changed = True
                         break
             
             # Update if components changed
             if components_changed:
-                # Preserve ml_per_liter settings from existing components when possible
+                # Preserve ratio settings from existing components when possible
                 for new_comp in new_components:
                     for curr_comp in current_components:
                         if (curr_comp.get('pump_id') == new_comp.get('pump_id') and 
-                            'ml_per_liter' in curr_comp):
-                            new_comp['ml_per_liter'] = curr_comp['ml_per_liter']
+                            'ratio' in curr_comp):
+                            new_comp['ratio'] = curr_comp['ratio']
                             break
+                        elif (curr_comp.get('pump_id') == new_comp.get('pump_id') and 
+                            'ml_per_liter' in curr_comp):
+                            # Handle legacy components with ml_per_liter instead of ratio
+                            new_comp['ratio'] = curr_comp['ml_per_liter']
+                            break
+                
+                # Sort components by dosing_order to ensure proper sequence
+                new_components.sort(key=lambda comp: comp.get('dosing_order', 99))
                 
                 # Update the nutrient_components in the profile
                 profile['nutrient_components'] = new_components
