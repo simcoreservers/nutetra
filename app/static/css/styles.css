@@ -246,29 +246,6 @@ input:focus, select:focus, textarea:focus {
   margin-top: var(--spacing-xs);
 }
 
-/* Submenu toggle indicator */
-.sidebar-nav li > a {
-  position: relative;
-}
-
-.sidebar-nav li > a:after {
-  content: '\f105'; /* FontAwesome chevron-right */
-  font-family: 'Font Awesome 5 Free';
-  font-weight: 900;
-  position: absolute;
-  right: var(--spacing-md);
-  transition: transform 0.3s ease;
-}
-
-.sidebar-nav li.active > a:after {
-  transform: rotate(90deg);
-}
-
-/* Only add chevron to items with submenus */
-.sidebar-nav li:not(:has(.submenu)) > a:after {
-  display: none;
-}
-
 /* Submenu transition */
 .submenu {
   padding-left: var(--spacing-lg);
