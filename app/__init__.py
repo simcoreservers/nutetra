@@ -4,12 +4,10 @@ from flask.cli import with_appcontext
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import click
-from flask_login import LoginManager
 
 # Initialize extensions
 db = SQLAlchemy()
 scheduler = BackgroundScheduler()
-login_manager = LoginManager()
 # We will not initialize socketio here anymore since it will be created in run.py
 
 # Import Flask CLI command for database initialization
@@ -124,10 +122,6 @@ def create_app(test_config=None):
     # Initialize database
     db.init_app(app)
     
-    # Configure login manager to allow anonymous access
-    login_manager.init_app(app)
-    login_manager.login_view = None  # Disable login requirement
-    
     # Instead of initializing Socket.IO here, we'll do it in run.py
     # This avoids circular import issues
     
@@ -139,14 +133,12 @@ def create_app(test_config=None):
 
     # Register blueprints
     from app.controllers.main import main_bp
-    from app.controllers.auth import auth_bp
     from app.controllers.api import api_bp
     from app.controllers.sensors import sensors_bp
     from app.controllers.dosing import dosing_bp
     from app.controllers.settings import settings_bp
     
     app.register_blueprint(main_bp)
-    app.register_blueprint(auth_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(sensors_bp, url_prefix='/sensors')
     app.register_blueprint(dosing_bp, url_prefix='/dosing')
