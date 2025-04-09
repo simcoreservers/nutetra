@@ -46,6 +46,7 @@
                     </button>
                     <button class="action-button {% if pump.enabled %}disable-pump{% else %}enable-pump{% endif %}" data-pump-id="{{ pump.id }}">
                         <i class="fas {% if pump.enabled %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i> 
+                        {{ 'Disable' if pump.enabled else 'Enable' }}
                     </button>
                 </div>
             </div>
