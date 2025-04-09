@@ -67,6 +67,11 @@
                         <i class="fas {% if pump.enabled %}fa-toggle-off{% else %}fa-toggle-on{% endif %}"></i> 
                         {{ 'Disable' if pump.enabled else 'Enable' }}
                     </button>
+                    {% if pump.type != 'ph_up' and pump.type != 'ph_down' %}
+                    <button class="action-button delete-pump danger" data-pump-id="{{ pump.id }}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    {% endif %}
                 </div>
             </div>
             {% else %}
@@ -187,6 +192,25 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="delete-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Delete Pump</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="delete-warning">Are you sure you want to delete this pump? This action cannot be undone.</p>
+            <p>All associated data will be permanently removed from the system.</p>
+            
+            <div class="form-actions">
+                <button id="confirm-delete-btn" class="button danger-button">Delete Pump</button>
+                <button class="button cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -198,6 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const pumpForm = document.getElementById('pump-form');
     const closeModalBtns = document.querySelectorAll('.close-modal, .cancel-btn');
     const testModal = document.getElementById('test-modal');
+    const deleteModal = document.getElementById('delete-modal');
     
     // Nutrient selectors
     const nutrientBrandSelect = document.getElementById('nutrient-brand');
@@ -327,6 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             pumpModal.classList.remove('active');
             testModal.classList.remove('active');
+            deleteModal.classList.remove('active');
         });
     });
     
@@ -555,6 +581,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error:', error);
                 alert('An error occurred while updating pump status');
             });
+        });
+    });
+    
+    // Delete pump buttons
+    document.querySelectorAll('.delete-pump').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pumpId = this.getAttribute('data-pump-id');
+            document.getElementById('confirm-delete-btn').setAttribute('data-pump-id', pumpId);
+            deleteModal.classList.add('active');
+        });
+    });
+    
+    // Confirm delete button
+    document.getElementById('confirm-delete-btn').addEventListener('click', function() {
+        const pumpId = this.getAttribute('data-pump-id');
+        
+        // Disable the button to prevent multiple clicks
+        this.disabled = true;
+        this.textContent = 'Deleting...';
+        
+        // Send delete request to API
+        fetch(`/api/pumps/${pumpId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Show success message and reload page
+                alert(result.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + (result.error || 'Unknown error'));
+                // Re-enable the button
+                this.disabled = false;
+                this.textContent = 'Delete Pump';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the pump');
+            // Re-enable the button
+            this.disabled = false;
+            this.textContent = 'Delete Pump';
         });
     });
     
@@ -938,6 +1007,30 @@ document.addEventListener('DOMContentLoaded', function() {
         margin-top: 5px;
         font-size: 0.8rem;
         color: var(--text-color-muted);
+    }
+    
+    .action-button.danger {
+        background-color: var(--danger-color-light);
+        color: var(--danger-color);
+    }
+    
+    .action-button.danger:hover {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .danger-button {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .danger-button:hover {
+        background-color: var(--danger-color-dark);
+    }
+    
+    .delete-warning {
+        color: var(--danger-color);
+        font-weight: 500;
     }
 </style>
 {% endblock %} 

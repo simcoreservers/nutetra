@@ -379,6 +379,38 @@ def get_pump(pump_id):
             'error': str(e)
         }), 500
 
+@api_bp.route('/pumps/<int:pump_id>', methods=['DELETE'])
+def delete_pump(pump_id):
+    """Delete a pump"""
+    try:
+        pump = Pump.query.get(pump_id)
+        if not pump:
+            return jsonify({
+                'success': False,
+                'error': f"Pump with ID {pump_id} not found"
+            }), 404
+        
+        # Prevent deleting pH pumps as they are hardwired
+        if pump.type in ['ph_up', 'ph_down']:
+            return jsonify({
+                'success': False,
+                'error': "pH pumps are hardwired and cannot be deleted"
+            }), 403
+        
+        # Delete the pump
+        db.session.delete(pump)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f"Pump '{pump.name}' deleted successfully"
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @api_bp.route('/calibration/ph', methods=['POST'])
 def calibrate_ph_endpoint():
     """Calibrate the pH sensor"""
