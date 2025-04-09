@@ -276,7 +276,7 @@ def create_pump():
 
 @api_bp.route('/pumps/<int:pump_id>', methods=['PUT'])
 def update_pump(pump_id):
-    """Update a pump's configuration"""
+    """Update a specific pump"""
     try:
         pump = Pump.query.get(pump_id)
         if not pump:
@@ -284,6 +284,24 @@ def update_pump(pump_id):
                 'success': False,
                 'error': f"Pump with ID {pump_id} not found"
             }), 404
+        
+        # Prevent editing pH up and pH down pumps except for enabled status
+        if pump.type in ['ph_up', 'ph_down']:
+            # Only allow enabling/disabling pH pumps
+            data = request.get_json()
+            if data and 'enabled' in data:
+                pump.enabled = data['enabled']
+                db.session.commit()
+                return jsonify({
+                    'success': True,
+                    'message': f"Pump {pump.name} updated successfully",
+                    'data': pump.to_dict()
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': "pH pumps are hardwired and cannot be modified except for enabling/disabling"
+                }), 403
         
         data = request.get_json()
         if not data:

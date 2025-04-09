@@ -35,8 +35,6 @@ class NutrientBrand(db.Model):
                         {'name': 'Flora Micro', 'nitrogen_pct': 5.0, 'phosphorus_pct': 0.0, 'potassium_pct': 1.0},
                         {'name': 'Flora Bloom', 'nitrogen_pct': 0.0, 'phosphorus_pct': 5.0, 'potassium_pct': 4.0},
                         {'name': 'CALiMAGic', 'nitrogen_pct': 2.0, 'phosphorus_pct': 0.0, 'potassium_pct': 0.0},
-                        {'name': 'pH Up', 'nitrogen_pct': 0.0, 'phosphorus_pct': 0.0, 'potassium_pct': 0.0},
-                        {'name': 'pH Down', 'nitrogen_pct': 0.0, 'phosphorus_pct': 0.0, 'potassium_pct': 0.0}
                     ]
                 },
                 {

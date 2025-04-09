@@ -28,6 +28,12 @@
                         <span class="detail-label">Type:</span>
                         <span class="detail-value">{{ pump.type|replace('_', ' ')|title }}</span>
                     </div>
+                    {% if pump.type == 'ph_up' or pump.type == 'ph_down' %}
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value hardwired-badge">Hardwired</span>
+                    </div>
+                    {% endif %}
                     <div class="detail-row">
                         <span class="detail-label">GPIO Pin:</span>
                         <span class="detail-value">{{ pump.gpio_pin }}</span>
@@ -55,7 +61,9 @@
                     {% endif %}
                 </div>
                 <div class="pump-actions">
-                    <button class="action-button edit-pump" data-pump-id="{{ pump.id }}">
+                    <button class="action-button edit-pump {% if pump.type == 'ph_up' or pump.type == 'ph_down' %}disabled{% endif %}" 
+                            data-pump-id="{{ pump.id }}"
+                            {% if pump.type == 'ph_up' or pump.type == 'ph_down' %}disabled title="pH pumps are hardwired"{% endif %}>
                         <i class="fas fa-edit"></i> Edit
                     </button>
                     <button class="action-button test-pump" data-pump-id="{{ pump.id }}">
@@ -261,6 +269,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Load products for this brand
             loadBrandProducts(brandId);
             nutrientProductSelect.disabled = false;
+            
+            // Check if this is the Custom brand
+            const brandName = this.options[this.selectedIndex].textContent;
+            const isCustomBrand = brandName === "Custom";
+            
+            // Set NPK fields readonly state based on brand
+            setNPKFieldsReadonly(!isCustomBrand);
+            
+            // Clear NPK values if switching to Custom brand
+            if (isCustomBrand) {
+                nitrogenInput.value = '';
+                phosphorusInput.value = '';
+                potassiumInput.value = '';
+            }
         } else {
             // Clear and disable the product select
             nutrientProductSelect.innerHTML = '<option value="">Select a product</option>';
@@ -269,6 +291,8 @@ document.addEventListener('DOMContentLoaded', function() {
             nitrogenInput.value = '';
             phosphorusInput.value = '';
             potassiumInput.value = '';
+            // Reset NPK fields to editable (default state)
+            setNPKFieldsReadonly(false);
         }
     });
     
@@ -280,6 +304,13 @@ document.addEventListener('DOMContentLoaded', function() {
             nitrogenInput.value = selectedOption.dataset.n || '';
             phosphorusInput.value = selectedOption.dataset.p || '';
             potassiumInput.value = selectedOption.dataset.k || '';
+            
+            // Check if this is a Custom brand product
+            const brandName = nutrientBrandSelect.options[nutrientBrandSelect.selectedIndex].textContent;
+            const isCustomBrand = brandName === "Custom";
+            
+            // Set NPK fields readonly state based on brand
+            setNPKFieldsReadonly(!isCustomBrand);
         } else {
             // Clear NPK values
             nitrogenInput.value = '';
@@ -375,6 +406,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Edit pump buttons
     document.querySelectorAll('.edit-pump').forEach(btn => {
         btn.addEventListener('click', function() {
+            // Don't do anything if the button is disabled
+            if (this.hasAttribute('disabled')) {
+                return;
+            }
+            
             const pumpId = this.getAttribute('data-pump-id');
             
             // Fetch pump data from API
@@ -409,10 +445,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                 setTimeout(() => {
                                     if (pump.nutrient_name) {
                                         nutrientProductSelect.value = pump.nutrient_name;
-                                        // Might need to manually set NPK values
+                                        // Set NPK values
                                         if (pump.nitrogen_pct !== null) nitrogenInput.value = pump.nitrogen_pct;
                                         if (pump.phosphorus_pct !== null) phosphorusInput.value = pump.phosphorus_pct;
                                         if (pump.potassium_pct !== null) potassiumInput.value = pump.potassium_pct;
+                                        
+                                        // Check if this is a Custom brand product
+                                        const brandName = nutrientBrandSelect.options[nutrientBrandSelect.selectedIndex].textContent;
+                                        const isCustomBrand = brandName === "Custom";
+                                        
+                                        // Set NPK fields readonly state based on brand
+                                        setNPKFieldsReadonly(!isCustomBrand);
                                     }
                                 }, 500);
                             }
@@ -582,6 +625,23 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
             });
+    }
+    
+    // Function to set NPK fields readonly state
+    function setNPKFieldsReadonly(readonly) {
+        nitrogenInput.readOnly = readonly;
+        phosphorusInput.readOnly = readonly;
+        potassiumInput.readOnly = readonly;
+        
+        // Add visual indication for readonly fields
+        const npkFields = [nitrogenInput, phosphorusInput, potassiumInput];
+        npkFields.forEach(field => {
+            if (readonly) {
+                field.classList.add('readonly-field');
+            } else {
+                field.classList.remove('readonly-field');
+            }
+        });
     }
 });
 </script>
@@ -847,6 +907,34 @@ document.addEventListener('DOMContentLoaded', function() {
             flex: 1;
             justify-content: center;
         }
+    }
+    
+    .readonly-field {
+        background-color: var(--bg-color-lighter);
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+    
+    .action-button.disabled {
+        background-color: var(--bg-color-light);
+        color: var(--text-color-muted);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+    
+    .action-button.disabled:hover {
+        background-color: var(--bg-color-light);
+        color: var(--text-color-muted);
+    }
+    
+    .hardwired-badge {
+        background-color: var(--info-color-light);
+        color: var(--info-color);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
     }
 </style>
 {% endblock %} 
