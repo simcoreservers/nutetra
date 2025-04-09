@@ -462,5 +462,61 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: var(--spacing-xl);
     color: var(--text-color-muted);
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .pump-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+    
+    .action-button {
+        flex: 1;
+        min-width: 0;
+        padding: var(--spacing-xs);
+        font-size: 0.9rem;
+    }
+    
+    .pump-actions {
+        flex-wrap: wrap;
+    }
+    
+    /* Modal improvements for mobile */
+    .modal-content {
+        width: 95%;
+        max-width: 95%;
+        margin: 10% auto;
+    }
+    
+    #add-pump-btn {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .section-header h3 {
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .section-header button {
+        align-self: flex-start;
+    }
+}
+
+/* Tablet Responsive Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .pump-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .action-button {
+        font-size: 0.9rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+}
 </style>
 {% endblock %} 

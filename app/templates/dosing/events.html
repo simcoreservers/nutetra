@@ -4,113 +4,139 @@
 {% block page_title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="page-content">
-    <div class="dashboard-section">
-        <div class="section-header">
-            <h3>Dosing History</h3>
-            
-            <div class="filter-controls">
-                <form id="filter-form" method="get" action="{{ url_for('dosing.events') }}">
-                    <div class="filter-group">
-                        <label for="pump-filter">Filter by Pump:</label>
-                        <select id="pump-filter" name="pump_id" class="form-control">
-                            <option value="">All Pumps</option>
-                            {% for pump in pumps %}
-                            <option value="{{ pump.id }}" {% if selected_pump_id == pump.id %}selected{% endif %}>
-                                {{ pump.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="button">Apply</button>
-                        {% if selected_pump_id %}
-                        <a href="{{ url_for('dosing.events') }}" class="button">Clear Filter</a>
-                        {% endif %}
-                    </div>
-                </form>
-            </div>
+<div class="dashboard-section">
+    <div class="card card-shadow">
+        <div class="card-header">
+            <h2><i class="fas fa-history"></i> Dosing History</h2>
         </div>
-        
-        <div class="events-table-container">
-            {% if events %}
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Pump</th>
-                        <th>Amount</th>
-                        <th>Reason</th>
-                        <th>Before</th>
-                        <th>After</th>
-                        <th>Change</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for event in events %}
-                    <tr>
-                        <td>{{ event.timestamp|datetime }}</td>
-                        <td>{{ event.pump.name }}</td>
-                        <td>{{ event.amount_ml|round(2) }} ml</td>
-                        <td>
-                            <span class="event-reason {{ event.reason }}">
-                                {% if event.reason == 'manual' %}
-                                <i class="fas fa-hand-pointer"></i> Manual
-                                {% elif event.reason == 'test' %}
-                                <i class="fas fa-vial"></i> Test
-                                {% elif event.reason == 'ph_high' %}
-                                <i class="fas fa-arrow-down"></i> pH High
-                                {% elif event.reason == 'ph_low' %}
-                                <i class="fas fa-arrow-up"></i> pH Low
-                                {% elif event.reason == 'ec_low' %}
-                                <i class="fas fa-plus"></i> EC Low
+        <div class="card-body">
+            <!-- Filter Controls -->
+            <div class="filter-controls">
+                <div class="control-group">
+                    <form method="get" id="filter-form">
+                        <div class="control-group">
+                            <label for="pump_id">Filter by Pump:</label>
+                            <select name="pump_id" id="filter-pump" class="form-control">
+                                <option value="">All Pumps</option>
+                                {% for pump in pumps %}
+                                <option value="{{ pump.id }}" {% if selected_pump_id == pump.id|string %}selected{% endif %}>
+                                    {{ pump.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                {% if selected_pump_id %}
+                <div class="control-group">
+                    <a href="{{ url_for('dosing.events') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear Filter
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if events|length > 0 %}
+            <!-- Events Table -->
+            <div class="table-responsive">
+                <table class="events-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Pump</th>
+                            <th>Amount</th>
+                            <th>Reason</th>
+                            <th>Sensor Before</th>
+                            <th>Sensor After</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <td class="event-time">{{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ event.pump.name }}</td>
+                            <td>{{ event.amount_ml }} ml</td>
+                            <td>
+                                <div class="reason-text">
+                                    {% if event.reason == 'manual' %}
+                                    <span class="event-icon manual"><i class="fas fa-hand-point-right"></i></span> Manual Dosing
+                                    {% elif event.reason == 'test' %}
+                                    <span class="event-icon test"><i class="fas fa-flask"></i></span> Test
+                                    {% elif event.reason == 'ph_high' or event.reason == 'ph_low' %}
+                                    <span class="event-icon ph-adjust"><i class="fas fa-vial"></i></span> pH Adjustment
+                                    {% elif event.reason == 'ec_low' %}
+                                    <span class="event-icon ec-adjust"><i class="fas fa-tint"></i></span> EC Adjustment
+                                    {% else %}
+                                    <span>{{ event.reason }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="sensor-readings">
+                                    {% if event.sensor_reading_before %}
+                                    <div class="reading-group">
+                                        <span class="reading-label">pH</span>
+                                        <span class="reading-value">{{ event.sensor_reading_before.ph|round(2) }}</span>
+                                    </div>
+                                    <div class="reading-group">
+                                        <span class="reading-label">EC</span>
+                                        <span class="reading-value">{{ event.sensor_reading_before.ec|round(2) }}</span>
+                                    </div>
+                                    {% else %}
+                                    <span>-</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="sensor-readings">
+                                    {% if event.sensor_reading_after %}
+                                    <div class="reading-group">
+                                        <span class="reading-label">pH</span>
+                                        <span class="reading-value">{{ event.sensor_reading_after.ph|round(2) }}</span>
+                                    </div>
+                                    <div class="reading-group">
+                                        <span class="reading-label">EC</span>
+                                        <span class="reading-value">{{ event.sensor_reading_after.ec|round(2) }}</span>
+                                    </div>
+                                    {% else %}
+                                    <span>-</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if event.sensor_reading_before and event.sensor_reading_after %}
+                                <div class="sensor-readings">
+                                    <div class="reading-group">
+                                        <span class="reading-label">pH</span>
+                                        {% set ph_change = event.sensor_reading_after.ph - event.sensor_reading_before.ph %}
+                                        <span class="reading-value {% if ph_change > 0 %}text-success{% elif ph_change < 0 %}text-danger{% endif %}">
+                                            {% if ph_change > 0 %}+{% endif %}{{ ph_change|round(2) }}
+                                        </span>
+                                    </div>
+                                    <div class="reading-group">
+                                        <span class="reading-label">EC</span>
+                                        {% set ec_change = event.sensor_reading_after.ec - event.sensor_reading_before.ec %}
+                                        <span class="reading-value {% if ec_change > 0 %}text-success{% elif ec_change < 0 %}text-danger{% endif %}">
+                                            {% if ec_change > 0 %}+{% endif %}{{ ec_change|round(2) }}
+                                        </span>
+                                    </div>
+                                </div>
                                 {% else %}
-                                {{ event.reason|replace('_', ' ')|title }}
+                                <span>-</span>
                                 {% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            {% if event.sensor_before is not none %}
-                                {% if event.reason in ['ph_high', 'ph_low'] %}
-                                    {{ event.sensor_before|round(2) }} pH
-                                {% elif event.reason in ['ec_low'] %}
-                                    {{ event.sensor_before|round(0) }} μS/cm
-                                {% else %}
-                                    {{ event.sensor_before|round(2) }}
-                                {% endif %}
-                            {% else %}
-                                --
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if event.sensor_after is not none %}
-                                {% if event.reason in ['ph_high', 'ph_low'] %}
-                                    {{ event.sensor_after|round(2) }} pH
-                                {% elif event.reason in ['ec_low'] %}
-                                    {{ event.sensor_after|round(0) }} μS/cm
-                                {% else %}
-                                    {{ event.sensor_after|round(2) }}
-                                {% endif %}
-                            {% else %}
-                                --
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if event.sensor_before is not none and event.sensor_after is not none %}
-                                {% set change = event.sensor_after - event.sensor_before %}
-                                <span class="{% if change > 0 %}positive{% elif change < 0 %}negative{% endif %}">
-                                    {{ change|round(2) }}
-                                    {% if change > 0 %}▲{% elif change < 0 %}▼{% endif %}
-                                </span>
-                            {% else %}
-                                --
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
+            <!-- Empty State -->
             <div class="empty-state">
-                <p>No dosing events recorded yet.</p>
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <h3>No dosing events found</h3>
+                <p>No dosing events have been recorded yet.</p>
             </div>
             {% endif %}
         </div>
@@ -120,109 +146,210 @@
 
 {% block extra_css %}
 <style>
+    /* Filter Controls */
     .filter-controls {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 15px;
     }
     
-    .filter-group {
+    .control-group {
         display: flex;
-        gap: var(--spacing-sm);
         align-items: center;
+        gap: 10px;
     }
     
-    .filter-group label {
-        margin-bottom: 0;
-        white-space: nowrap;
-    }
-    
-    .events-table-container {
-        margin-top: var(--spacing-md);
+    /* Events Table */
+    .table-responsive {
         overflow-x: auto;
+        margin-bottom: 20px;
     }
     
-    .data-table {
+    .events-table {
         width: 100%;
         border-collapse: collapse;
-        border: 1px solid var(--border-color);
     }
     
-    .data-table th,
-    .data-table td {
-        padding: var(--spacing-sm);
+    .events-table th, 
+    .events-table td {
+        padding: 12px 15px;
         text-align: left;
         border-bottom: 1px solid var(--border-color);
     }
     
-    .data-table th {
-        background-color: var(--bg-color-light);
-        font-weight: 600;
+    .events-table th {
+        background-color: var(--card-header-bg);
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
     
-    .data-table tr:hover {
-        background-color: rgba(0, 0, 0, 0.05);
-    }
-    
-    .event-reason {
+    /* Reason icons */
+    .event-icon {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        margin-right: 8px;
+        color: white;
+    }
+    
+    .event-icon.manual {
+        background-color: #3498db;
+    }
+    
+    .event-icon.test {
+        background-color: #9b59b6;
+    }
+    
+    .event-icon.ph-adjust {
+        background-color: #e74c3c;
+    }
+    
+    .event-icon.ec-adjust {
+        background-color: #2ecc71;
+    }
+    
+    .reason-text {
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Sensor readings */
+    .sensor-readings {
+        display: flex;
+        flex-direction: column;
         gap: 5px;
-        padding: 4px 8px;
-        border-radius: 30px;
-        font-size: 0.8rem;
     }
     
-    .event-reason.manual {
-        background-color: var(--info-color-light);
-        color: var(--info-color);
+    .reading-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
     
-    .event-reason.test {
-        background-color: var(--purple-light);
-        color: var(--purple);
+    .reading-label {
+        font-weight: bold;
+        min-width: 30px;
     }
     
-    .event-reason.ph_high {
-        background-color: var(--danger-color-light);
-        color: var(--danger-color);
-    }
-    
-    .event-reason.ph_low {
-        background-color: var(--success-color-light);
-        color: var(--success-color);
-    }
-    
-    .event-reason.ec_low {
-        background-color: var(--warning-color-light);
-        color: var(--warning-color);
-    }
-    
-    .positive {
-        color: var(--success-color);
-    }
-    
-    .negative {
-        color: var(--danger-color);
-    }
-    
+    /* Empty state */
     .empty-state {
         text-align: center;
-        padding: var(--spacing-xl);
-        color: var(--text-color-muted);
-        background-color: var(--bg-color-lighter);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
+        padding: 40px 20px;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        margin-bottom: 10px;
+        opacity: 0.7;
+    }
+    
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+        .filter-controls {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .events-table th,
+        .events-table td {
+            padding: 8px 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* Keep first 3 columns visible at all times on mobile */
+        .events-table th:nth-child(1),
+        .events-table th:nth-child(2),
+        .events-table th:nth-child(3),
+        .events-table td:nth-child(1),
+        .events-table td:nth-child(2),
+        .events-table td:nth-child(3) {
+            position: sticky;
+            left: 0;
+            background-color: var(--card-bg);
+            z-index: 5;
+        }
+        
+        .events-table td:nth-child(1) {
+            min-width: 140px;
+        }
+        
+        .events-table td:nth-child(2) {
+            min-width: 100px;
+        }
+        
+        .events-table td:nth-child(3) {
+            min-width: 70px;
+        }
+        
+        .reading-group {
+            font-size: 0.85rem;
+        }
+        
+        .event-icon {
+            width: 24px;
+            height: 24px;
+        }
+    }
+    
+    /* Tablet responsive styles */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .events-table th,
+        .events-table td {
+            padding: 10px 12px;
+        }
+        
+        .reading-group {
+            font-size: 0.9rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-submit the form when the filter dropdown changes
-        document.getElementById('pump-filter').addEventListener('change', function() {
-            document.getElementById('filter-form').submit();
-        });
+$(document).ready(function() {
+    // Auto-submit filter form when pump selection changes
+    $("#filter-pump").change(function() {
+        $("#filter-form").submit();
     });
+    
+    // Function to make the table responsive for mobile
+    function adjustTableForMobile() {
+        const table = $('.events-table');
+        if (table.length) {
+            // Add scroll hint indicator for mobile if table is wider than container
+            if ($(window).width() < 768 && table.width() > table.parent().width()) {
+                if ($('.scroll-hint').length === 0) {
+                    table.parent().append('<div class="scroll-hint">Swipe to see more →</div>');
+                    setTimeout(function() {
+                        $('.scroll-hint').fadeOut(1000);
+                    }, 3000);
+                }
+            } else {
+                $('.scroll-hint').remove();
+            }
+        }
+    }
+
+    // Format timestamps to local time
+    $('.event-time').each(function() {
+        const utcTime = $(this).text();
+        if (utcTime) {
+            const localTime = new Date(utcTime + ' UTC');
+            $(this).text(localTime.toLocaleString());
+        }
+    });
+
+    // Call responsive function on load and resize
+    adjustTableForMobile();
+    $(window).resize(adjustTableForMobile);
+});
 </script>
 {% endblock %} 
