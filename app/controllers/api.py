@@ -355,16 +355,16 @@ def update_pump(pump_id):
     if nutrient_changed:
         update_result = Settings.auto_configure_nutrient_components()
         return jsonify({
-            'status': 'success',
+            'success': True,
             'message': f'Pump {pump.name} updated and profiles reconfigured',
             'profile_update': update_result,
-            'pump': pump.to_dict()
+            'data': pump.to_dict()
         })
     
     return jsonify({
-        'status': 'success',
+        'success': True,
         'message': f'Pump {pump.name} updated',
-        'pump': pump.to_dict()
+        'data': pump.to_dict()
     })
 
 @api_bp.route('/pumps/<int:pump_id>', methods=['GET'])
