@@ -374,25 +374,25 @@ def dose_nutrients(amount_ml=None):
         recipe = NutrientRecipe.query.get(recipe_id)
         
         if recipe and recipe.components:
-            # Calculate the sum of all ratios
-            total_ratio = sum(component.ratio for component in recipe.components)
-            
-            # Dose each component according to its ratio
+            # Dose each component according to its configured amount
             for component in recipe.components:
-                # Calculate the amount for this component based on its ratio
-                component_amount = (component.ratio / total_ratio) * amount_ml
+                # Get the pump associated with this component
+                pump = component.pump
                 
-                # Activate the pump
-                if component_amount > 0:
-                    success = activate_pump(
-                        pump_id=component.pump_id,
-                        amount_ml=component_amount,
-                        reason='ec_adjustment'
-                    )
-                    
-                    # If any component fails, return False
-                    if not success:
-                        return False
+                # Skip if no pump or pump is disabled
+                if not pump or not pump.enabled:
+                    continue
+                
+                # Activate the pump with the configured dose amount
+                success = activate_pump(
+                    pump_id=component.pump_id,
+                    amount_ml=component.dose_amount,
+                    reason='ec_adjustment'
+                )
+                
+                # If any component fails, return False
+                if not success:
+                    return False
             
             # All components dosed successfully
             return True
