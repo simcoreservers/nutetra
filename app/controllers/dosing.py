@@ -388,9 +388,12 @@ def manage_profiles():
         for incompatibility in config_result['incompatibilities']:
             flash(f"Nutrient Incompatibility Warning: {incompatibility['message']}", 'warning')
     
+    # Always show a message about configuration status
+    flash(f"Nutrient profile configuration: Found {config_result.get('pumps_found', 0)} pumps. Ordered as: (1) Cal-Mag → (2) Micro → (3) Grow → (4) Bloom", 'info')
+    
     # Flash a message if profiles were updated
     if config_result.get('updated'):
-        flash(f"Plant profiles have been automatically updated to use your {config_result.get('pumps_found', 0)} enabled nutrient pumps", 'info')
+        flash(f"Plant profiles have been automatically updated to use your enabled nutrient pumps", 'success')
     
     return render_template(
         'dosing/profiles.html',

@@ -66,7 +66,8 @@
                                 <span class="sequence-note">Cal-Mag is added first for optimal nutrient absorption</span>
                                 <ul>
                                     {% for component in profile.nutrient_components %}
-                                    <li class="{% if component.nutrient_type %}nutrient-type-{{ component.nutrient_type }}{% endif %}">
+                                    <li class="{% if component.nutrient_type %}nutrient-type-{{ component.nutrient_type }}{% endif %}" 
+                                        {% if component.nutrient_type == 'calmag' %}style="border-left: 5px solid #ff00ff; background-color: rgba(255,0,255,0.1);"{% endif %}>
                                         <span class="component-name">{{ component.pump_name }}</span>
                                         <span class="component-dosing">
                                             {% if component.dosing_ml_per_liter is defined %}
@@ -85,6 +86,15 @@
                             </div>
                         </div>
                         {% endif %}
+                    </div>
+                    
+                    <!-- Debug Information -->
+                    <div class="debug-info" style="margin-top: 15px; padding: 10px; border: 1px solid #333; font-size: 0.8rem; background: #111;">
+                        <strong>Debug Info:</strong><br>
+                        Components count: {{ profile.nutrient_components|length }}<br>
+                        {% for component in profile.nutrient_components %}
+                            {{ component.nutrient_type }} (Order: {{ component.dosing_order }}) - {{ component.pump_name }}<br>
+                        {% endfor %}
                     </div>
                     
                     <div class="profile-actions">

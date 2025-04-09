@@ -53,8 +53,16 @@ class Settings(db.Model):
         return settings
     
     @classmethod
-    def initialize_defaults(cls):
-        """Initialize default settings"""
+    def initialize_defaults(cls, force_reset=False):
+        """Initialize default settings
+        
+        Args:
+            force_reset: If True, this will reset existing plant profiles to their defaults
+        """
+        # Get existing profiles
+        existing_profiles = None
+        if force_reset:
+            existing_profiles = cls.get('plant_profiles')
         
         # Initialize plant profiles without nutrient components
         # Components will be auto-configured based on available pumps
@@ -160,53 +168,36 @@ class Settings(db.Model):
         if not active_profile or active_profile not in plant_profiles:
             cls.set('active_plant_profile', 'general')
         
+        # Default settings - only set if they don't exist
         defaults = {
-        # pH settings
-        'ph_setpoint': 6.0,
-        'ph_buffer': 0.2,
-        'ph_check_interval': 300,  # seconds
-        'ph_dose_amount': 1.0,     # ml
-        'ph_dose_wait_time': 60,   # seconds to wait after dosing
-        
-        # EC settings
-        'ec_setpoint': 1350,
-        'ec_buffer': 150,
-        'ec_check_interval': 300,  # seconds
-        'ec_dose_amount': 5.0,     # ml
-        'ec_dose_wait_time': 60,   # seconds to wait after dosing
-        
-        # Temperature settings
-        'temp_check_interval': 300,  # seconds
-        'temp_min_alert': 18.0,      # °C
-        'temp_max_alert': 30.0,      # °C
-        
-        # Notification settings
-        'notifications_enabled': True,
-        'email_notifications': False,
-        'email_address': '',
-        'sms_notifications': False,
-        'phone_number': '',
-        
-        # System settings
-        'logging_interval': 300,  # seconds
-        'auto_dosing_enabled': True,
-        'night_mode_enabled': False,
-        'night_mode_start': '22:00',
-        'night_mode_end': '06:00',
-        
-        # UI settings
-        'dark_mode': True,
-        'temp_target': 25.0,
-        'temp_buffer': 2.0,
-        'chart_points': 50,
-        'refresh_interval': 10,  # seconds
+            'active_plant_profile': 'general',
+            'plant_profiles': plant_profiles,
+            'ec_setpoint': 1350,
+            'ec_buffer': 150,
+            'ph_setpoint': 6.0,
+            'ph_buffer': 0.2,
+            'temp_min': 18.0,
+            'temp_max': 28.0,
+            'cycle_interval': 300,
+            'ph_calibration_offset': 0.0
         }
         
-        default_values = defaults.copy()
-        
-        for key, value in default_values.items():
-            if Settings.get(key) is None:
-                Settings.set(key, value) 
+        # Set each default setting if it doesn't exist
+        for key, value in defaults.items():
+            if force_reset and key == 'plant_profiles':
+                # If forcing a reset, always update plant profiles
+                # But preserve custom profiles if they exist
+                if existing_profiles:
+                    # Keep any custom profiles
+                    for profile_id, profile in existing_profiles.items():
+                        if profile.get('custom', False):
+                            plant_profiles[profile_id] = profile
+                
+                # Always update the plant profiles
+                cls.set('plant_profiles', plant_profiles)
+                print("Plant profiles have been reset to defaults")
+            elif cls.get(key) is None:
+                cls.set(key, value)
 
     @staticmethod
     def auto_configure_nutrient_components():
@@ -230,18 +221,48 @@ class Settings(db.Model):
         
         # Nutrient type mapping based on name patterns
         def get_nutrient_type(pump):
-            name = pump.nutrient_name.lower() if pump.nutrient_name else pump.name.lower()
-            if any(term in name for term in ['grow', 'veg', 'vegetative']):
-                return 'grow'
-            elif any(term in name for term in ['bloom', 'flower', 'fruit']):
-                return 'bloom'
-            elif any(term in name for term in ['micro', 'trace']):
-                return 'micro'
-            elif any(term in name for term in ['cal', 'mag', 'calcium', 'magnesium']):
+            # Get the name from either the nutrient name or pump name
+            name = (pump.nutrient_name or pump.name).lower()
+            
+            # Print for debugging - will show in logs
+            print(f"Identifying nutrient type for: {name}")
+            
+            # Look for Cal-Mag related terms (expanded list)
+            calmag_terms = ['cal', 'mag', 'calcium', 'magnesium', 'calimagic', 'calmag', 'cal-mag', 'ca', 'mg']
+            if any(term in name.replace('-', '').replace('_', '').split() for term in calmag_terms):
+                print(f"→ Identified as CALMAG")
                 return 'calmag'
-            else:
-                # Default to grow if we can't determine
+                
+            # Micro nutrients
+            micro_terms = ['micro', 'trace', 'element', 'core']
+            if any(term in name for term in micro_terms):
+                print(f"→ Identified as MICRO")
+                return 'micro'
+                
+            # Grow nutrients
+            grow_terms = ['grow', 'veg', 'vegetative', 'growth', 'gro']
+            if any(term in name for term in grow_terms):
+                print(f"→ Identified as GROW")
                 return 'grow'
+                
+            # Bloom nutrients  
+            bloom_terms = ['bloom', 'flower', 'fruit', 'flowering', 'booster']
+            if any(term in name for term in bloom_terms):
+                print(f"→ Identified as BLOOM")
+                return 'bloom'
+                
+            # If we have "A" or "B" in the name - try to identify based on that
+            if ' a ' in f' {name} ' or name.endswith(' a') or name.endswith('-a'):
+                print(f"→ 'A' component - likely GROW")
+                return 'grow'
+                
+            if ' b ' in f' {name} ' or name.endswith(' b') or name.endswith('-b'):
+                print(f"→ 'B' component - likely BLOOM") 
+                return 'bloom'
+            
+            # Default to grow if we can't determine
+            print(f"→ Could not identify - defaulting to GROW")
+            return 'grow'
         
         # Check for incompatible nutrients
         def check_incompatibility(pumps):
