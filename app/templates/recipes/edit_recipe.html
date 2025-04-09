@@ -15,15 +15,14 @@
             </div>
         </div>
         
-        <div class="recipe-form-container">
-            <!-- Recipe Details Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h4>Recipe Details</h4>
-                </div>
-                
-                <div class="card-body">
-                    <form id="recipe-form" method="post" action="{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}">
+        <div class="recipe-editor">
+            <form id="recipe-form" method="post" action="{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}">
+                <!-- Recipe Info Panel -->
+                <div class="recipe-panel info-panel">
+                    <div class="panel-header">
+                        <h4><i class="fas fa-flask"></i> Recipe Details</h4>
+                    </div>
+                    <div class="panel-body">
                         <div class="form-group">
                             <label for="name">Recipe Name</label>
                             <input type="text" id="name" name="name" class="form-control" value="{{ recipe.name }}" required>
@@ -35,7 +34,7 @@
                             <p class="helper-text">Describe what this recipe is ideal for (e.g., "Leafy Greens", "Fruiting Plants")</p>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="form-group switch-group">
                             <label class="switch-container">
                                 <span class="label">Active</span>
                                 <label class="switch">
@@ -45,109 +44,112 @@
                             </label>
                             <p class="helper-text">Available for activation (inactive recipes cannot be used)</p>
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
             
-            <!-- Recipe Components -->
-            <div class="card">
-                <div class="card-header">
-                    <h4>Recipe Components</h4>
+                <!-- Components Panel -->
+                <div class="recipe-panel components-panel">
+                    <div class="panel-header">
+                        <h4><i class="fas fa-vial"></i> Recipe Components</h4>
+                        <div class="panel-actions">
+                            <button type="button" id="add-component-toggle" class="button small-button">
+                                <i class="fas fa-plus-circle"></i> Add Component
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-body">
+                        <!-- Add Component Form (initially hidden) -->
+                        <div id="add-component-container" class="add-component-container" style="display: none;">
+                            <form id="add-component-form" method="post" action="{{ url_for('recipes.add_component', recipe_id=recipe.id) }}">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="pump_id">Nutrient Pump</label>
+                                        <select id="pump_id" name="pump_id" class="form-control" required>
+                                            <option value="">Select a pump</option>
+                                            {% for pump in nutrient_pumps %}
+                                                <option value="{{ pump.id }}">{{ pump.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="component_name">Component Name <span class="optional-label">(Optional)</span></label>
+                                        <input type="text" id="component_name" name="component_name" class="form-control" placeholder="Uses pump name if blank">
+                                    </div>
+                                    
+                                    <div class="form-group ratio-group">
+                                        <label for="ratio">Ratio</label>
+                                        <input type="number" id="ratio" name="ratio" class="form-control" value="1.0" min="0.1" step="0.1" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="submit" class="button primary-button">
+                                        <i class="fas fa-plus-circle"></i> Add Component
+                                    </button>
+                                    <button type="button" id="cancel-add" class="button">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Components List -->
+                        <div class="components-list-container">
+                            {% if recipe.components %}
+                                <div class="components-grid">
+                                    {% for component in recipe.components %}
+                                        <div class="component-card">
+                                            <div class="component-header">
+                                                <span class="component-name">{{ component.name or component.pump.name }}</span>
+                                                <span class="component-pump">{{ component.pump.name }}</span>
+                                            </div>
+                                            <div class="component-body">
+                                                <div class="ratio-display">
+                                                    <div class="ratio-label">Ratio</div>
+                                                    <div class="ratio-value">{{ component.ratio|round(1) }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="component-footer">
+                                                <button type="button" class="button small-button edit-component-btn"
+                                                        data-id="{{ component.id }}" 
+                                                        data-name="{{ component.name or '' }}" 
+                                                        data-ratio="{{ component.ratio }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                
+                                                <form action="{{ url_for('recipes.delete_component', component_id=component.id) }}" method="post" class="inline-form">
+                                                    <button type="submit" class="button small-button danger-button" data-critical="true"
+                                                            onclick="return confirm('Are you sure you want to remove this component?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-flask empty-icon"></i>
+                                    <p>No components added to this recipe yet.</p>
+                                    <p>Add components to define which nutrients make up this recipe.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="card-body">
-                    <p class="intro-text">
-                        Define which nutrients make up this recipe and their ratios. The system will dose these nutrients 
-                        proportionally to maintain the EC target level.
-                    </p>
-                    
-                    <div class="component-section">
-                        <h5>Current Components</h5>
-                        {% if recipe.components %}
-                            <div class="component-table-container">
-                                <table class="component-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Pump</th>
-                                            <th>Ratio</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for component in recipe.components %}
-                                            <tr>
-                                                <td>{{ component.name or component.pump.name }}</td>
-                                                <td>{{ component.pump.name }}</td>
-                                                <td>{{ component.ratio|round(1) }}</td>
-                                                <td class="actions-cell">
-                                                    <button type="button" class="button small-button edit-component-btn"
-                                                            data-id="{{ component.id }}" 
-                                                            data-name="{{ component.name or '' }}" 
-                                                            data-ratio="{{ component.ratio }}">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    
-                                                    <form action="{{ url_for('recipes.delete_component', component_id=component.id) }}" method="post" class="inline-form">
-                                                        <button type="submit" class="button small-button danger-button" data-critical="true"
-                                                                onclick="return confirm('Are you sure you want to remove this component?')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <p class="no-components">No components added yet</p>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="component-section">
-                        <h5>Add Component</h5>
-                        <form id="add-component-form" method="post" action="{{ url_for('recipes.add_component', recipe_id=recipe.id) }}">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="pump_id">Nutrient Pump</label>
-                                    <select id="pump_id" name="pump_id" class="form-control" required>
-                                        <option value="">Select a pump</option>
-                                        {% for pump in nutrient_pumps %}
-                                            <option value="{{ pump.id }}">{{ pump.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="component_name">Component Name <span class="optional-label">(Optional)</span></label>
-                                    <input type="text" id="component_name" name="component_name" class="form-control" placeholder="Uses pump name if blank">
-                                </div>
-                                
-                                <div class="form-group ratio-group">
-                                    <label for="ratio">Ratio</label>
-                                    <input type="number" id="ratio" name="ratio" class="form-control" value="1.0" min="0.1" step="0.1" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="submit" class="button primary-button">
-                                    <i class="fas fa-plus-circle"></i> Add Component
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                <!-- Action Buttons -->
+                <div class="recipe-actions">
+                    <button type="submit" form="recipe-form" class="button primary-button">
+                        <i class="fas fa-save"></i> Save Recipe
+                    </button>
+                    <a href="{{ url_for('recipes.index') }}" class="button">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
                 </div>
-            </div>
-            
-            <div class="form-actions final-actions">
-                <button type="submit" form="recipe-form" class="button primary-button">
-                    <i class="fas fa-save"></i> Save Recipe
-                </button>
-                <a href="{{ url_for('recipes.index') }}" class="button">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -189,49 +191,242 @@
 
 {% block extra_css %}
 <style>
-    .recipe-form-container {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-md);
+    /* Main recipe editor layout */
+    .recipe-editor {
         max-width: 1200px;
         margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-gap: var(--spacing-lg);
     }
     
-    .component-section {
-        margin-bottom: var(--spacing-lg);
+    /* Panel styling */
+    .recipe-panel {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
     
-    .component-section h5 {
-        margin-bottom: var(--spacing-sm);
-        font-size: 1rem;
-    }
-    
-    .component-table-container {
-        overflow-x: auto;
-    }
-    
-    .component-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    .component-table th,
-    .component-table td {
-        padding: var(--spacing-sm);
-        text-align: left;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .component-table th {
+    .panel-header {
         background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .panel-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .panel-header h4 i {
+        margin-right: var(--spacing-sm);
+        color: var(--primary-color);
+    }
+    
+    .panel-body {
+        padding: var(--spacing-md);
+    }
+    
+    .panel-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+    
+    /* Form elements */
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+    
+    .form-row .form-group {
+        flex: 1 1 250px;
+        min-width: 0;
+    }
+    
+    .ratio-group {
+        flex: 0 0 150px;
+    }
+    
+    .switch-group {
+        margin-top: var(--spacing-lg);
+    }
+    
+    /* Add component section */
+    .add-component-container {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius);
+        margin-bottom: var(--spacing-md);
+        border: 1px solid var(--border-color);
+    }
+    
+    /* Components grid */
+    .components-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: var(--spacing-md);
+    }
+    
+    .component-card {
+        background-color: var(--bg-color);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .component-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .component-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .component-name {
+        font-weight: 500;
+    }
+    
+    .component-pump {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+    }
+    
+    .component-body {
+        padding: var(--spacing-md);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .ratio-display {
+        text-align: center;
+    }
+    
+    .ratio-label {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .ratio-value {
+        font-size: 2rem;
         font-weight: 600;
+        color: var(--primary-color);
     }
     
-    .actions-cell {
-        white-space: nowrap;
-        text-align: right;
+    .component-footer {
+        padding: var(--spacing-sm) var(--spacing-md);
+        background-color: var(--bg-color-light);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-sm);
     }
     
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-lg);
+        color: var(--text-color-muted);
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    /* Recipe actions */
+    .recipe-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+    }
+    
+    .recipe-actions .button {
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .recipe-actions .button i,
+    .form-actions .button i {
+        margin-right: 0.5rem;
+    }
+    
+    /* Helper elements */
+    .helper-text {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+        margin-top: 0.25rem;
+        margin-bottom: 0;
+    }
+    
+    .optional-label {
+        font-size: 0.8rem;
+        color: var(--text-color-muted);
+        font-weight: normal;
+    }
+    
+    .inline-form {
+        display: inline;
+    }
+    
+    /* Form controls */
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
+    }
+    
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px;
+        padding-right: 2.5rem;
+    }
+    
+    /* Input placeholders */
+    ::placeholder {
+        color: var(--text-color-muted);
+        opacity: 0.6;
+    }
+    
+    /* Buttons */
     .small-button {
         font-size: 0.85rem;
         padding: 0.35rem 0.7rem;
@@ -240,44 +435,6 @@
     .danger-button {
         background-color: var(--danger-color);
         color: white;
-    }
-    
-    .no-components {
-        color: var(--text-color-muted);
-        font-style: italic;
-        padding: var(--spacing-md);
-        background-color: var(--bg-color-light);
-        border-radius: var(--border-radius);
-    }
-    
-    .inline-form {
-        display: inline;
-    }
-    
-    .intro-text {
-        margin-bottom: var(--spacing-md);
-    }
-    
-    .final-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--spacing-md);
-        margin-top: var(--spacing-md);
-        padding: var(--spacing-md);
-        background-color: var(--bg-color-lighter);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-    }
-    
-    .final-actions .button {
-        min-width: 120px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .final-actions .button i {
-        margin-right: 0.5rem;
     }
     
     /* Modal styles */
@@ -313,6 +470,12 @@
     
     .modal-header h4 {
         margin: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .modal-header h4 i {
+        margin-right: 0.5rem;
     }
     
     .modal-body {
@@ -327,29 +490,78 @@
         color: var(--text-color);
     }
     
-    /* Improved responsive styles */
-    .form-row {
+    .modal-actions {
         display: flex;
-        flex-wrap: wrap;
         gap: var(--spacing-md);
+        justify-content: flex-end;
+        margin-top: var(--spacing-lg);
     }
     
-    .form-row .form-group {
-        flex: 1 1 250px;
-        min-width: 0;
+    /* Switch styling */
+    .switch-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-color);
+        transition: .4s;
+        border: 1px solid var(--border-color);
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 3px;
+        background-color: var(--text-color-muted);
+        transition: .4s;
+    }
+    
+    input:checked + .slider {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(26px);
+        background-color: white;
+    }
+    
+    .slider.round {
+        border-radius: 24px;
+    }
+    
+    .slider.round:before {
+        border-radius: 50%;
+    }
+    
+    /* Responsive styles */
     @media (max-width: 992px) {
-        .recipe-form-container {
+        .recipe-editor {
             padding: 0 var(--spacing-sm);
-        }
-        
-        .card {
-            overflow: hidden;
-        }
-        
-        .card-body {
-            padding: var(--spacing-md) var(--spacing-sm);
         }
     }
     
@@ -369,58 +581,54 @@
             text-align: center;
         }
         
+        .panel-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .panel-actions {
+            margin-top: var(--spacing-sm);
+            width: 100%;
+        }
+        
+        .panel-actions .button {
+            width: 100%;
+        }
+        
         .form-row {
             flex-direction: column;
             gap: var(--spacing-sm);
         }
         
-        .component-table th:nth-child(2),
-        .component-table td:nth-child(2) {
-            display: none; /* Hide the pump column on small screens */
+        .component-header {
+            flex-direction: column;
         }
         
-        .component-table {
-            font-size: 0.9rem;
+        .component-name {
+            margin-bottom: var(--spacing-xs);
         }
         
-        .actions-cell {
-            padding-left: 0;
+        .components-grid {
+            grid-template-columns: 1fr;
         }
         
-        .actions-cell .button {
-            padding: 0.25rem 0.5rem;
+        .recipe-actions {
+            flex-direction: column;
+            padding: var(--spacing-sm);
+        }
+        
+        .recipe-actions .button {
+            width: 100%;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .recipe-actions .button:last-child {
+            margin-bottom: 0;
         }
         
         .modal-content {
             margin: 20% auto;
             width: 95%;
-        }
-        
-        .final-actions {
-            flex-direction: column;
-            margin-top: var(--spacing-sm);
-            padding: var(--spacing-sm);
-        }
-        
-        .final-actions .button {
-            width: 100%;
-            margin-bottom: var(--spacing-sm);
-        }
-        
-        .final-actions .button:last-child {
-            margin-bottom: 0;
-        }
-        
-        .ratio-group {
-            flex: 1 1 100%;
-        }
-        
-        #add-component-form .form-actions {
-            margin-top: var(--spacing-sm);
-        }
-        
-        #add-component-form .button {
-            width: 100%;
         }
         
         .modal-actions {
@@ -434,103 +642,49 @@
     }
     
     @media (max-width: 480px) {
-        .component-table {
-            table-layout: fixed;
-        }
-        
-        .component-table th, 
-        .component-table td {
-            padding: var(--spacing-xs) var(--spacing-sm);
-        }
-        
-        .component-table th:first-child,
-        .component-table td:first-child {
-            width: 45%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .component-table th:nth-child(3),
-        .component-table td:nth-child(3) {
-            width: 20%;
-        }
-        
-        .card-header h4 {
-            font-size: 1rem;
-        }
-        
-        .form-actions button, 
-        .form-actions a {
-            padding: 0.5rem;
-            font-size: 0.9rem;
+        .panel-body {
+            padding: var(--spacing-sm);
         }
         
         .form-control {
             padding: 0.6rem 0.5rem;
             font-size: 16px; /* Prevents zoom on iOS */
         }
-    }
-    
-    /* Component form enhancements */
-    .optional-label {
-        font-size: 0.8rem;
-        color: var(--text-color-muted);
-        font-weight: normal;
-    }
-    
-    .ratio-group {
-        flex: 0 0 150px;
-    }
-    
-    .form-actions .button .fas {
-        margin-right: 0.5rem;
-    }
-    
-    /* Input placeholders */
-    ::placeholder {
-        color: var(--text-color-muted);
-        opacity: 0.6;
-    }
-    
-    /* Form layouts */
-    .form-control {
-        width: 100%;
-        padding: 0.5rem 0.75rem;
-        background-color: var(--input-bg);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        color: var(--text-color);
-    }
-    
-    select.form-control {
-        appearance: none;
-        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 0.75rem center;
-        background-size: 16px;
-        padding-right: 2.5rem;
-    }
-    
-    /* Modal enhancements */
-    .modal-actions {
-        display: flex;
-        gap: var(--spacing-md);
-        justify-content: flex-end;
-        margin-top: var(--spacing-lg);
-    }
-    
-    .modal-header i {
-        margin-right: 0.5rem;
+        
+        .component-body {
+            padding: var(--spacing-sm);
+        }
+        
+        .ratio-value {
+            font-size: 1.5rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Edit component buttons
+    // Add component toggle
     document.addEventListener('DOMContentLoaded', function() {
-        // Add event listeners to all edit component buttons
+        const addComponentToggle = document.getElementById('add-component-toggle');
+        const addComponentContainer = document.getElementById('add-component-container');
+        const cancelAddBtn = document.getElementById('cancel-add');
+        
+        if (addComponentToggle && addComponentContainer) {
+            addComponentToggle.addEventListener('click', function() {
+                addComponentContainer.style.display = 'block';
+                addComponentToggle.style.display = 'none';
+            });
+            
+            if (cancelAddBtn) {
+                cancelAddBtn.addEventListener('click', function() {
+                    addComponentContainer.style.display = 'none';
+                    addComponentToggle.style.display = 'inline-flex';
+                });
+            }
+        }
+        
+        // Edit component buttons
         document.querySelectorAll('.edit-component-btn').forEach(function(button) {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
@@ -539,6 +693,29 @@
                 editComponent(id, name, ratio);
             });
         });
+        
+        // Form validation
+        const addComponentForm = document.getElementById('add-component-form');
+        if (addComponentForm) {
+            addComponentForm.addEventListener('submit', function(e) {
+                const ratio = parseFloat(document.getElementById('ratio').value);
+                if (ratio <= 0) {
+                    e.preventDefault();
+                    alert('Ratio must be greater than 0');
+                }
+            });
+        }
+        
+        const editComponentForm = document.getElementById('edit-component-form');
+        if (editComponentForm) {
+            editComponentForm.addEventListener('submit', function(e) {
+                const ratio = parseFloat(document.getElementById('edit_ratio').value);
+                if (ratio <= 0) {
+                    e.preventDefault();
+                    alert('Ratio must be greater than 0');
+                }
+            });
+        }
     });
 
     // Edit component modal functionality
@@ -566,27 +743,5 @@
             closeEditModal();
         }
     }
-    
-    // Initialize page
-    document.addEventListener('DOMContentLoaded', function() {
-        // Form validation
-        const addComponentForm = document.getElementById('add-component-form');
-        addComponentForm.addEventListener('submit', function(e) {
-            const ratio = parseFloat(document.getElementById('ratio').value);
-            if (ratio <= 0) {
-                e.preventDefault();
-                alert('Ratio must be greater than 0');
-            }
-        });
-        
-        const editComponentForm = document.getElementById('edit-component-form');
-        editComponentForm.addEventListener('submit', function(e) {
-            const ratio = parseFloat(document.getElementById('edit_ratio').value);
-            if (ratio <= 0) {
-                e.preventDefault();
-                alert('Ratio must be greater than 0');
-            }
-        });
-    });
 </script>
 {% endblock %} 
