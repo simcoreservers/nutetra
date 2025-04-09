@@ -12,6 +12,7 @@ import os
 from ..models.sensor import SensorData
 from ..models.notification import Notification
 from app.models.nutrient import NutrientBrand, NutrientProduct
+from app import db
 
 # Create a blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -261,7 +262,6 @@ def create_pump():
         )
         
         # Save to database
-        from app import db
         db.session.add(new_pump)
         db.session.commit()
         
@@ -922,7 +922,6 @@ def create_nutrient_brand():
         )
         
         # Save to database
-        from app import db
         db.session.add(new_brand)
         db.session.commit()
         
@@ -976,7 +975,6 @@ def create_nutrient_product():
         )
         
         # Save to database
-        from app import db
         db.session.add(new_product)
         db.session.commit()
         
