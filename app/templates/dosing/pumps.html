@@ -28,12 +28,6 @@
                         <span class="detail-label">Type:</span>
                         <span class="detail-value">{{ pump.type|replace('_', ' ')|title }}</span>
                     </div>
-                    {% if pump.type == 'ph_up' or pump.type == 'ph_down' %}
-                    <div class="detail-row">
-                        <span class="detail-label">Status:</span>
-                        <span class="detail-value hardwired-badge">Hardwired</span>
-                    </div>
-                    {% endif %}
                     <div class="detail-row">
                         <span class="detail-label">GPIO Pin:</span>
                         <span class="detail-value">{{ pump.gpio_pin }}</span>
