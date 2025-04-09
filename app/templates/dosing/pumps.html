@@ -45,7 +45,7 @@
                         <i class="fas fa-vial"></i> Test
                     </button>
                     <button class="action-button {% if pump.enabled %}disable-pump{% else %}enable-pump{% endif %}" data-pump-id="{{ pump.id }}">
-                        <i class="fas {% if pump.enabled %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i> 
+                        <i class="fas {% if pump.enabled %}fa-toggle-off{% else %}fa-toggle-on{% endif %}"></i> 
                         {{ 'Disable' if pump.enabled else 'Enable' }}
                     </button>
                 </div>
@@ -322,6 +322,11 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             const pumpId = this.getAttribute('data-pump-id');
             const isCurrentlyEnabled = this.classList.contains('disable-pump');
+            
+            // Confirm action
+            if (!confirm(`Are you sure you want to ${isCurrentlyEnabled ? 'disable' : 'enable'} this pump?`)) {
+                return;
+            }
             
             // Disable button during operation
             btn.disabled = true;

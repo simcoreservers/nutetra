@@ -7,8 +7,6 @@ class NutrientRecipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(200))
-    target_ec = db.Column(db.Float, default=1200.0)  # Target EC in μS/cm
-    target_ph = db.Column(db.Float, default=6.0)     # Target pH value
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
@@ -24,8 +22,6 @@ class NutrientRecipe(db.Model):
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'target_ec': self.target_ec,
-            'target_ph': self.target_ph,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'is_active': self.is_active,
@@ -60,7 +56,7 @@ class NutrientRecipe(db.Model):
                 comp_a = RecipeComponent(
                     recipe_id=default_recipe.id,
                     pump_id=nutrient_a.id,
-                    dose_amount=10.0,
+                    ratio=1.0,
                     name="Part A"
                 )
                 db.session.add(comp_a)
@@ -69,7 +65,7 @@ class NutrientRecipe(db.Model):
                 comp_b = RecipeComponent(
                     recipe_id=default_recipe.id,
                     pump_id=nutrient_b.id,
-                    dose_amount=10.0,
+                    ratio=1.0,
                     name="Part B"
                 )
                 db.session.add(comp_b)
@@ -83,14 +79,14 @@ class RecipeComponent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     recipe_id = db.Column(db.Integer, db.ForeignKey('nutrient_recipes.id'), nullable=False)
     pump_id = db.Column(db.Integer, db.ForeignKey('pumps.id'), nullable=False)
-    dose_amount = db.Column(db.Float, nullable=False, default=10.0)  # Amount to dose in ml
+    ratio = db.Column(db.Float, nullable=False, default=1.0)  # Relative ratio in the recipe
     name = db.Column(db.String(50))  # Optional name for the component
     
     # Relationship to pump
     pump = db.relationship('Pump')
     
     def __repr__(self):
-        return f'<RecipeComponent {self.id}: {self.name or "Unnamed"} (dose: {self.dose_amount}ml)>'
+        return f'<RecipeComponent {self.id}: {self.name or "Unnamed"} (ratio: {self.ratio})>'
     
     def to_dict(self):
         return {
@@ -98,6 +94,6 @@ class RecipeComponent(db.Model):
             'recipe_id': self.recipe_id,
             'pump_id': self.pump_id,
             'pump_name': self.pump.name if self.pump else 'Unknown',
-            'dose_amount': self.dose_amount,
+            'ratio': self.ratio,
             'name': self.name
         } 
