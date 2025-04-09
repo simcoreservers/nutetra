@@ -205,25 +205,20 @@ class Settings(db.Model):
         """
         Automatically configure nutrient components based on the available pumps
         """
-        # Get all settings
-        settings = Settings.query.all()
-        if not settings:
-            return False
+        # Get all plant profiles
+        plant_profiles = Settings.get('plant_profiles', {})
+        if not plant_profiles:
+            return "No plant profiles found"
         
         # Get all nutrient pumps
         pumps = Pump.query.filter(Pump.type == 'nutrient').all()
         
         updated_profiles = 0
-        total_profiles = len(settings)
+        total_profiles = len(plant_profiles)
         
-        for setting in settings:
+        for profile_id, profile in plant_profiles.items():
             # Parse the existing nutrient_components
-            current_components = []
-            if setting.nutrient_components:
-                try:
-                    current_components = json.loads(setting.nutrient_components)
-                except:
-                    current_components = []
+            current_components = profile.get('nutrient_components', [])
             
             # Create new components based on available pumps
             new_components = []
@@ -302,11 +297,13 @@ class Settings(db.Model):
                             new_comp['ml_per_liter'] = curr_comp['ml_per_liter']
                             break
                 
-                setting.nutrient_components = json.dumps(new_components)
+                # Update the nutrient_components in the profile
+                profile['nutrient_components'] = new_components
                 updated_profiles += 1
         
+        # Update the plant_profiles setting if any profiles were updated
         if updated_profiles > 0:
-            db.session.commit()
+            Settings.set('plant_profiles', plant_profiles)
             return f"Updated {updated_profiles} of {total_profiles} profiles"
         
         return "No profiles needed updating" 
