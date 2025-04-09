@@ -96,6 +96,47 @@
                     <input type="number" id="flow-rate" name="flow_rate" class="form-control" min="0.1" step="0.1" required>
                 </div>
                 
+                <!-- Nutrient Information Section -->
+                <div id="nutrient-section" class="form-section">
+                    <h4 class="section-title">Nutrient Information</h4>
+                    <p class="section-description">Specify the nutrient brand and product for this pump</p>
+                    
+                    <div class="form-group">
+                        <label for="nutrient-brand">Nutrient Brand</label>
+                        <select id="nutrient-brand" name="nutrient_brand" class="form-control">
+                            <option value="">Select a brand</option>
+                            <!-- Brands will be loaded dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nutrient-product">Nutrient Product</label>
+                        <select id="nutrient-product" name="nutrient_name" class="form-control" disabled>
+                            <option value="">Select a product</option>
+                            <!-- Products will be loaded dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="npk-values">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nitrogen-pct">Nitrogen (N) %</label>
+                                <input type="number" id="nitrogen-pct" name="nitrogen_pct" class="form-control" min="0" max="100" step="0.1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phosphorus-pct">Phosphorus (P) %</label>
+                                <input type="number" id="phosphorus-pct" name="phosphorus_pct" class="form-control" min="0" max="100" step="0.1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="potassium-pct">Potassium (K) %</label>
+                                <input type="number" id="potassium-pct" name="potassium_pct" class="form-control" min="0" max="100" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label class="switch">
                         <input type="checkbox" id="is-enabled" name="is_enabled" checked>
@@ -147,12 +188,77 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModalBtns = document.querySelectorAll('.close-modal, .cancel-btn');
     const testModal = document.getElementById('test-modal');
     
+    // Nutrient selectors
+    const nutrientBrandSelect = document.getElementById('nutrient-brand');
+    const nutrientProductSelect = document.getElementById('nutrient-product');
+    const nitrogenInput = document.getElementById('nitrogen-pct');
+    const phosphorusInput = document.getElementById('phosphorus-pct');
+    const potassiumInput = document.getElementById('potassium-pct');
+    const pumpTypeSelect = document.getElementById('pump-type');
+    
+    // Load nutrient brands when the page loads
+    loadNutrientBrands();
+    
+    // Hide nutrient section for non-nutrient pumps
+    pumpTypeSelect.addEventListener('change', function() {
+        const nutrientSection = document.getElementById('nutrient-section');
+        if (this.value.startsWith('nutrient') || this.value === 'custom') {
+            nutrientSection.style.display = 'block';
+        } else {
+            nutrientSection.style.display = 'none';
+        }
+    });
+    
+    // Handle nutrient brand selection
+    nutrientBrandSelect.addEventListener('change', function() {
+        const brandId = this.value;
+        if (brandId) {
+            // Load products for this brand
+            loadBrandProducts(brandId);
+            nutrientProductSelect.disabled = false;
+        } else {
+            // Clear and disable the product select
+            nutrientProductSelect.innerHTML = '<option value="">Select a product</option>';
+            nutrientProductSelect.disabled = true;
+            // Clear NPK values
+            nitrogenInput.value = '';
+            phosphorusInput.value = '';
+            potassiumInput.value = '';
+        }
+    });
+    
+    // Handle nutrient product selection
+    nutrientProductSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            // Get NPK values from data attributes
+            nitrogenInput.value = selectedOption.dataset.n || '';
+            phosphorusInput.value = selectedOption.dataset.p || '';
+            potassiumInput.value = selectedOption.dataset.k || '';
+        } else {
+            // Clear NPK values
+            nitrogenInput.value = '';
+            phosphorusInput.value = '';
+            potassiumInput.value = '';
+        }
+    });
+    
     // Open add pump modal
     addPumpBtn.addEventListener('click', function() {
         // Reset form for adding a new pump
         document.getElementById('modal-title').textContent = 'Add Pump';
         document.getElementById('pump-id').value = '';
         pumpForm.reset();
+        
+        // Show/hide nutrient section based on pump type
+        const pumpType = pumpTypeSelect.value;
+        const nutrientSection = document.getElementById('nutrient-section');
+        if (pumpType.startsWith('nutrient') || pumpType === 'custom') {
+            nutrientSection.style.display = 'block';
+        } else {
+            nutrientSection.style.display = 'none';
+        }
+        
         pumpModal.classList.add('active');
     });
     
@@ -180,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Skip empty id
             } else {
                 // Convert number fields to numbers
-                if (key === 'gpio_pin' || key === 'flow_rate') {
+                if (['gpio_pin', 'flow_rate', 'nitrogen_pct', 'phosphorus_pct', 'potassium_pct'].includes(key) && value !== '') {
                     data[key] = Number(value);
                 } else {
                     data[key] = value;
@@ -242,6 +348,33 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('flow-rate').value = pump.flow_rate;
                         document.getElementById('is-enabled').checked = pump.enabled;
                         
+                        // Show/hide nutrient section based on pump type
+                        const pumpType = pump.type;
+                        const nutrientSection = document.getElementById('nutrient-section');
+                        if (pumpType.startsWith('nutrient') || pumpType === 'custom') {
+                            nutrientSection.style.display = 'block';
+                            
+                            // If the pump has nutrient info, select it
+                            if (pump.nutrient_brand) {
+                                nutrientBrandSelect.value = pump.nutrient_brand;
+                                // Trigger change event to load products
+                                nutrientBrandSelect.dispatchEvent(new Event('change'));
+                                
+                                // Wait for products to load, then select the product
+                                setTimeout(() => {
+                                    if (pump.nutrient_name) {
+                                        nutrientProductSelect.value = pump.nutrient_name;
+                                        // Might need to manually set NPK values
+                                        if (pump.nitrogen_pct !== null) nitrogenInput.value = pump.nitrogen_pct;
+                                        if (pump.phosphorus_pct !== null) phosphorusInput.value = pump.phosphorus_pct;
+                                        if (pump.potassium_pct !== null) potassiumInput.value = pump.potassium_pct;
+                                    }
+                                }, 500);
+                            }
+                        } else {
+                            nutrientSection.style.display = 'none';
+                        }
+                        
                         // Show modal
                         pumpModal.classList.add('active');
                     } else {
@@ -250,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error loading pump data');
+                    alert('An error occurred while loading pump data');
                 });
         });
     });
@@ -259,61 +392,53 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.test-pump').forEach(btn => {
         btn.addEventListener('click', function() {
             const pumpId = this.getAttribute('data-pump-id');
-            // Store pump ID in test modal
-            testModal.setAttribute('data-pump-id', pumpId);
-            // Reset values
-            document.getElementById('test-amount').value = 1;
-            // Show modal
+            document.getElementById('run-test-btn').setAttribute('data-pump-id', pumpId);
             testModal.classList.add('active');
         });
     });
     
     // Run pump test
-    const runTestBtn = document.getElementById('run-test-btn');
-    runTestBtn.addEventListener('click', function() {
-        const pumpId = testModal.getAttribute('data-pump-id');
-        const amount = parseFloat(document.getElementById('test-amount').value);
+    document.getElementById('run-test-btn').addEventListener('click', function() {
+        const pumpId = this.getAttribute('data-pump-id');
+        const amount = document.getElementById('test-amount').value;
         
-        if (!pumpId || isNaN(amount) || amount <= 0) {
+        if (!pumpId || !amount) {
             alert('Please enter a valid amount');
             return;
         }
         
-        // Disable button while running
-        runTestBtn.disabled = true;
-        runTestBtn.textContent = 'Running...';
+        // Disable the button to prevent multiple clicks
+        this.disabled = true;
+        this.textContent = 'Running...';
         
-        // Call API to test pump
+        // Send test request to API
         fetch(`/api/dosing/pump/${pumpId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                amount_ml: amount
+                amount_ml: Number(amount)
             })
         })
         .then(response => response.json())
-        .then(data => {
-            // Re-enable button
-            runTestBtn.disabled = false;
-            runTestBtn.textContent = 'Run Test';
-            
-            if (data.success) {
-                // Close modal and show success
-                testModal.classList.remove('active');
+        .then(result => {
+            if (result.success) {
                 alert('Test completed successfully');
             } else {
-                alert('Error: ' + (data.error || 'Unknown error'));
+                alert('Error: ' + (result.error || 'Unknown error'));
             }
         })
         .catch(error => {
-            // Re-enable button
-            runTestBtn.disabled = false;
-            runTestBtn.textContent = 'Run Test';
-            
             console.error('Error:', error);
             alert('An error occurred while testing the pump');
+        })
+        .finally(() => {
+            // Re-enable the button
+            this.disabled = false;
+            this.textContent = 'Run Test';
+            // Close the modal
+            testModal.classList.remove('active');
         });
     });
     
@@ -321,202 +446,347 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.enable-pump, .disable-pump').forEach(btn => {
         btn.addEventListener('click', function() {
             const pumpId = this.getAttribute('data-pump-id');
-            const isCurrentlyEnabled = this.classList.contains('disable-pump');
+            const enable = this.classList.contains('enable-pump');
             
-            // Confirm action
-            if (!confirm(`Are you sure you want to ${isCurrentlyEnabled ? 'disable' : 'enable'} this pump?`)) {
-                return;
-            }
-            
-            // Disable button during operation
-            btn.disabled = true;
-            
-            // Call API to update pump
+            // Send request to API
             fetch(`/api/pumps/${pumpId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    enabled: !isCurrentlyEnabled
+                    enabled: enable
                 })
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload page to show updated status
+            .then(result => {
+                if (result.success) {
+                    // Reload page to reflect changes
                     window.location.reload();
                 } else {
-                    // Re-enable button and show error
-                    btn.disabled = false;
-                    alert('Error: ' + (data.error || 'Unknown error'));
+                    alert('Error: ' + (result.error || 'Unknown error'));
                 }
             })
             .catch(error => {
-                // Re-enable button
-                btn.disabled = false;
                 console.error('Error:', error);
-                alert('An error occurred while updating the pump');
+                alert('An error occurred while updating pump status');
             });
         });
     });
+    
+    // Function to load nutrient brands
+    function loadNutrientBrands() {
+        fetch('/api/nutrient-brands')
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const brands = result.data;
+                    
+                    // Clear and populate the brands dropdown
+                    nutrientBrandSelect.innerHTML = '<option value="">Select a brand</option>';
+                    
+                    brands.forEach(brand => {
+                        const option = document.createElement('option');
+                        option.value = brand.id;
+                        option.textContent = brand.name;
+                        nutrientBrandSelect.appendChild(option);
+                    });
+                } else {
+                    console.error('Error loading nutrient brands:', result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+    
+    // Function to load products for a specific brand
+    function loadBrandProducts(brandId) {
+        fetch(`/api/nutrient-brands/${brandId}/products`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const products = result.data;
+                    
+                    // Clear and populate the products dropdown
+                    nutrientProductSelect.innerHTML = '<option value="">Select a product</option>';
+                    
+                    products.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.name;
+                        option.textContent = product.name;
+                        // Store NPK values as data attributes
+                        if (product.nitrogen_pct !== null) option.dataset.n = product.nitrogen_pct;
+                        if (product.phosphorus_pct !== null) option.dataset.p = product.phosphorus_pct;
+                        if (product.potassium_pct !== null) option.dataset.k = product.potassium_pct;
+                        nutrientProductSelect.appendChild(option);
+                    });
+                } else {
+                    console.error('Error loading brand products:', result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
 });
 </script>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-.pump-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-md);
-}
-
-.pump-card {
-    background-color: var(--bg-color-lighter);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.pump-header {
-    background-color: var(--bg-color-light);
-    padding: var(--spacing-md);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.pump-header h4 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0;
-}
-
-.pump-status {
-    display: flex;
-    align-items: center;
-}
-
-.status-indicator {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 5px;
-}
-
-.status-indicator.success {
-    background-color: var(--success-color);
-}
-
-.status-indicator.danger {
-    background-color: var(--danger-color);
-}
-
-.pump-details {
-    padding: var(--spacing-md);
-    flex: 1;
-}
-
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-sm);
-}
-
-.detail-label {
-    color: var(--text-color-muted);
-}
-
-.detail-value {
-    font-weight: 500;
-}
-
-.pump-actions {
-    padding: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    gap: var(--spacing-xs);
-}
-
-.switch-label {
-    margin-left: var(--spacing-sm);
-    vertical-align: middle;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
-}
-
-.empty-state {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--text-color-muted);
-}
-
-/* Mobile Responsive Styles */
-@media (max-width: 768px) {
     .pump-grid {
-        grid-template-columns: 1fr;
-        gap: var(--spacing-sm);
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
     }
     
-    .action-button {
+    .pump-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .pump-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .pump-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .pump-status {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    
+    .status-indicator.success {
+        background-color: var(--success-color);
+    }
+    
+    .status-indicator.danger {
+        background-color: var(--danger-color);
+    }
+    
+    .pump-details {
+        padding: var(--spacing-md);
         flex: 1;
-        min-width: 0;
-        padding: var(--spacing-xs);
-        font-size: 0.9rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    
+    .detail-label {
+        color: var(--text-color-muted);
+        font-weight: 500;
     }
     
     .pump-actions {
-        flex-wrap: wrap;
-    }
-    
-    /* Modal improvements for mobile */
-    .modal-content {
-        width: 95%;
-        max-width: 95%;
-        margin: 10% auto;
-    }
-    
-    #add-pump-btn {
-        padding: var(--spacing-xs) var(--spacing-sm);
-    }
-    
-    .section-header {
-        flex-direction: column;
-        align-items: flex-start;
+        display: flex;
         gap: var(--spacing-sm);
-    }
-    
-    .section-header h3 {
-        margin-bottom: var(--spacing-xs);
-    }
-    
-    .section-header button {
-        align-self: flex-start;
-    }
-}
-
-/* Tablet Responsive Styles */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .pump-grid {
-        grid-template-columns: repeat(2, 1fr);
+        padding: var(--spacing-md);
+        border-top: 1px solid var(--border-color);
+        background-color: var(--bg-color-light);
+        justify-content: flex-end;
     }
     
     .action-button {
+        padding: 6px 12px;
+        border-radius: var(--border-radius);
+        border: none;
+        cursor: pointer;
+        background-color: var(--bg-color-dark);
+        color: var(--text-color);
         font-size: 0.9rem;
-        padding: var(--spacing-xs) var(--spacing-sm);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
     }
-}
+    
+    .action-button:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .action-button.disable-pump {
+        background-color: var(--danger-color-light);
+        color: var(--danger-color);
+    }
+    
+    .action-button.disable-pump:hover {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-color-muted);
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        animation: modal-appear 0.3s ease-out;
+    }
+    
+    @keyframes modal-appear {
+        from { opacity: 0; transform: translateY(-50px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .modal-header {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-color-muted);
+        cursor: pointer;
+    }
+    
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    
+    .form-group .switch-label {
+        margin-left: 10px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-size: 1rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
+    }
+
+    /* Nutrient Section Styling */
+    .form-section {
+        margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-md);
+        background-color: var(--bg-color);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+    }
+    
+    .section-title {
+        margin-top: 0;
+        margin-bottom: var(--spacing-xs);
+        font-size: 1.1rem;
+        color: var(--primary-color);
+    }
+    
+    .section-description {
+        color: var(--text-color-muted);
+        font-size: 0.9rem;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .npk-values {
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-sm);
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .npk-values .form-row {
+        margin-bottom: 0;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        
+        .modal-content {
+            width: 95%;
+            max-height: 95vh;
+        }
+        
+        .pump-actions {
+            flex-wrap: wrap;
+        }
+        
+        .action-button {
+            flex: 1;
+            justify-content: center;
+        }
+    }
 </style>
 {% endblock %} 

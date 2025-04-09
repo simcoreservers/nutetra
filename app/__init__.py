@@ -148,10 +148,14 @@ def create_app(test_config=None):
     with app.app_context():
         from app.utils.sensor_manager import init_sensors
         from app.utils.dosing_manager import init_dosing
+        from app.models.nutrient import NutrientBrand
         
         db.create_all()
         init_sensors()
         init_dosing()
+        
+        # Initialize nutrient brands and products
+        NutrientBrand.initialize_defaults()
         
     # Register the database command
     app.cli.add_command(init_db_command)

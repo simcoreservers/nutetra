@@ -11,6 +11,7 @@ import random
 import os
 from ..models.sensor import SensorData
 from ..models.notification import Notification
+from app.models.nutrient import NutrientBrand, NutrientProduct
 
 # Create a blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -248,7 +249,13 @@ def create_pump():
             type=data['type'],
             gpio_pin=data['gpio_pin'],
             flow_rate=data['flow_rate'],
-            enabled=data.get('is_enabled', True)
+            enabled=data.get('enabled', True),
+            # Add nutrient information if provided
+            nutrient_brand=data.get('nutrient_brand'),
+            nutrient_name=data.get('nutrient_name'),
+            nitrogen_pct=data.get('nitrogen_pct'),
+            phosphorus_pct=data.get('phosphorus_pct'),
+            potassium_pct=data.get('potassium_pct')
         )
         
         # Save to database
@@ -291,13 +298,33 @@ def update_pump(pump_id):
         if 'type' in data:
             pump.type = data['type']
         if 'gpio_pin' in data:
+            # Check if the new GPIO pin is already in use by another pump
+            if data['gpio_pin'] != pump.gpio_pin:
+                existing_pump = Pump.query.filter_by(gpio_pin=data['gpio_pin']).first()
+                if existing_pump and existing_pump.id != pump_id:
+                    return jsonify({
+                        'success': False,
+                        'error': f"GPIO pin {data['gpio_pin']} is already in use by pump '{existing_pump.name}'"
+                    }), 400
             pump.gpio_pin = data['gpio_pin']
         if 'flow_rate' in data:
             pump.flow_rate = data['flow_rate']
         if 'enabled' in data:
             pump.enabled = data['enabled']
+            
+        # Update nutrient information if provided
+        if 'nutrient_brand' in data:
+            pump.nutrient_brand = data['nutrient_brand']
+        if 'nutrient_name' in data:
+            pump.nutrient_name = data['nutrient_name']
+        if 'nitrogen_pct' in data:
+            pump.nitrogen_pct = data['nitrogen_pct']
+        if 'phosphorus_pct' in data:
+            pump.phosphorus_pct = data['phosphorus_pct']
+        if 'potassium_pct' in data:
+            pump.potassium_pct = data['potassium_pct']
         
-        # Save changes
+        # Save changes to database
         from app import db
         db.session.commit()
         
@@ -798,6 +825,147 @@ def test_notification():
                 'error': f'Unknown notification type: {notification_type}'
             }), 400
             
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@api_bp.route('/nutrient-brands', methods=['GET'])
+def get_nutrient_brands():
+    """Get all nutrient brands"""
+    try:
+        brands = NutrientBrand.query.all()
+        
+        return jsonify({
+            'success': True,
+            'data': [brand.to_dict() for brand in brands]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@api_bp.route('/nutrient-brands/<int:brand_id>/products', methods=['GET'])
+def get_brand_products(brand_id):
+    """Get all products for a specific nutrient brand"""
+    try:
+        brand = NutrientBrand.query.get(brand_id)
+        if not brand:
+            return jsonify({
+                'success': False,
+                'error': f"Brand with ID {brand_id} not found"
+            }), 404
+        
+        products = NutrientProduct.query.filter_by(brand_id=brand_id).all()
+        
+        return jsonify({
+            'success': True,
+            'data': [product.to_dict() for product in products]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@api_bp.route('/nutrient-brands', methods=['POST'])
+def create_nutrient_brand():
+    """Create a new nutrient brand"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': "No data provided"
+            }), 400
+        
+        # Validate required fields
+        if 'name' not in data:
+            return jsonify({
+                'success': False,
+                'error': "Missing required field: name"
+            }), 400
+        
+        # Check if brand already exists
+        existing_brand = NutrientBrand.query.filter_by(name=data['name']).first()
+        if existing_brand:
+            return jsonify({
+                'success': False,
+                'error': f"Brand '{data['name']}' already exists"
+            }), 400
+        
+        # Create new brand
+        new_brand = NutrientBrand(
+            name=data['name'],
+            description=data.get('description')
+        )
+        
+        # Save to database
+        from app import db
+        db.session.add(new_brand)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': "Nutrient brand created successfully",
+            'data': new_brand.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@api_bp.route('/nutrient-products', methods=['POST'])
+def create_nutrient_product():
+    """Create a new nutrient product"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': "No data provided"
+            }), 400
+        
+        # Validate required fields
+        required_fields = ['brand_id', 'name']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False,
+                    'error': f"Missing required field: {field}"
+                }), 400
+        
+        # Check if brand exists
+        brand = NutrientBrand.query.get(data['brand_id'])
+        if not brand:
+            return jsonify({
+                'success': False,
+                'error': f"Brand with ID {data['brand_id']} not found"
+            }), 404
+        
+        # Create new product
+        new_product = NutrientProduct(
+            brand_id=data['brand_id'],
+            name=data['name'],
+            description=data.get('description'),
+            nitrogen_pct=data.get('nitrogen_pct'),
+            phosphorus_pct=data.get('phosphorus_pct'),
+            potassium_pct=data.get('potassium_pct')
+        )
+        
+        # Save to database
+        from app import db
+        db.session.add(new_product)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': "Nutrient product created successfully",
+            'data': new_product.to_dict()
+        })
     except Exception as e:
         return jsonify({
             'success': False,

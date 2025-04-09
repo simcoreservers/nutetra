@@ -10,6 +10,13 @@ class Pump(db.Model):
     flow_rate = db.Column(db.Float, nullable=False)  # ml per second
     enabled = db.Column(db.Boolean, default=True)
     
+    # New fields for nutrient information
+    nutrient_brand = db.Column(db.String(50), nullable=True)
+    nutrient_name = db.Column(db.String(100), nullable=True)
+    nitrogen_pct = db.Column(db.Float, nullable=True)  # N percentage
+    phosphorus_pct = db.Column(db.Float, nullable=True)  # P percentage
+    potassium_pct = db.Column(db.Float, nullable=True)  # K percentage
+    
     def __repr__(self):
         return f'<Pump {self.id}: {self.name} ({self.type})>'
     
@@ -20,7 +27,12 @@ class Pump(db.Model):
             'type': self.type,
             'gpio_pin': self.gpio_pin,
             'flow_rate': self.flow_rate,
-            'enabled': self.enabled
+            'enabled': self.enabled,
+            'nutrient_brand': self.nutrient_brand,
+            'nutrient_name': self.nutrient_name,
+            'nitrogen_pct': self.nitrogen_pct,
+            'phosphorus_pct': self.phosphorus_pct,
+            'potassium_pct': self.potassium_pct
         }
     
     def calculate_dosing_time(self, amount_ml):
