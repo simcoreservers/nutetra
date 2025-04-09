@@ -75,18 +75,18 @@
                             <div class="profile-details">
                                 <div class="detail-item">
                                     <span class="detail-label">pH:</span> 
-                                    <span id="profile-ph" class="detail-value">{{ settings.plant_profiles[settings.active_plant_profile].ph_setpoint }}</span>
+                                    <span id="profile-ph" class="detail-value">{{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('ph_setpoint', 6.0) }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">EC:</span> 
-                                    <span id="profile-ec" class="detail-value">{{ settings.plant_profiles[settings.active_plant_profile].ec_setpoint }} μS/cm</span>
+                                    <span id="profile-ec" class="detail-value">{{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('ec_setpoint', 1350) }} μS/cm</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Temperature:</span> 
-                                    <span id="profile-temp" class="detail-value">{{ settings.plant_profiles[settings.active_plant_profile].temp_min }} - {{ settings.plant_profiles[settings.active_plant_profile].temp_max }}°C</span>
+                                    <span id="profile-temp" class="detail-value">{{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('temp_min', 18.0) }} - {{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('temp_max', 28.0) }}°C</span>
                                 </div>
                             </div>
-                            <p id="profile-description" class="profile-description">{{ settings.plant_profiles[settings.active_plant_profile].description }}</p>
+                            <p id="profile-description" class="profile-description">{{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('description', 'General purpose profile suitable for most plants') }}</p>
                         </div>
                     </div>
                 </div>

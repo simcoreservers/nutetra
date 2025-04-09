@@ -239,6 +239,64 @@ def events():
 @dosing_bp.route('/settings', methods=['GET', 'POST'])
 def settings():
     """Manage dosing settings"""
+    # Ensure plant profiles are initialized
+    if not Settings.get('plant_profiles'):
+        # Initialize default plant profiles
+        plant_profiles = {
+            'general': {
+                'name': 'General Purpose',
+                'ph_setpoint': 6.0,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1350,
+                'ec_buffer': 150,
+                'temp_min': 18.0,
+                'temp_max': 28.0,
+                'description': 'General purpose profile suitable for most plants'
+            },
+            'leafy_greens': {
+                'name': 'Leafy Greens',
+                'ph_setpoint': 6.0,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1000,
+                'ec_buffer': 100,
+                'temp_min': 18.0,
+                'temp_max': 24.0,
+                'description': 'Optimized for lettuce, spinach, kale and other leafy vegetables'
+            },
+            'fruiting': {
+                'name': 'Fruiting Plants',
+                'ph_setpoint': 6.0,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1800,
+                'ec_buffer': 150,
+                'temp_min': 20.0,
+                'temp_max': 28.0,
+                'description': 'For tomatoes, peppers, cucumbers and other fruiting plants'
+            },
+            'herbs': {
+                'name': 'Herbs',
+                'ph_setpoint': 5.8,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1200,
+                'ec_buffer': 100,
+                'temp_min': 18.0,
+                'temp_max': 26.0,
+                'description': 'Ideal for basil, cilantro, parsley and other herbs'
+            },
+            'strawberries': {
+                'name': 'Strawberries',
+                'ph_setpoint': 5.8,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1300,
+                'ec_buffer': 100,
+                'temp_min': 18.0,
+                'temp_max': 26.0,
+                'description': 'Optimized for growing strawberries'
+            }
+        }
+        Settings.set('plant_profiles', plant_profiles)
+        Settings.set('active_plant_profile', 'general')
+        
     if request.method == 'POST':
         # Update settings from form
         auto_dosing = 'auto_dosing_enabled' in request.form
