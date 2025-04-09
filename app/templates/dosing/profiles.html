@@ -13,6 +13,13 @@
             </a>
         </div>
         
+        {% if has_incompatibilities %}
+        <div class="incompatibility-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Warning:</strong> Some nutrient combinations may not be compatible. Check the messages above for details and consider adjusting your pump configuration.
+        </div>
+        {% endif %}
+        
         <div class="profiles-grid">
             {% for profile_id, profile in profiles.items() %}
             <div class="profile-card">
@@ -38,6 +45,23 @@
                             <span class="detail-label">Temperature:</span>
                             <span class="detail-value">{{ profile.temp_min }}-{{ profile.temp_max }}°C</span>
                         </div>
+                        
+                        {% if profile.nutrient_components %}
+                        <div class="components-list">
+                            <h5>Nutrient Configuration</h5>
+                            <ul>
+                                {% for component in profile.nutrient_components %}
+                                <li>
+                                    <span class="component-name">{{ component.pump_name }}</span>
+                                    <span class="component-ratio">{{ component.ratio }}</span>
+                                    {% if component.nutrient_type %}
+                                    <span class="component-type">{{ component.nutrient_type }}</span>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
                     </div>
                     
                     <div class="profile-actions">
@@ -173,6 +197,67 @@
     
     .back-link {
         margin-top: var(--spacing-lg);
+    }
+    
+    /* Nutrient components styles */
+    .components-list {
+        margin-top: var(--spacing-md);
+        border-top: 1px solid var(--border-color);
+        padding-top: var(--spacing-sm);
+    }
+    
+    .components-list h5 {
+        font-size: 0.9rem;
+        margin-bottom: var(--spacing-xs);
+        color: var(--text-color-muted);
+    }
+    
+    .components-list ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .components-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .component-name {
+        flex: 2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .component-ratio {
+        flex: 1;
+        text-align: center;
+        font-weight: 500;
+    }
+    
+    .component-type {
+        flex: 1;
+        text-align: right;
+        color: var(--text-color-muted);
+        font-style: italic;
+    }
+    
+    /* Incompatibility warning */
+    .incompatibility-warning {
+        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-sm);
+        background-color: var(--warning-color-light);
+        border-radius: var(--border-radius);
+        color: var(--warning-color);
+        font-size: 0.9rem;
+    }
+    
+    .incompatibility-warning i {
+        margin-right: var(--spacing-xs);
     }
 </style>
 {% endblock %} 

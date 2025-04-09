@@ -244,62 +244,18 @@ def settings():
     """Manage dosing settings"""
     # Ensure plant profiles are initialized
     if not Settings.get('plant_profiles'):
-        # Initialize default plant profiles
-        plant_profiles = {
-            'general': {
-                'name': 'General Purpose',
-                'ph_setpoint': 6.0,
-                'ph_buffer': 0.2,
-                'ec_setpoint': 1350,
-                'ec_buffer': 150,
-                'temp_min': 18.0,
-                'temp_max': 28.0,
-                'description': 'General purpose profile suitable for most plants'
-            },
-            'leafy_greens': {
-                'name': 'Leafy Greens',
-                'ph_setpoint': 6.0,
-                'ph_buffer': 0.2,
-                'ec_setpoint': 1000,
-                'ec_buffer': 100,
-                'temp_min': 18.0,
-                'temp_max': 24.0,
-                'description': 'Optimized for lettuce, spinach, kale and other leafy vegetables'
-            },
-            'fruiting': {
-                'name': 'Fruiting Plants',
-                'ph_setpoint': 6.0,
-                'ph_buffer': 0.2,
-                'ec_setpoint': 1800,
-                'ec_buffer': 150,
-                'temp_min': 20.0,
-                'temp_max': 28.0,
-                'description': 'For tomatoes, peppers, cucumbers and other fruiting plants'
-            },
-            'herbs': {
-                'name': 'Herbs',
-                'ph_setpoint': 5.8,
-                'ph_buffer': 0.2,
-                'ec_setpoint': 1200,
-                'ec_buffer': 100,
-                'temp_min': 18.0,
-                'temp_max': 26.0,
-                'description': 'Ideal for basil, cilantro, parsley and other herbs'
-            },
-            'strawberries': {
-                'name': 'Strawberries',
-                'ph_setpoint': 5.8,
-                'ph_buffer': 0.2,
-                'ec_setpoint': 1300,
-                'ec_buffer': 100,
-                'temp_min': 18.0,
-                'temp_max': 26.0,
-                'description': 'Optimized for growing strawberries'
-            }
-        }
-        Settings.set('plant_profiles', plant_profiles)
-        Settings.set('active_plant_profile', 'general')
-        
+        # Use the Settings model to initialize default plant profiles
+        Settings.initialize_defaults()
+    
+    # Auto-configure nutrient components based on available pumps
+    # This updates default profiles with the user's actual enabled pumps
+    config_result = Settings.auto_configure_nutrient_components()
+    
+    # Show incompatibility warnings if any were found
+    if config_result.get('incompatibilities'):
+        for incompatibility in config_result['incompatibilities']:
+            flash(f"Nutrient Incompatibility Warning: {incompatibility['message']}", 'warning')
+    
     if request.method == 'POST':
         # Update settings from form
         auto_dosing = 'auto_dosing_enabled' in request.form
@@ -417,16 +373,30 @@ def settings():
 @dosing_bp.route('/profiles')
 def manage_profiles():
     """Manage plant profiles"""
+    # Auto-configure nutrient components based on available pumps
+    # This ensures the default profiles are always up-to-date with available nutrients
+    config_result = Settings.auto_configure_nutrient_components()
+    
     # Get all plant profiles
     plant_profiles = Settings.get('plant_profiles', {})
     
     # Get the default profiles (these can't be deleted)
     default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
     
+    # Display warnings about any incompatibilities found
+    if config_result.get('incompatibilities'):
+        for incompatibility in config_result['incompatibilities']:
+            flash(f"Nutrient Incompatibility Warning: {incompatibility['message']}", 'warning')
+    
+    # Flash a message if profiles were updated
+    if config_result.get('updated'):
+        flash(f"Plant profiles have been automatically updated to use your {config_result.get('pumps_found', 0)} enabled nutrient pumps", 'info')
+    
     return render_template(
         'dosing/profiles.html',
         profiles=plant_profiles,
-        default_profiles=default_profiles
+        default_profiles=default_profiles,
+        has_incompatibilities=bool(config_result.get('incompatibilities'))
     )
 
 @dosing_bp.route('/profiles/add', methods=['GET', 'POST'])

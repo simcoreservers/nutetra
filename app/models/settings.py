@@ -56,7 +56,8 @@ class Settings(db.Model):
     def initialize_defaults(cls):
         """Initialize default settings"""
         
-        # Plant profiles
+        # Initialize plant profiles without nutrient components
+        # Components will be auto-configured based on available pumps
         plant_profiles = {
             'general': {
                 'name': 'General',
@@ -67,11 +68,14 @@ class Settings(db.Model):
                 'ec_buffer': 150,
                 'temp_min': 18.0,
                 'temp_max': 28.0,
-                'nutrient_components': [
-                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
-                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 1.0}
-                ],
-                'custom': False
+                'nutrient_components': [],
+                'custom': False,
+                'nutrient_ratios': {
+                    'grow': 1.0,  # Balanced grow nutrients
+                    'bloom': 1.0,  # Balanced bloom nutrients
+                    'micro': 1.0,  # Balanced micro nutrients
+                    'calmag': 0.5  # Lower ratio for calcium/magnesium
+                }
             },
             'leafy_greens': {
                 'name': 'Leafy Greens',
@@ -82,58 +86,68 @@ class Settings(db.Model):
                 'ec_buffer': 150,
                 'temp_min': 15.0,
                 'temp_max': 24.0,
-                'nutrient_components': [
-                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
-                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 1.0}
-                ],
-                'custom': False
+                'nutrient_components': [],
+                'custom': False,
+                'nutrient_ratios': {
+                    'grow': 1.5,   # Higher nitrogen for leafy growth
+                    'bloom': 0.5,  # Lower P-K for leafy greens
+                    'micro': 1.0,  # Normal micro nutrients
+                    'calmag': 0.7  # Medium calcium/magnesium
+                }
             },
             'fruiting': {
-                'name': 'Fruiting Plants',
-                'description': 'Optimal settings for tomatoes, peppers, cucumbers, etc.',
-                'ph_setpoint': 6.2,
+                'name': 'Fruiting',
+                'description': 'For tomatoes, peppers, cucumbers and other fruiting plants',
+                'ph_setpoint': 6.0,
                 'ph_buffer': 0.2,
                 'ec_setpoint': 1800,
                 'ec_buffer': 150,
                 'temp_min': 20.0,
-                'temp_max': 30.0,
-                'nutrient_components': [
-                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
-                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 1.0},
-                    {'pump_id': 3, 'pump_name': 'Nutrient C', 'ratio': 0.5}
-                ],
-                'custom': False
+                'temp_max': 28.0,
+                'nutrient_components': [],
+                'custom': False,
+                'nutrient_ratios': {
+                    'grow': 0.7,   # Lower nitrogen for fruiting stage
+                    'bloom': 2.0,  # Higher P-K for fruit production
+                    'micro': 1.0,  # Normal micro nutrients
+                    'calmag': 1.0  # Higher calcium for fruit development
+                }
             },
             'herbs': {
                 'name': 'Herbs',
-                'description': 'Optimal settings for basil, cilantro, mint, etc.',
+                'description': 'Ideal for basil, cilantro, parsley and other herbs',
                 'ph_setpoint': 5.8,
                 'ph_buffer': 0.2,
-                'ec_setpoint': 1000,
-                'ec_buffer': 150,
+                'ec_setpoint': 1200,
+                'ec_buffer': 100,
                 'temp_min': 18.0,
                 'temp_max': 26.0,
-                'nutrient_components': [
-                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
-                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 0.8}
-                ],
-                'custom': False
+                'nutrient_components': [],
+                'custom': False,
+                'nutrient_ratios': {
+                    'grow': 1.2,   # Higher nitrogen for leafy growth
+                    'bloom': 0.7,  # Lower P-K for herbs
+                    'micro': 1.0,  # Normal micro nutrients
+                    'calmag': 0.5  # Lower calcium/magnesium
+                }
             },
             'strawberries': {
                 'name': 'Strawberries',
-                'description': 'Optimal settings for strawberries',
+                'description': 'Optimized for growing strawberries',
                 'ph_setpoint': 5.8,
                 'ph_buffer': 0.2,
-                'ec_setpoint': 1500,
-                'ec_buffer': 150,
-                'temp_min': 16.0,
-                'temp_max': 24.0,
-                'nutrient_components': [
-                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
-                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 1.0},
-                    {'pump_id': 3, 'pump_name': 'Nutrient C', 'ratio': 0.3}
-                ],
-                'custom': False
+                'ec_setpoint': 1300,
+                'ec_buffer': 100,
+                'temp_min': 18.0,
+                'temp_max': 26.0,
+                'nutrient_components': [],
+                'custom': False,
+                'nutrient_ratios': {
+                    'grow': 0.8,   # Moderate nitrogen for growth
+                    'bloom': 1.8,  # Higher P-K for fruit production
+                    'micro': 1.0,  # Normal micro nutrients
+                    'calmag': 1.2  # Higher calcium for fruit quality
+                }
             }
         }
 
@@ -193,3 +207,105 @@ class Settings(db.Model):
         for key, value in default_values.items():
             if Settings.get(key) is None:
                 Settings.set(key, value) 
+
+    @staticmethod
+    def auto_configure_nutrient_components():
+        """
+        Automatically configure nutrient components for all default profiles
+        based on available nutrient pumps
+        """
+        from app.models.pump import Pump
+        
+        # Get all enabled nutrient pumps
+        nutrient_pumps = Pump.query.filter(
+            Pump.type == 'nutrient',
+            Pump.enabled == True
+        ).all()
+        
+        # Get all plant profiles
+        plant_profiles = Settings.get('plant_profiles', {})
+        
+        # Track if we've made changes
+        profiles_updated = False
+        
+        # Nutrient type mapping based on name patterns
+        def get_nutrient_type(pump):
+            name = pump.nutrient_name.lower() if pump.nutrient_name else pump.name.lower()
+            if any(term in name for term in ['grow', 'veg', 'vegetative']):
+                return 'grow'
+            elif any(term in name for term in ['bloom', 'flower', 'fruit']):
+                return 'bloom'
+            elif any(term in name for term in ['micro', 'trace']):
+                return 'micro'
+            elif any(term in name for term in ['cal', 'mag', 'calcium', 'magnesium']):
+                return 'calmag'
+            else:
+                # Default to grow if we can't determine
+                return 'grow'
+        
+        # Check for incompatible nutrients
+        def check_incompatibility(pumps):
+            incompatibilities = []
+            
+            # Example incompatibility check: calcium-containing products with phosphates
+            calcium_pumps = [p for p in pumps if 'cal' in (p.nutrient_name or '').lower()]
+            phosphate_pumps = [p for p in pumps if 'phos' in (p.nutrient_name or '').lower()]
+            
+            if calcium_pumps and phosphate_pumps:
+                incompatibilities.append({
+                    'type': 'mixing',
+                    'message': 'Calcium products should not be mixed directly with phosphates',
+                    'pumps': [{'id': p.id, 'name': p.name} for p in calcium_pumps + phosphate_pumps]
+                })
+            
+            return incompatibilities
+        
+        # Check for incompatibilities and store them
+        incompatibilities = check_incompatibility(nutrient_pumps)
+        if incompatibilities:
+            Settings.set('nutrient_incompatibilities', incompatibilities)
+        else:
+            Settings.set('nutrient_incompatibilities', [])
+        
+        # Process each default profile
+        for profile_id, profile in plant_profiles.items():
+            # Skip custom profiles
+            if profile.get('custom', True):
+                continue
+            
+            # Get nutrient ratios for this profile
+            nutrient_ratios = profile.get('nutrient_ratios', {})
+            if not nutrient_ratios:
+                continue
+            
+            # Create new components based on available pumps
+            new_components = []
+            
+            for pump in nutrient_pumps:
+                nutrient_type = get_nutrient_type(pump)
+                
+                # Get the ratio for this nutrient type from the profile
+                ratio = nutrient_ratios.get(nutrient_type, 1.0)
+                
+                # Add as a component
+                new_components.append({
+                    'pump_id': pump.id,
+                    'pump_name': pump.name,
+                    'ratio': ratio,
+                    'nutrient_type': nutrient_type  # Store the type for reference
+                })
+            
+            # Update the profile if we have components and they're different from what's there
+            if new_components and (len(new_components) != len(profile.get('nutrient_components', []))):
+                profile['nutrient_components'] = new_components
+                profiles_updated = True
+        
+        # Save profiles if updated
+        if profiles_updated:
+            Settings.set('plant_profiles', plant_profiles)
+        
+        return {
+            'updated': profiles_updated,
+            'pumps_found': len(nutrient_pumps),
+            'incompatibilities': incompatibilities
+        } 
