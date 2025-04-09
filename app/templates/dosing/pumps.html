@@ -37,7 +37,7 @@
                         <span class="detail-value">{{ pump.flow_rate }} ml/s</span>
                     </div>
                     
-                    {% if pump.type.startswith('nutrient') and pump.nutrient_name %}
+                    {% if pump.type == 'nutrient' or pump.type.startswith('nutrient_') and pump.nutrient_name %}
                     <div class="nutrient-info">
                         <div class="detail-row">
                             <span class="detail-label">Nutrient:</span>
@@ -94,16 +94,8 @@
                     <input type="text" id="pump-name" name="name" class="form-control" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="pump-type">Type</label>
-                    <select id="pump-type" name="type" class="form-control" required>
-                        <option value="ph_up">pH Up</option>
-                        <option value="ph_down">pH Down</option>
-                        <option value="nutrient_a">Nutrient A</option>
-                        <option value="nutrient_b">Nutrient B</option>
-                        <option value="nutrient_c">Nutrient C</option>
-                    </select>
-                </div>
+                <!-- Hidden field - only nutrient pumps can be added -->
+                <input type="hidden" id="pump-type" name="type" value="nutrient">
                 
                 <div class="form-group">
                     <label for="gpio-pin">GPIO Pin</label>
@@ -218,15 +210,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load nutrient brands when the page loads
     loadNutrientBrands();
     
-    // Hide nutrient section for non-nutrient pumps
-    pumpTypeSelect.addEventListener('change', function() {
-        const nutrientSection = document.getElementById('nutrient-section');
-        if (this.value.startsWith('nutrient') || this.value === 'custom') {
-            nutrientSection.style.display = 'block';
-        } else {
-            nutrientSection.style.display = 'none';
-        }
-    });
+    // Since we only have nutrient pumps now, nutrient section is always visible
+    // No need to listen for type changes
+    const nutrientSection = document.getElementById('nutrient-section');
+    nutrientSection.style.display = 'block'; // Always show nutrient section
     
     // Handle nutrient brand selection
     nutrientBrandSelect.addEventListener('change', function() {
@@ -316,18 +303,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Open add pump modal
     addPumpBtn.addEventListener('click', function() {
         // Reset form for adding a new pump
-        document.getElementById('modal-title').textContent = 'Add Pump';
+        document.getElementById('modal-title').textContent = 'Add Nutrient Pump';
         document.getElementById('pump-id').value = '';
         pumpForm.reset();
         
-        // Show/hide nutrient section based on pump type
-        const pumpType = pumpTypeSelect.value;
-        const nutrientSection = document.getElementById('nutrient-section');
-        if (pumpType.startsWith('nutrient') || pumpType === 'custom') {
-            nutrientSection.style.display = 'block';
-        } else {
-            nutrientSection.style.display = 'none';
-        }
+        // Set default type to nutrient (for the hidden field)
+        document.getElementById('pump-type').value = 'nutrient';
         
         pumpModal.classList.add('active');
     });
@@ -418,7 +399,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('modal-title').textContent = 'Edit Pump';
                         document.getElementById('pump-id').value = pump.id;
                         document.getElementById('pump-name').value = pump.name;
-                        document.getElementById('pump-type').value = pump.type;
+                        
+                        // For any nutrient type, use the generic 'nutrient' type
+                        if (pump.type.startsWith('nutrient_')) {
+                            pumpTypeSelect.value = 'nutrient';
+                        } else {
+                            pumpTypeSelect.value = pump.type;
+                        }
+                        
                         document.getElementById('gpio-pin').value = pump.gpio_pin;
                         document.getElementById('flow-rate').value = pump.flow_rate;
                         document.getElementById('is-enabled').checked = pump.enabled;
@@ -426,8 +414,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Show/hide nutrient section based on pump type
                         const pumpType = pump.type;
                         const nutrientSection = document.getElementById('nutrient-section');
-                        if (pumpType.startsWith('nutrient') || pumpType === 'custom') {
+                        if (pumpType === 'nutrient' || pumpType.startsWith('nutrient_')) {
                             nutrientSection.style.display = 'block';
+                            
+                            // If this is an old nutrient type (nutrient_a, nutrient_b, etc.), update the select
+                            if (pumpType.startsWith('nutrient_')) {
+                                pumpTypeSelect.value = 'nutrient';
+                            }
                             
                             // If the pump has nutrient info, select it
                             if (pump.nutrient_brand) {
@@ -929,6 +922,13 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 0.8rem;
         font-weight: 600;
         display: inline-block;
+    }
+    
+    .form-help {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.8rem;
+        color: var(--text-color-muted);
     }
 </style>
 {% endblock %} 

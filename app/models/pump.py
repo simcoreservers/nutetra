@@ -54,16 +54,30 @@ class Pump(db.Model):
     @staticmethod
     def initialize_defaults():
         """Set up default pumps if none exist"""
+        # Check if pH pumps exist
+        ph_up_exists = Pump.query.filter_by(type="ph_up").first() is not None
+        ph_down_exists = Pump.query.filter_by(type="ph_down").first() is not None
+        
+        # Always ensure pH pumps exist as they are hardwired
+        if not ph_up_exists:
+            ph_up = Pump(name="pH Up", type="ph_up", gpio_pin=17, flow_rate=1.0)
+            db.session.add(ph_up)
+            
+        if not ph_down_exists:
+            ph_down = Pump(name="pH Down", type="ph_down", gpio_pin=18, flow_rate=1.0)
+            db.session.add(ph_down)
+        
+        # Only add other default pumps if no pumps exist at all
         if Pump.query.count() == 0:
-            default_pumps = [
-                Pump(name="pH Up", type="ph_up", gpio_pin=17, flow_rate=1.0),
-                Pump(name="pH Down", type="ph_down", gpio_pin=18, flow_rate=1.0),
-                Pump(name="Nutrient A", type="nutrient_a", gpio_pin=22, flow_rate=1.0),
-                Pump(name="Nutrient B", type="nutrient_b", gpio_pin=23, flow_rate=1.0),
-                Pump(name="Nutrient C", type="nutrient_c", gpio_pin=24, flow_rate=1.0)
+            default_nutrient_pumps = [
+                Pump(name="Nutrient A", type="nutrient", gpio_pin=22, flow_rate=1.0),
+                Pump(name="Nutrient B", type="nutrient", gpio_pin=23, flow_rate=1.0),
+                Pump(name="Nutrient C", type="nutrient", gpio_pin=24, flow_rate=1.0)
             ]
             
-            for pump in default_pumps:
+            for pump in default_nutrient_pumps:
                 db.session.add(pump)
-            
+        
+        # Commit any changes made
+        if db.session.new:
             db.session.commit() 

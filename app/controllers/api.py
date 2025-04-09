@@ -235,13 +235,16 @@ def create_pump():
                     'error': f"Missing required field: {field}"
                 }), 400
         
-        # Check if the GPIO pin is already in use
-        existing_pump = Pump.query.filter_by(gpio_pin=data['gpio_pin']).first()
-        if existing_pump:
+        # Prevent creating pH pumps as they are hardwired
+        if data['type'] in ['ph_up', 'ph_down']:
             return jsonify({
                 'success': False,
-                'error': f"GPIO pin {data['gpio_pin']} is already in use by pump '{existing_pump.name}'"
-            }), 400
+                'error': "pH pumps are hardwired and cannot be created. You can only create nutrient pumps."
+            }), 403
+                
+        # Ensure the type is 'nutrient'
+        if data['type'] != 'nutrient':
+            data['type'] = 'nutrient'
         
         # Create new pump
         new_pump = Pump(
@@ -250,7 +253,6 @@ def create_pump():
             gpio_pin=data['gpio_pin'],
             flow_rate=data['flow_rate'],
             enabled=data.get('enabled', True),
-            # Add nutrient information if provided
             nutrient_brand=data.get('nutrient_brand'),
             nutrient_name=data.get('nutrient_name'),
             nitrogen_pct=data.get('nitrogen_pct'),
@@ -343,7 +345,6 @@ def update_pump(pump_id):
             pump.potassium_pct = data['potassium_pct']
         
         # Save changes to database
-        from app import db
         db.session.commit()
         
         return jsonify({
