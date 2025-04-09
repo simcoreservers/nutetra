@@ -1,5 +1,6 @@
 from app import db
 import json
+from app.models.pump import Pump
 
 class Settings(db.Model):
     __tablename__ = 'settings'
