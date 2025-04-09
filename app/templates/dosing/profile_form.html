@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Add' if action == 'add' else 'Edit' }} Plant Profile | NuTetra Controller{% endblock %}
+{% block page_title %}{{ 'Add' if action == 'add' else 'Edit' }} Plant Profile{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <form id="profile-form" method="post" action="{{ url_for('dosing.add_profile') if action == 'add' else url_for('dosing.edit_profile', profile_id=profile_id) }}">
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>Profile Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="name">Profile Name</label>
+                        <input type="text" id="name" name="name" class="form-control" value="{{ profile.name if profile else '' }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" class="form-control" rows="3">{{ profile.description if profile else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>pH Settings</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ph-setpoint">pH Setpoint</label>
+                            <input type="number" id="ph-setpoint" name="ph_setpoint" class="form-control" 
+                                   min="5.0" max="7.0" step="0.1" value="{{ profile.ph_setpoint if profile else 6.0 }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="ph-buffer">pH Buffer</label>
+                            <input type="number" id="ph-buffer" name="ph_buffer" class="form-control" 
+                                   min="0.1" max="1.0" step="0.1" value="{{ profile.ph_buffer if profile else 0.2 }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>EC Settings</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ec-setpoint">EC Setpoint (μS/cm)</label>
+                            <input type="number" id="ec-setpoint" name="ec_setpoint" class="form-control" 
+                                   min="500" max="3000" step="10" value="{{ profile.ec_setpoint if profile else 1350 }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="ec-buffer">EC Buffer (μS/cm)</label>
+                            <input type="number" id="ec-buffer" name="ec_buffer" class="form-control" 
+                                   min="50" max="500" step="10" value="{{ profile.ec_buffer if profile else 150 }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>Temperature Settings</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="temp-min">Minimum Temperature (°C)</label>
+                            <input type="number" id="temp-min" name="temp_min" class="form-control" 
+                                   min="10" max="30" step="0.5" value="{{ profile.temp_min if profile else 18.0 }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="temp-max">Maximum Temperature (°C)</label>
+                            <input type="number" id="temp-max" name="temp_max" class="form-control" 
+                                   min="15" max="35" step="0.5" value="{{ profile.temp_max if profile else 28.0 }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="button primary-button">
+                    {{ 'Add Profile' if action == 'add' else 'Save Changes' }}
+                </button>
+                <a href="{{ url_for('dosing.manage_profiles') }}" class="button">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .form-row {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: var(--spacing-xs);
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--bg-color-dark);
+        color: var(--text-color);
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+    }
+    
+    .primary-button {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.getElementById('profile-form');
+        
+        form.addEventListener('submit', function(e) {
+            const tempMin = parseFloat(document.getElementById('temp-min').value);
+            const tempMax = parseFloat(document.getElementById('temp-max').value);
+            
+            if (tempMin >= tempMax) {
+                e.preventDefault();
+                alert('Maximum temperature must be higher than minimum temperature');
+                return;
+            }
+        });
+    });
+</script>
+{% endblock %} 

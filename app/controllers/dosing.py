@@ -4,6 +4,9 @@ from app.models.dosing_event import DosingEvent
 from app.models.settings import Settings
 from app.utils.dosing_manager import activate_pump, schedule_dosing_checks
 from app import db
+import uuid
+from datetime import datetime
+import copy
 
 # Create a blueprint
 dosing_bp = Blueprint('dosing', __name__)
@@ -409,4 +412,192 @@ def settings():
     return render_template(
         'dosing/settings.html',
         settings=settings
-    ) 
+    )
+
+@dosing_bp.route('/profiles')
+def manage_profiles():
+    """Manage plant profiles"""
+    # Get all plant profiles
+    plant_profiles = Settings.get('plant_profiles', {})
+    
+    # Get the default profiles (these can't be deleted)
+    default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
+    
+    return render_template(
+        'dosing/profiles.html',
+        profiles=plant_profiles,
+        default_profiles=default_profiles
+    )
+
+@dosing_bp.route('/profiles/add', methods=['GET', 'POST'])
+def add_profile():
+    """Add a new plant profile"""
+    if request.method == 'POST':
+        # Get profile details from form
+        name = request.form.get('name')
+        description = request.form.get('description')
+        ph_setpoint = request.form.get('ph_setpoint', type=float)
+        ph_buffer = request.form.get('ph_buffer', type=float)
+        ec_setpoint = request.form.get('ec_setpoint', type=float)
+        ec_buffer = request.form.get('ec_buffer', type=float)
+        temp_min = request.form.get('temp_min', type=float)
+        temp_max = request.form.get('temp_max', type=float)
+        
+        # Validate input
+        if not name:
+            flash('Profile name is required', 'error')
+            return redirect(url_for('dosing.add_profile'))
+        
+        # Generate a unique profile ID
+        profile_id = f"custom_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        
+        # Get existing profiles
+        plant_profiles = Settings.get('plant_profiles', {})
+        
+        # Create the new profile
+        plant_profiles[profile_id] = {
+            'name': name,
+            'description': description or f"Custom profile for {name}",
+            'ph_setpoint': ph_setpoint or 6.0,
+            'ph_buffer': ph_buffer or 0.2,
+            'ec_setpoint': ec_setpoint or 1350,
+            'ec_buffer': ec_buffer or 150,
+            'temp_min': temp_min or 18.0,
+            'temp_max': temp_max or 28.0,
+            'custom': True
+        }
+        
+        # Save to database
+        Settings.set('plant_profiles', plant_profiles)
+        
+        flash(f'Plant profile "{name}" added successfully', 'success')
+        return redirect(url_for('dosing.manage_profiles'))
+    
+    # For GET requests, show the add profile form
+    return render_template('dosing/profile_form.html', profile=None, action='add')
+
+@dosing_bp.route('/profiles/edit/<profile_id>', methods=['GET', 'POST'])
+def edit_profile(profile_id):
+    """Edit an existing plant profile"""
+    # Get all plant profiles
+    plant_profiles = Settings.get('plant_profiles', {})
+    
+    # Check if profile exists
+    if profile_id not in plant_profiles:
+        flash('Profile not found', 'error')
+        return redirect(url_for('dosing.manage_profiles'))
+    
+    # Get the profile
+    profile = plant_profiles[profile_id]
+    
+    # Check if this is a default profile
+    default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
+    if profile_id in default_profiles:
+        flash('Default profiles cannot be edited', 'error')
+        return redirect(url_for('dosing.manage_profiles'))
+    
+    if request.method == 'POST':
+        # Get profile details from form
+        name = request.form.get('name')
+        description = request.form.get('description')
+        ph_setpoint = request.form.get('ph_setpoint', type=float)
+        ph_buffer = request.form.get('ph_buffer', type=float)
+        ec_setpoint = request.form.get('ec_setpoint', type=float)
+        ec_buffer = request.form.get('ec_buffer', type=float)
+        temp_min = request.form.get('temp_min', type=float)
+        temp_max = request.form.get('temp_max', type=float)
+        
+        # Validate input
+        if not name:
+            flash('Profile name is required', 'error')
+            return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+        
+        # Update the profile
+        profile['name'] = name
+        profile['description'] = description or f"Custom profile for {name}"
+        profile['ph_setpoint'] = ph_setpoint or 6.0
+        profile['ph_buffer'] = ph_buffer or 0.2
+        profile['ec_setpoint'] = ec_setpoint or 1350
+        profile['ec_buffer'] = ec_buffer or 150
+        profile['temp_min'] = temp_min or 18.0
+        profile['temp_max'] = temp_max or 28.0
+        
+        # Save to database
+        plant_profiles[profile_id] = profile
+        Settings.set('plant_profiles', plant_profiles)
+        
+        flash(f'Plant profile "{name}" updated successfully', 'success')
+        return redirect(url_for('dosing.manage_profiles'))
+    
+    # For GET requests, show the edit profile form
+    return render_template(
+        'dosing/profile_form.html',
+        profile=profile,
+        profile_id=profile_id,
+        action='edit'
+    )
+
+@dosing_bp.route('/profiles/delete/<profile_id>', methods=['POST'])
+def delete_profile(profile_id):
+    """Delete a plant profile"""
+    # Get all plant profiles
+    plant_profiles = Settings.get('plant_profiles', {})
+    
+    # Check if profile exists
+    if profile_id not in plant_profiles:
+        flash('Profile not found', 'error')
+        return redirect(url_for('dosing.manage_profiles'))
+    
+    # Check if this is a default profile
+    default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
+    if profile_id in default_profiles:
+        flash('Default profiles cannot be deleted', 'error')
+        return redirect(url_for('dosing.manage_profiles'))
+    
+    # Check if this is the active profile
+    active_profile = Settings.get('active_plant_profile', 'general')
+    if profile_id == active_profile:
+        # Set active profile to general
+        Settings.set('active_plant_profile', 'general')
+        flash('Active profile switched to General Purpose', 'warning')
+    
+    # Get the profile name for the message
+    profile_name = plant_profiles[profile_id]['name']
+    
+    # Delete the profile
+    del plant_profiles[profile_id]
+    Settings.set('plant_profiles', plant_profiles)
+    
+    flash(f'Plant profile "{profile_name}" deleted successfully', 'success')
+    return redirect(url_for('dosing.manage_profiles'))
+
+@dosing_bp.route('/profiles/duplicate/<profile_id>', methods=['POST'])
+def duplicate_profile(profile_id):
+    """Duplicate a plant profile"""
+    # Get all plant profiles
+    plant_profiles = Settings.get('plant_profiles', {})
+    
+    # Check if profile exists
+    if profile_id not in plant_profiles:
+        flash('Profile not found', 'error')
+        return redirect(url_for('dosing.manage_profiles'))
+    
+    # Get the source profile
+    source_profile = plant_profiles[profile_id]
+    
+    # Create a copy
+    new_profile = copy.deepcopy(source_profile)
+    new_profile['name'] = f"Copy of {new_profile['name']}"
+    
+    # Generate a unique profile ID
+    new_profile_id = f"custom_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    # Add custom flag
+    new_profile['custom'] = True
+    
+    # Add to profiles
+    plant_profiles[new_profile_id] = new_profile
+    Settings.set('plant_profiles', plant_profiles)
+    
+    flash(f'Plant profile "{new_profile["name"]}" created successfully', 'success')
+    return redirect(url_for('dosing.manage_profiles')) 
