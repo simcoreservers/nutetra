@@ -149,6 +149,8 @@ def create_app(test_config=None):
         from app.utils.sensor_manager import init_sensors
         from app.utils.dosing_manager import init_dosing
         from app.models.nutrient import NutrientBrand
+        from app.models.settings import Settings
+        from app.models.pump import Pump
         
         db.create_all()
         init_sensors()
