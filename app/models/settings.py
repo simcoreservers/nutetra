@@ -52,104 +52,144 @@ class Settings(db.Model):
                 settings[setting.key] = setting.value
         return settings
     
-    @staticmethod
-    def initialize_defaults():
-        """Set default settings if they don't exist"""
-        defaults = {
-            # pH settings
-            'ph_setpoint': 6.0,
-            'ph_buffer': 0.2,
-            'ph_check_interval': 300,  # seconds
-            'ph_dose_amount': 1.0,     # ml
-            'ph_dose_wait_time': 60,   # seconds to wait after dosing
-            
-            # EC settings
-            'ec_setpoint': 1350,
-            'ec_buffer': 150,
-            'ec_check_interval': 300,  # seconds
-            'ec_dose_amount': 5.0,     # ml
-            'ec_dose_wait_time': 60,   # seconds to wait after dosing
-            
-            # Temperature settings
-            'temp_check_interval': 300,  # seconds
-            'temp_min_alert': 18.0,      # °C
-            'temp_max_alert': 30.0,      # °C
-            
-            # Notification settings
-            'notifications_enabled': True,
-            'email_notifications': False,
-            'email_address': '',
-            'sms_notifications': False,
-            'phone_number': '',
-            
-            # System settings
-            'logging_interval': 300,  # seconds
-            'auto_dosing_enabled': True,
-            'night_mode_enabled': False,
-            'night_mode_start': '22:00',
-            'night_mode_end': '06:00',
-            
-            # Plant profiles
-            'active_plant_profile': 'general',
-            'plant_profiles': {
-                'general': {
-                    'name': 'General Purpose',
-                    'ph_setpoint': 6.0,
-                    'ph_buffer': 0.2,
-                    'ec_setpoint': 1350,
-                    'ec_buffer': 150,
-                    'temp_min': 18.0,
-                    'temp_max': 28.0,
-                    'description': 'General purpose profile suitable for most plants'
-                },
-                'leafy_greens': {
-                    'name': 'Leafy Greens',
-                    'ph_setpoint': 6.0,
-                    'ph_buffer': 0.2,
-                    'ec_setpoint': 1000,
-                    'ec_buffer': 100,
-                    'temp_min': 18.0,
-                    'temp_max': 24.0,
-                    'description': 'Optimized for lettuce, spinach, kale and other leafy vegetables'
-                },
-                'fruiting': {
-                    'name': 'Fruiting Plants',
-                    'ph_setpoint': 6.0,
-                    'ph_buffer': 0.2,
-                    'ec_setpoint': 1800,
-                    'ec_buffer': 150,
-                    'temp_min': 20.0,
-                    'temp_max': 28.0,
-                    'description': 'For tomatoes, peppers, cucumbers and other fruiting plants'
-                },
-                'herbs': {
-                    'name': 'Herbs',
-                    'ph_setpoint': 5.8,
-                    'ph_buffer': 0.2,
-                    'ec_setpoint': 1200,
-                    'ec_buffer': 100,
-                    'temp_min': 18.0,
-                    'temp_max': 26.0,
-                    'description': 'Ideal for basil, cilantro, parsley and other herbs'
-                },
-                'strawberries': {
-                    'name': 'Strawberries',
-                    'ph_setpoint': 5.8,
-                    'ph_buffer': 0.2,
-                    'ec_setpoint': 1300,
-                    'ec_buffer': 100,
-                    'temp_min': 18.0,
-                    'temp_max': 26.0,
-                    'description': 'Optimized for growing strawberries'
-                }
+    @classmethod
+    def initialize_defaults(cls):
+        """Initialize default settings"""
+        
+        # Plant profiles
+        plant_profiles = {
+            'general': {
+                'name': 'General',
+                'description': 'General purpose profile for most plants',
+                'ph_setpoint': 6.0,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1350,
+                'ec_buffer': 150,
+                'temp_min': 18.0,
+                'temp_max': 28.0,
+                'nutrient_components': [
+                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
+                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 1.0}
+                ],
+                'custom': False
             },
-            
-            # UI settings
-            'dark_mode': True,
-            'chart_points': 50,
-            'refresh_interval': 10,  # seconds
+            'leafy_greens': {
+                'name': 'Leafy Greens',
+                'description': 'Optimal settings for lettuce, spinach, kale, etc.',
+                'ph_setpoint': 6.0,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1200,
+                'ec_buffer': 150,
+                'temp_min': 15.0,
+                'temp_max': 24.0,
+                'nutrient_components': [
+                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
+                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 1.0}
+                ],
+                'custom': False
+            },
+            'fruiting': {
+                'name': 'Fruiting Plants',
+                'description': 'Optimal settings for tomatoes, peppers, cucumbers, etc.',
+                'ph_setpoint': 6.2,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1800,
+                'ec_buffer': 150,
+                'temp_min': 20.0,
+                'temp_max': 30.0,
+                'nutrient_components': [
+                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
+                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 1.0},
+                    {'pump_id': 3, 'pump_name': 'Nutrient C', 'ratio': 0.5}
+                ],
+                'custom': False
+            },
+            'herbs': {
+                'name': 'Herbs',
+                'description': 'Optimal settings for basil, cilantro, mint, etc.',
+                'ph_setpoint': 5.8,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1000,
+                'ec_buffer': 150,
+                'temp_min': 18.0,
+                'temp_max': 26.0,
+                'nutrient_components': [
+                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
+                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 0.8}
+                ],
+                'custom': False
+            },
+            'strawberries': {
+                'name': 'Strawberries',
+                'description': 'Optimal settings for strawberries',
+                'ph_setpoint': 5.8,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1500,
+                'ec_buffer': 150,
+                'temp_min': 16.0,
+                'temp_max': 24.0,
+                'nutrient_components': [
+                    {'pump_id': 1, 'pump_name': 'Nutrient A', 'ratio': 1.0},
+                    {'pump_id': 2, 'pump_name': 'Nutrient B', 'ratio': 1.0},
+                    {'pump_id': 3, 'pump_name': 'Nutrient C', 'ratio': 0.3}
+                ],
+                'custom': False
+            }
+        }
+
+        # Add settings if they don't exist
+        if not cls.get('plant_profiles'):
+            cls.set('plant_profiles', plant_profiles)
+        
+        # Make sure active_plant_profile exists and is valid
+        active_profile = cls.get('active_plant_profile')
+        if not active_profile or active_profile not in plant_profiles:
+            cls.set('active_plant_profile', 'general')
+        
+        defaults = {
+        # pH settings
+        'ph_setpoint': 6.0,
+        'ph_buffer': 0.2,
+        'ph_check_interval': 300,  # seconds
+        'ph_dose_amount': 1.0,     # ml
+        'ph_dose_wait_time': 60,   # seconds to wait after dosing
+        
+        # EC settings
+        'ec_setpoint': 1350,
+        'ec_buffer': 150,
+        'ec_check_interval': 300,  # seconds
+        'ec_dose_amount': 5.0,     # ml
+        'ec_dose_wait_time': 60,   # seconds to wait after dosing
+        
+        # Temperature settings
+        'temp_check_interval': 300,  # seconds
+        'temp_min_alert': 18.0,      # °C
+        'temp_max_alert': 30.0,      # °C
+        
+        # Notification settings
+        'notifications_enabled': True,
+        'email_notifications': False,
+        'email_address': '',
+        'sms_notifications': False,
+        'phone_number': '',
+        
+        # System settings
+        'logging_interval': 300,  # seconds
+        'auto_dosing_enabled': True,
+        'night_mode_enabled': False,
+        'night_mode_start': '22:00',
+        'night_mode_end': '06:00',
+        
+        # UI settings
+        'dark_mode': True,
+        'temp_target': 25.0,
+        'temp_buffer': 2.0,
+        'chart_points': 50,
+        'refresh_interval': 10,  # seconds
         }
         
-        for key, value in defaults.items():
+        default_values = defaults.copy()
+        
+        for key, value in default_values.items():
             if Settings.get(key) is None:
                 Settings.set(key, value) 

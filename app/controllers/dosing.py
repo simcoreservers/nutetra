@@ -443,9 +443,17 @@ def add_profile():
         temp_min = request.form.get('temp_min', type=float)
         temp_max = request.form.get('temp_max', type=float)
         
+        # Get nutrient components
+        component_pumps = request.form.getlist('component_pumps[]')
+        component_ratios = request.form.getlist('component_ratios[]')
+        
         # Validate input
         if not name:
             flash('Profile name is required', 'error')
+            return redirect(url_for('dosing.add_profile'))
+        
+        if not component_pumps:
+            flash('At least one nutrient component is required', 'error')
             return redirect(url_for('dosing.add_profile'))
         
         # Generate a unique profile ID
@@ -453,6 +461,21 @@ def add_profile():
         
         # Get existing profiles
         plant_profiles = Settings.get('plant_profiles', {})
+        
+        # Create nutrient components from form data
+        nutrient_components = []
+        for i in range(len(component_pumps)):
+            if i < len(component_ratios):
+                pump_id = int(component_pumps[i])
+                ratio = float(component_ratios[i])
+                pump = Pump.query.get(pump_id)
+                
+                if pump:
+                    nutrient_components.append({
+                        'pump_id': pump_id,
+                        'pump_name': pump.name,
+                        'ratio': ratio
+                    })
         
         # Create the new profile
         plant_profiles[profile_id] = {
@@ -464,6 +487,7 @@ def add_profile():
             'ec_buffer': ec_buffer or 150,
             'temp_min': temp_min or 18.0,
             'temp_max': temp_max or 28.0,
+            'nutrient_components': nutrient_components,
             'custom': True
         }
         
@@ -474,7 +498,13 @@ def add_profile():
         return redirect(url_for('dosing.manage_profiles'))
     
     # For GET requests, show the add profile form
-    return render_template('dosing/profile_form.html', profile=None, action='add')
+    # Get all nutrient pumps for the components section
+    nutrient_pumps = Pump.query.filter(
+        Pump.type.in_(['nutrient_a', 'nutrient_b', 'nutrient_c', 'custom']),
+        Pump.enabled == True
+    ).all()
+    
+    return render_template('dosing/profile_form.html', profile=None, action='add', pumps=nutrient_pumps)
 
 @dosing_bp.route('/profiles/edit/<profile_id>', methods=['GET', 'POST'])
 def edit_profile(profile_id):
@@ -507,10 +537,33 @@ def edit_profile(profile_id):
         temp_min = request.form.get('temp_min', type=float)
         temp_max = request.form.get('temp_max', type=float)
         
+        # Get nutrient components
+        component_pumps = request.form.getlist('component_pumps[]')
+        component_ratios = request.form.getlist('component_ratios[]')
+        
         # Validate input
         if not name:
             flash('Profile name is required', 'error')
             return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+        
+        if not component_pumps:
+            flash('At least one nutrient component is required', 'error')
+            return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+        
+        # Create nutrient components from form data
+        nutrient_components = []
+        for i in range(len(component_pumps)):
+            if i < len(component_ratios):
+                pump_id = int(component_pumps[i])
+                ratio = float(component_ratios[i])
+                pump = Pump.query.get(pump_id)
+                
+                if pump:
+                    nutrient_components.append({
+                        'pump_id': pump_id,
+                        'pump_name': pump.name,
+                        'ratio': ratio
+                    })
         
         # Update the profile
         profile['name'] = name
@@ -521,6 +574,7 @@ def edit_profile(profile_id):
         profile['ec_buffer'] = ec_buffer or 150
         profile['temp_min'] = temp_min or 18.0
         profile['temp_max'] = temp_max or 28.0
+        profile['nutrient_components'] = nutrient_components
         
         # Save to database
         plant_profiles[profile_id] = profile
@@ -530,11 +584,18 @@ def edit_profile(profile_id):
         return redirect(url_for('dosing.manage_profiles'))
     
     # For GET requests, show the edit profile form
+    # Get all nutrient pumps for the components section
+    nutrient_pumps = Pump.query.filter(
+        Pump.type.in_(['nutrient_a', 'nutrient_b', 'nutrient_c', 'custom']),
+        Pump.enabled == True
+    ).all()
+    
     return render_template(
         'dosing/profile_form.html',
         profile=profile,
         profile_id=profile_id,
-        action='edit'
+        action='edit',
+        pumps=nutrient_pumps
     )
 
 @dosing_bp.route('/profiles/delete/<profile_id>', methods=['POST'])

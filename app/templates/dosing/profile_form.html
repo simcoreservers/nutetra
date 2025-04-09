@@ -84,6 +84,82 @@
                 </div>
             </div>
             
+            <!-- Nutrient Components Section -->
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>Nutrient Components</h3>
+                </div>
+                <div class="card-body">
+                    <p class="instruction-text">
+                        Specify which nutrient pumps to use for this profile and their dosing ratios.
+                        The controller will dose nutrients according to these ratios when adjusting EC levels.
+                    </p>
+                    
+                    <div id="components-container">
+                        {% set components = profile.nutrient_components if profile and profile.nutrient_components else [] %}
+                        {% if components %}
+                            {% for component in components %}
+                                <div class="component-row">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="component-{{ loop.index }}-pump">Nutrient Pump</label>
+                                            <select id="component-{{ loop.index }}-pump" name="component_pumps[]" class="form-control">
+                                                {% for pump in pumps %}
+                                                    <option value="{{ pump.id }}" {% if component.pump_id == pump.id %}selected{% endif %}>
+                                                        {{ pump.name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="component-{{ loop.index }}-ratio">Ratio</label>
+                                            <input type="number" id="component-{{ loop.index }}-ratio" name="component_ratios[]" 
+                                                   class="form-control" min="0.1" step="0.1" value="{{ component.ratio }}">
+                                        </div>
+                                        <div class="form-group button-group">
+                                            <label class="invisible">Action</label>
+                                            <button type="button" class="remove-component button danger-button">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="component-row">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="component-1-pump">Nutrient Pump</label>
+                                        <select id="component-1-pump" name="component_pumps[]" class="form-control">
+                                            {% for pump in pumps %}
+                                                <option value="{{ pump.id }}">{{ pump.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="component-1-ratio">Ratio</label>
+                                        <input type="number" id="component-1-ratio" name="component_ratios[]" 
+                                               class="form-control" min="0.1" step="0.1" value="1.0">
+                                    </div>
+                                    <div class="form-group button-group">
+                                        <label class="invisible">Action</label>
+                                        <button type="button" class="remove-component button danger-button">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="add-component-container">
+                        <button type="button" id="add-component" class="button">
+                            <i class="fas fa-plus"></i> Add Nutrient Component
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div class="form-actions">
                 <button type="submit" class="button primary-button">
                     {{ 'Add Profile' if action == 'add' else 'Save Changes' }}
@@ -164,6 +240,47 @@
         background-color: var(--primary-color);
         color: #fff;
     }
+    
+    .instruction-text {
+        font-size: 0.95rem;
+        color: var(--text-color-muted);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .component-row {
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .component-row:last-child {
+        border-bottom: none;
+    }
+    
+    .button-group {
+        display: flex;
+        align-items: flex-end;
+        max-width: 50px;
+    }
+    
+    .invisible {
+        visibility: hidden;
+    }
+    
+    .danger-button {
+        background-color: var(--danger-color-light);
+        color: var(--danger-color);
+    }
+    
+    .danger-button:hover {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .add-component-container {
+        margin-top: var(--spacing-md);
+        text-align: center;
+    }
 </style>
 {% endblock %}
 
@@ -182,6 +299,82 @@
                 alert('Maximum temperature must be higher than minimum temperature');
                 return;
             }
+            
+            // Check if there's at least one nutrient component
+            const componentPumps = document.querySelectorAll('select[name="component_pumps[]"]');
+            if (componentPumps.length === 0) {
+                e.preventDefault();
+                alert('At least one nutrient component is required');
+                return;
+            }
+        });
+        
+        // Dynamic components handling
+        const componentsContainer = document.getElementById('components-container');
+        const addComponentBtn = document.getElementById('add-component');
+        
+        // Add component
+        addComponentBtn.addEventListener('click', function() {
+            const componentRows = document.querySelectorAll('.component-row');
+            const newIndex = componentRows.length + 1;
+            
+            const componentRow = document.createElement('div');
+            componentRow.className = 'component-row';
+            
+            // Get the pumps from the first select (if any exist)
+            let pumpOptionsHTML = '';
+            const firstSelect = document.querySelector('select[name="component_pumps[]"]');
+            
+            if (firstSelect) {
+                // Copy options from existing select
+                Array.from(firstSelect.options).forEach(function(option) {
+                    pumpOptionsHTML += `<option value="${option.value}">${option.text}</option>`;
+                });
+            }
+            
+            componentRow.innerHTML = `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="component-${newIndex}-pump">Nutrient Pump</label>
+                        <select id="component-${newIndex}-pump" name="component_pumps[]" class="form-control">
+                            ${pumpOptionsHTML}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="component-${newIndex}-ratio">Ratio</label>
+                        <input type="number" id="component-${newIndex}-ratio" name="component_ratios[]" 
+                               class="form-control" min="0.1" step="0.1" value="1.0">
+                    </div>
+                    <div class="form-group button-group">
+                        <label class="invisible">Action</label>
+                        <button type="button" class="remove-component button danger-button">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            componentsContainer.appendChild(componentRow);
+            
+            // Add event listener to the new remove button
+            const newRemoveBtn = componentRow.querySelector('.remove-component');
+            newRemoveBtn.addEventListener('click', removeComponent);
+        });
+        
+        // Remove component function
+        function removeComponent() {
+            const row = this.closest('.component-row');
+            row.remove();
+            
+            // If all rows removed, add a default one
+            if (document.querySelectorAll('.component-row').length === 0) {
+                addComponentBtn.click();
+            }
+        }
+        
+        // Add event listeners to existing remove buttons
+        document.querySelectorAll('.remove-component').forEach(button => {
+            button.addEventListener('click', removeComponent);
         });
     });
 </script>
