@@ -45,10 +45,6 @@
                             </label>
                             <p class="helper-text">Available for activation (inactive recipes cannot be used)</p>
                         </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="button primary-button">Save Recipe</button>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -85,8 +81,10 @@
                                                 <td>{{ component.pump.name }}</td>
                                                 <td>{{ component.ratio|round(1) }}</td>
                                                 <td class="actions-cell">
-                                                    <button type="button" class="button small-button" 
-                                                            onclick="editComponent({{ component.id }}, '{{ component.name or '' }}', {{ component.ratio }})">
+                                                    <button type="button" class="button small-button edit-component-btn"
+                                                            data-id="{{ component.id }}" 
+                                                            data-name="{{ component.name or '' }}" 
+                                                            data-ratio="{{ component.ratio }}">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
                                                     
@@ -143,7 +141,12 @@
             </div>
             
             <div class="form-actions final-actions">
-                <a href="{{ url_for('recipes.index') }}" class="button">Cancel</a>
+                <button type="submit" form="recipe-form" class="button primary-button">
+                    <i class="fas fa-save"></i> Save Recipe
+                </button>
+                <a href="{{ url_for('recipes.index') }}" class="button">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
             </div>
         </div>
     </div>
@@ -258,6 +261,23 @@
     .final-actions {
         display: flex;
         justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+    }
+    
+    .final-actions .button {
+        min-width: 120px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .final-actions .button i {
+        margin-right: 0.5rem;
     }
     
     /* Modal styles */
@@ -377,11 +397,18 @@
         }
         
         .final-actions {
+            flex-direction: column;
             margin-top: var(--spacing-sm);
+            padding: var(--spacing-sm);
         }
         
         .final-actions .button {
             width: 100%;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .final-actions .button:last-child {
+            margin-bottom: 0;
         }
         
         .ratio-group {
@@ -501,6 +528,19 @@
 
 {% block extra_js %}
 <script>
+    // Edit component buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all edit component buttons
+        document.querySelectorAll('.edit-component-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const ratio = this.getAttribute('data-ratio');
+                editComponent(id, name, ratio);
+            });
+        });
+    });
+
     // Edit component modal functionality
     function editComponent(componentId, name, ratio) {
         // Set form action
