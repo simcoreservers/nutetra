@@ -251,10 +251,9 @@ def settings():
     # This updates default profiles with the user's actual enabled pumps
     config_result = Settings.auto_configure_nutrient_components()
     
-    # Show incompatibility warnings if any were found
-    if config_result.get('incompatibilities'):
-        for incompatibility in config_result['incompatibilities']:
-            flash(f"Nutrient Incompatibility Warning: {incompatibility['message']}", 'warning')
+    # Show configuration result as a message
+    if config_result and "Updated" in config_result:
+        flash(f"Plant profiles updated: {config_result}", 'success')
     
     if request.method == 'POST':
         # Update settings from form
@@ -383,23 +382,21 @@ def manage_profiles():
     # Get the default profiles (these can't be deleted)
     default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
     
-    # Display warnings about any incompatibilities found
-    if config_result.get('incompatibilities'):
-        for incompatibility in config_result['incompatibilities']:
-            flash(f"Nutrient Incompatibility Warning: {incompatibility['message']}", 'warning')
+    # Get all nutrient pumps to display information about them
+    nutrient_pumps = Pump.query.filter(Pump.type == 'nutrient', Pump.enabled == True).all()
     
-    # Always show a message about configuration status
-    flash(f"Nutrient profile configuration: Found {config_result.get('pumps_found', 0)} pumps. Ordered as: (1) Cal-Mag → (2) Micro → (3) Grow → (4) Bloom", 'info')
+    # Show configuration result as a message
+    if config_result and "Updated" in config_result:
+        flash(f"Plant profiles updated: {config_result}", 'success')
     
-    # Flash a message if profiles were updated
-    if config_result.get('updated'):
-        flash(f"Plant profiles have been automatically updated to use your enabled nutrient pumps", 'success')
+    # Always show a message about pump configuration
+    flash(f"Nutrient profile configuration: Found {len(nutrient_pumps)} active nutrient pumps. Ordered as: (1) Cal-Mag → (2) Micro → (3) Grow → (4) Bloom", 'info')
     
     return render_template(
         'dosing/profiles.html',
         profiles=plant_profiles,
         default_profiles=default_profiles,
-        has_incompatibilities=bool(config_result.get('incompatibilities'))
+        has_incompatibilities=False  # Simplified since we don't track incompatibilities anymore
     )
 
 @dosing_bp.route('/profiles/add', methods=['GET', 'POST'])
