@@ -263,6 +263,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 nitrogenInput.value = '';
                 phosphorusInput.value = '';
                 potassiumInput.value = '';
+                // Don't clear the name field for Custom brand
+            } else {
+                // Clear name field so it will be filled by product selection
+                document.getElementById('pump-name').value = '';
             }
         } else {
             // Clear and disable the product select
@@ -292,6 +296,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Set NPK fields readonly state based on brand
             setNPKFieldsReadonly(!isCustomBrand);
+            
+            // Auto-set pump name to product name if not Custom brand
+            if (!isCustomBrand) {
+                document.getElementById('pump-name').value = selectedOption.textContent;
+            }
         } else {
             // Clear NPK values
             nitrogenInput.value = '';
