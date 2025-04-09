@@ -244,6 +244,9 @@ def settings():
         auto_dosing = 'auto_dosing_enabled' in request.form
         night_mode = 'night_mode_enabled' in request.form
         
+        # Get plant profile selection
+        active_profile = request.form.get('active_plant_profile')
+        
         # pH settings
         ph_setpoint = request.form.get('ph_setpoint', type=float)
         ph_buffer = request.form.get('ph_buffer', type=float)
@@ -265,6 +268,32 @@ def settings():
         # Update settings
         Settings.set('auto_dosing_enabled', auto_dosing)
         Settings.set('night_mode_enabled', night_mode)
+        
+        # Update active plant profile if changed
+        if active_profile:
+            Settings.set('active_plant_profile', active_profile)
+            
+            # If a profile was selected, apply its values as defaults
+            plant_profiles = Settings.get('plant_profiles', {})
+            if active_profile in plant_profiles:
+                profile = plant_profiles[active_profile]
+                
+                # Apply profile setpoints if form values match previous defaults
+                # (this means user didn't manually change them)
+                current_ph = Settings.get('ph_setpoint')
+                current_ec = Settings.get('ec_setpoint')
+                
+                if ph_setpoint is None or ph_setpoint == current_ph:
+                    ph_setpoint = profile['ph_setpoint']
+                
+                if ph_buffer is None or ph_buffer == Settings.get('ph_buffer'):
+                    ph_buffer = profile['ph_buffer']
+                    
+                if ec_setpoint is None or ec_setpoint == current_ec:
+                    ec_setpoint = profile['ec_setpoint']
+                
+                if ec_buffer is None or ec_buffer == Settings.get('ec_buffer'):
+                    ec_buffer = profile['ec_buffer']
         
         if ph_setpoint is not None:
             Settings.set('ph_setpoint', ph_setpoint)
@@ -314,7 +343,9 @@ def settings():
         'ec_check_interval': Settings.get('ec_check_interval', 300),
         'ec_dose_wait_time': Settings.get('ec_dose_wait_time', 60),
         'night_mode_start': Settings.get('night_mode_start', '22:00'),
-        'night_mode_end': Settings.get('night_mode_end', '06:00')
+        'night_mode_end': Settings.get('night_mode_end', '06:00'),
+        'active_plant_profile': Settings.get('active_plant_profile', 'general'),
+        'plant_profiles': Settings.get('plant_profiles', {})
     }
     
     return render_template(

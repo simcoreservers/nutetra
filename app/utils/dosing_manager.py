@@ -239,6 +239,11 @@ def check_and_adjust_ph():
         # Skip if auto-dosing is disabled
         if not Settings.get('auto_dosing_enabled', True):
             return
+            
+        # Check if in night mode
+        if check_night_mode():
+            logger.debug("pH check skipped: night mode active")
+            return
         
         try:
             # Get current pH
@@ -247,9 +252,21 @@ def check_and_adjust_ph():
                 logger.warning("Cannot adjust pH: no pH reading available")
                 return
             
-            # Get target pH range using setpoint and buffer
-            setpoint = Settings.get('ph_setpoint', 6.0)
-            buffer = Settings.get('ph_buffer', 0.2)
+            # Get plant profile settings if available
+            plant_profiles = Settings.get('plant_profiles', {})
+            active_profile = Settings.get('active_plant_profile', 'general')
+            
+            # Set target pH range based on profile or defaults
+            if active_profile in plant_profiles:
+                profile = plant_profiles[active_profile]
+                setpoint = profile.get('ph_setpoint', 6.0)
+                buffer = profile.get('ph_buffer', 0.2)
+                logger.debug(f"Using {profile.get('name', 'Unknown')} profile for pH targets (pH: {setpoint}±{buffer})")
+            else:
+                # Use system defaults
+                setpoint = Settings.get('ph_setpoint', 6.0)
+                buffer = Settings.get('ph_buffer', 0.2)
+                
             target_min = setpoint - buffer
             target_max = setpoint + buffer
             
@@ -303,6 +320,7 @@ def check_and_adjust_ph():
                     reason='ph_high',
                     sensor_before=current_ph
                 )
+                
             else:
                 logger.debug(f"pH is within range ({current_ph}), no adjustment needed")
                 
@@ -318,6 +336,11 @@ def check_and_adjust_ec():
         # Skip if auto-dosing is disabled
         if not Settings.get('auto_dosing_enabled', True):
             return
+            
+        # Check if in night mode
+        if check_night_mode():
+            logger.debug("EC check skipped: night mode active")
+            return
         
         try:
             # Get current EC
@@ -326,9 +349,21 @@ def check_and_adjust_ec():
                 logger.warning("Cannot adjust EC: no EC reading available")
                 return
             
-            # Get target EC range using setpoint and buffer
-            setpoint = Settings.get('ec_setpoint', 1350)
-            buffer = Settings.get('ec_buffer', 150)
+            # Get plant profile settings if available
+            plant_profiles = Settings.get('plant_profiles', {})
+            active_profile = Settings.get('active_plant_profile', 'general')
+            
+            # Set target EC range based on profile or defaults
+            if active_profile in plant_profiles:
+                profile = plant_profiles[active_profile]
+                setpoint = profile.get('ec_setpoint', 1350)
+                buffer = profile.get('ec_buffer', 150)
+                logger.debug(f"Using {profile.get('name', 'Unknown')} profile for EC targets (EC: {setpoint}±{buffer})")
+            else:
+                # Use system defaults
+                setpoint = Settings.get('ec_setpoint', 1350)
+                buffer = Settings.get('ec_buffer', 150)
+                
             target_min = setpoint - buffer
             target_max = setpoint + buffer
             

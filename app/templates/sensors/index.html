@@ -75,13 +75,30 @@
                     {% set temp_reading = get_last_reading('temp') %}
                     <div class="reading-value" id="temp-value">{{ temp_reading|temp }}</div>
                     <div class="reading-range">
-                        <em>Monitoring Only</em>
+                        {% set profile = settings.get('plant_profiles', {}).get(settings.get('active_plant_profile', 'general'), {}) %}
+                        {% if profile %}
+                            Target: {{ profile.get('temp_min', 18.0) }} - {{ profile.get('temp_max', 28.0) }}°C
+                        {% else %}
+                            Alert: < {{ settings.get('temp_min_alert', 18.0) }}°C or > {{ settings.get('temp_max_alert', 30.0) }}°C
+                        {% endif %}
                     </div>
                     
                     <div class="action-buttons">
                         <a href="{{ url_for('sensors.calibration') }}" class="action-button">Calibrate</a>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Plant Profile Information -->
+        <div class="profile-section">
+            <div class="section-header">
+                <h4>Active Plant Profile: {{ settings.get('plant_profiles', {}).get(settings.get('active_plant_profile', 'general'), {}).get('name', 'General Purpose') }}</h4>
+                <a href="{{ url_for('dosing.settings') }}" class="action-button small">Change Profile</a>
+            </div>
+            
+            <div class="profile-description">
+                {{ settings.get('plant_profiles', {}).get(settings.get('active_plant_profile', 'general'), {}).get('description', 'Default settings for general hydroponics') }}
             </div>
         </div>
     </div>
@@ -91,6 +108,41 @@
 <meta name="refresh-interval" content="30">
 <meta name="ph-settings" content='{"setpoint": {{ settings.get("ph_setpoint", 6.0) }}, "buffer": {{ settings.get("ph_buffer", 0.2) }}}'>
 <meta name="ec-settings" content='{"setpoint": {{ settings.get("ec_setpoint", 1350) }}, "buffer": {{ settings.get("ec_buffer", 150) }}}'>
+<meta name="temp-settings" content='{"min": {{ settings.get("plant_profiles", {}).get(settings.get("active_plant_profile", "general"), {}).get("temp_min", 18.0) }}, "max": {{ settings.get("plant_profiles", {}).get(settings.get("active_plant_profile", "general"), {}).get("temp_max", 28.0) }}}'>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-section {
+        margin-top: var(--spacing-md);
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+    }
+    
+    .profile-section .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .profile-section h4 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .action-button.small {
+        padding: 4px 8px;
+        font-size: 0.85rem;
+    }
+    
+    .profile-description {
+        margin-top: var(--spacing-sm);
+        font-size: 0.9rem;
+        color: var(--text-color-muted);
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}

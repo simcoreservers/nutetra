@@ -3,10 +3,14 @@ import time
 import smbus2
 import threading
 import logging
+import json
+import os
 from app import scheduler
 from app.models.sensor_reading import SensorReading
 from app.models.settings import Settings
 from flask import current_app
+from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
 # Create a logger for this module
 logger = logging.getLogger(__name__)
@@ -34,6 +38,16 @@ last_readings = {
     'temp': None
 }
 
+# Latest sensor readings (in-memory cache)
+latest_readings = {
+    'ph': None,
+    'ec': None,
+    'temp': None
+}
+
+# Initialize SQLAlchemy
+db = SQLAlchemy()
+
 def init_sensors():
     """Initialize the sensor communication and start the reading schedule"""
     global bus
@@ -57,8 +71,9 @@ def init_sensors():
         # Take initial readings
         read_all_sensors()
         
+        logger.info("Sensor subsystem initialized")
     except Exception as e:
-        logger.error(f"Failed to initialize sensors: {e}")
+        logger.error(f"Failed to initialize sensor subsystem: {e}")
         if 'bus' in locals() and bus:
             bus.close()
             bus = None
@@ -185,29 +200,82 @@ def read_response(address):
         raise
 
 def read_and_log_sensor(sensor_type):
-    """Read a sensor and log the value to the database"""
-    # Import Flask's current_app to get the application context
-    from flask import current_app
+    """Read a sensor and log the result to the database"""
+    try:
+        # Read from the sensor
+        value = read_sensor(sensor_type)
+        if value is None:
+            logger.warning(f"Failed to read {sensor_type} sensor: no reading obtained")
+            return
+        
+        # Log the reading
+        SensorReading.add_reading(sensor_type, value)
+        
+        # Check if reading is out of range and notify if needed
+        check_reading_range(sensor_type, value)
+        
+        # Broadcast to connected clients via Socket.IO
+        from app import socketio
+        socketio.emit('sensor_update', {sensor_type: value})
+        
+        logger.debug(f"Logged {sensor_type} reading: {value}")
+    except Exception as e:
+        logger.error(f"Error reading {sensor_type} sensor: {e}")
+
+def check_reading_range(sensor_type, value):
+    """Check if a sensor reading is out of range and notify if needed"""
+    # Check if notifications are enabled
+    if not Settings.get('notifications_enabled', True):
+        return
     
-    # Use the app context for database operations
-    with current_app.app_context():
-        try:
-            value = read_sensor(sensor_type)
-            SensorReading.add_reading(sensor_type, value)
-            logger.debug(f"Recorded {sensor_type} reading: {value}")
+    message = None
+    
+    # Check ranges based on sensor type
+    if sensor_type == 'ph':
+        setpoint = Settings.get('ph_setpoint', 6.0)
+        buffer = Settings.get('ph_buffer', 0.2)
+        min_val = setpoint - buffer
+        max_val = setpoint + buffer
+        
+        if value < min_val:
+            message = f"pH is low: {value:.2f} (below {min_val:.2f})"
+        elif value > max_val:
+            message = f"pH is high: {value:.2f} (above {max_val:.2f})"
             
-            # Emit the reading through SocketIO for real-time updates
-            from app import socketio
-            socketio.emit('sensor_update', {
-                'sensor_type': sensor_type,
-                'value': value,
-                'timestamp': time.time()
-            })
+    elif sensor_type == 'ec':
+        setpoint = Settings.get('ec_setpoint', 1350)
+        buffer = Settings.get('ec_buffer', 150)
+        min_val = setpoint - buffer
+        max_val = setpoint + buffer
+        
+        if value < min_val:
+            message = f"EC is low: {value:.0f} µS/cm (below {min_val:.0f})"
+        elif value > max_val:
+            message = f"EC is high: {value:.0f} µS/cm (above {max_val:.0f})"
             
-            return value
-        except Exception as e:
-            logger.error(f"Failed to read and log {sensor_type} sensor: {e}")
-            return None
+    elif sensor_type == 'temp':
+        # Use plant profile temperature ranges if available
+        plant_profiles = Settings.get('plant_profiles', {})
+        active_profile = Settings.get('active_plant_profile', 'general')
+        
+        if active_profile in plant_profiles:
+            profile = plant_profiles[active_profile]
+            min_val = profile.get('temp_min', 18.0)
+            max_val = profile.get('temp_max', 28.0)
+        else:
+            # Fall back to alert thresholds
+            min_val = Settings.get('temp_min_alert', 18.0)
+            max_val = Settings.get('temp_max_alert', 30.0)
+        
+        if value < min_val:
+            message = f"Temperature is low: {value:.1f}°C (below {min_val:.1f}°C)"
+        elif value > max_val:
+            message = f"Temperature is high: {value:.1f}°C (above {max_val:.1f}°C)"
+    
+    # Send notification if needed
+    if message:
+        from app.utils.notification_manager import notify_out_of_range
+        notify_out_of_range(sensor_type, message)
 
 def read_all_sensors():
     """Read all sensors and return the values"""

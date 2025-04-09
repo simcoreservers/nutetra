@@ -72,6 +72,8 @@ class Settings(db.Model):
             
             # Temperature settings
             'temp_check_interval': 300,  # seconds
+            'temp_min_alert': 18.0,      # °C
+            'temp_max_alert': 30.0,      # °C
             
             # Notification settings
             'notifications_enabled': True,
@@ -86,6 +88,61 @@ class Settings(db.Model):
             'night_mode_enabled': False,
             'night_mode_start': '22:00',
             'night_mode_end': '06:00',
+            
+            # Plant profiles
+            'active_plant_profile': 'general',
+            'plant_profiles': {
+                'general': {
+                    'name': 'General Purpose',
+                    'ph_setpoint': 6.0,
+                    'ph_buffer': 0.2,
+                    'ec_setpoint': 1350,
+                    'ec_buffer': 150,
+                    'temp_min': 18.0,
+                    'temp_max': 28.0,
+                    'description': 'General purpose profile suitable for most plants'
+                },
+                'leafy_greens': {
+                    'name': 'Leafy Greens',
+                    'ph_setpoint': 6.0,
+                    'ph_buffer': 0.2,
+                    'ec_setpoint': 1000,
+                    'ec_buffer': 100,
+                    'temp_min': 18.0,
+                    'temp_max': 24.0,
+                    'description': 'Optimized for lettuce, spinach, kale and other leafy vegetables'
+                },
+                'fruiting': {
+                    'name': 'Fruiting Plants',
+                    'ph_setpoint': 6.0,
+                    'ph_buffer': 0.2,
+                    'ec_setpoint': 1800,
+                    'ec_buffer': 150,
+                    'temp_min': 20.0,
+                    'temp_max': 28.0,
+                    'description': 'For tomatoes, peppers, cucumbers and other fruiting plants'
+                },
+                'herbs': {
+                    'name': 'Herbs',
+                    'ph_setpoint': 5.8,
+                    'ph_buffer': 0.2,
+                    'ec_setpoint': 1200,
+                    'ec_buffer': 100,
+                    'temp_min': 18.0,
+                    'temp_max': 26.0,
+                    'description': 'Ideal for basil, cilantro, parsley and other herbs'
+                },
+                'strawberries': {
+                    'name': 'Strawberries',
+                    'ph_setpoint': 5.8,
+                    'ph_buffer': 0.2,
+                    'ec_setpoint': 1300,
+                    'ec_buffer': 100,
+                    'temp_min': 18.0,
+                    'temp_max': 26.0,
+                    'description': 'Optimized for growing strawberries'
+                }
+            },
             
             # UI settings
             'dark_mode': True,
