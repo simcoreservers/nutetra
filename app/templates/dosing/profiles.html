@@ -8,16 +8,9 @@
     <div class="dashboard-section">
         <div class="section-header">
             <h3>Plant Profiles</h3>
-            <div class="header-actions">
-                <form method="POST" action="{{ url_for('dosing.migrate_profiles') }}" class="inline-form">
-                    <button type="submit" class="action-button secondary">
-                        <i class="fas fa-sync-alt"></i> Update Profiles
-                    </button>
-                </form>
-                <a href="{{ url_for('dosing.add_profile') }}" class="action-button">
-                    <i class="fas fa-plus"></i> Add New Profile
-                </a>
-            </div>
+            <a href="{{ url_for('dosing.add_profile') }}" class="action-button">
+                <i class="fas fa-plus"></i> Add New Profile
+            </a>
         </div>
         
         <div class="profiles-grid">
@@ -80,26 +73,12 @@
 
 {% block extra_css %}
 <style>
-    /* Add styles for the header actions */
-    .header-actions {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-    
+    /* Generic styles */
     .inline-form {
         display: inline-block;
     }
     
-    .action-button.secondary {
-        background-color: var(--bg-color-dark);
-        color: var(--text-color);
-    }
-    
-    .action-button.secondary:hover {
-        background-color: var(--primary-color-light);
-    }
-
-    /* Existing styles */
+    /* Profiles grid */
     .profiles-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
