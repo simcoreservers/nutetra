@@ -8,9 +8,14 @@
     <div class="dashboard-section">
         <div class="section-header">
             <h3>Pumps Configuration</h3>
-            <button id="add-pump-btn" class="button">
-                <i class="fas fa-plus"></i> Add Pump
-            </button>
+            <div class="header-actions">
+                <button id="migrate-pumps-btn" class="button button-secondary" title="Convert old nutrient types (A, B, C) to generic nutrient type">
+                    <i class="fas fa-exchange-alt"></i> Standardize Pumps
+                </button>
+                <button id="add-pump-btn" class="button">
+                    <i class="fas fa-plus"></i> Add Pump
+                </button>
+            </div>
         </div>
 
         <div class="pump-grid">
@@ -218,6 +223,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Add pump button
     const addPumpBtn = document.getElementById('add-pump-btn');
+    const migratePumpsBtn = document.getElementById('migrate-pumps-btn');
     const pumpModal = document.getElementById('pump-modal');
     const pumpForm = document.getElementById('pump-form');
     const closeModalBtns = document.querySelectorAll('.close-modal, .cancel-btn');
@@ -627,6 +633,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Migrate pumps button
+    migratePumpsBtn.addEventListener('click', function() {
+        if (confirm("Convert all nutrient pumps to use the standard type? This will not change their functionality but will standardize their configuration.")) {
+            // Disable the button while processing
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            // Call the migration API
+            fetch('/api/pumps/migrate-types', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert(result.message);
+                    // Reload the page to reflect changes
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (result.error || 'Unknown error'));
+                    // Re-enable the button
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-exchange-alt"></i> Standardize Pumps';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while migrating pump types');
+                // Re-enable the button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-exchange-alt"></i> Standardize Pumps';
+            });
+        }
+    });
+    
     // Function to load nutrient brands
     function loadNutrientBrands() {
         fetch('/api/nutrient-brands')
@@ -1031,6 +1071,20 @@ document.addEventListener('DOMContentLoaded', function() {
     .delete-warning {
         color: var(--danger-color);
         font-weight: 500;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+    
+    .button-secondary {
+        background-color: var(--bg-color-dark);
+        color: var(--text-color);
+    }
+    
+    .button-secondary:hover {
+        background-color: var(--primary-color-light);
     }
 </style>
 {% endblock %} 

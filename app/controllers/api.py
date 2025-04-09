@@ -316,7 +316,15 @@ def update_pump(pump_id):
         if 'name' in data:
             pump.name = data['name']
         if 'type' in data:
-            pump.type = data['type']
+            # Convert any non-pH nutrient type to the generic 'nutrient' type
+            if data['type'].startswith('nutrient_') and data['type'] not in ['ph_up', 'ph_down']:
+                pump.type = 'nutrient'
+            else:
+                pump.type = data['type']
+        elif pump.type.startswith('nutrient_') and pump.type not in ['ph_up', 'ph_down']:
+            # Always convert old nutrient types to the generic 'nutrient' type
+            pump.type = 'nutrient'
+            
         if 'gpio_pin' in data:
             # Check if the new GPIO pin is already in use by another pump
             if data['gpio_pin'] != pump.gpio_pin:
@@ -1047,6 +1055,40 @@ def initialize_nutrient_brands():
             'success': True,
             'message': f"Successfully initialized {new_count} nutrient brands",
             'initialized': True
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@api_bp.route('/pumps/migrate-types', methods=['POST'])
+def migrate_pump_types():
+    """Migrate old nutrient_a, nutrient_b, etc. types to the generic 'nutrient' type"""
+    try:
+        # Find all pumps with old nutrient types
+        old_pumps = Pump.query.filter(
+            Pump.type.like('nutrient_%')
+        ).all()
+        
+        count = 0
+        for pump in old_pumps:
+            # Skip ph pumps which also start with nutrient_
+            if pump.type in ['ph_up', 'ph_down']:
+                continue
+                
+            # Update the type to the generic 'nutrient'
+            pump.type = 'nutrient'
+            count += 1
+        
+        # Commit the changes
+        if count > 0:
+            db.session.commit()
+            
+        return jsonify({
+            'success': True,
+            'message': f"Successfully migrated {count} pumps to generic nutrient type",
+            'count': count
         })
     except Exception as e:
         return jsonify({
