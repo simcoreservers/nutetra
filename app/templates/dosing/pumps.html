@@ -32,10 +32,6 @@
                         <span class="detail-label">GPIO Pin:</span>
                         <span class="detail-value">{{ pump.gpio_pin }}</span>
                     </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Flow Rate:</span>
-                        <span class="detail-value">{{ pump.flow_rate }} ml/s</span>
-                    </div>
                     
                     {% if pump.type == 'nutrient' and pump.nutrient_name %}
                     <div class="nutrient-info">
