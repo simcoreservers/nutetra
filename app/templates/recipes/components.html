@@ -123,7 +123,7 @@
             <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body">
-            <form id="component-form" action="{{ url_for('recipes.add_component', recipe_id=recipe.id) }}" method="post">
+            <form id="component-form" action="{{ url_for('recipes.add_component_new', recipe_id=recipe.id) }}" method="post">
                 <input type="hidden" id="component_id" name="component_id">
                 
                 <div class="form-group">
@@ -569,7 +569,7 @@
             document.getElementById('component_id').value = '';
             
             // Update form action and title
-            componentForm.action = "{{ url_for('recipes.add_component', recipe_id=recipe.id) }}";
+            componentForm.action = "{{ url_for('recipes.add_component_new', recipe_id=recipe.id) }}";
             modalTitle.textContent = 'Add Component';
             
             // Show modal

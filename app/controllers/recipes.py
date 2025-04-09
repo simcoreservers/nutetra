@@ -165,8 +165,8 @@ def delete_recipe(recipe_id):
     return redirect(url_for('recipes.index'))
 
 @recipes_bp.route('/component/add/<int:recipe_id>', methods=['POST'])
-def add_component(recipe_id):
-    """Add a component to a recipe"""
+def add_component_legacy(recipe_id):
+    """Add a component to a recipe (legacy method)"""
     recipe = NutrientRecipe.query.get_or_404(recipe_id)
     
     # Get component details from form
@@ -200,7 +200,7 @@ def add_component(recipe_id):
         recipe_id=recipe_id,
         pump_id=pump_id,
         name=name or pump.name,
-        ratio=ratio
+        dose_amount=10.0  # Default dose amount instead of ratio
     )
     
     # Save to database
@@ -211,8 +211,8 @@ def add_component(recipe_id):
     return redirect(url_for('recipes.edit_recipe', recipe_id=recipe_id))
 
 @recipes_bp.route('/component/edit/<int:component_id>', methods=['POST'])
-def edit_component(component_id):
-    """Edit a recipe component"""
+def edit_component_legacy(component_id):
+    """Edit a recipe component (legacy method)"""
     component = RecipeComponent.query.get_or_404(component_id)
     
     # Get component details from form
@@ -226,7 +226,8 @@ def edit_component(component_id):
     
     # Update the component
     component.name = name
-    component.ratio = ratio
+    # Convert ratio to dose_amount
+    component.dose_amount = ratio * 10.0  # Convert ratio to approximate dose amount
     
     # Save to database
     db.session.commit()
@@ -265,7 +266,7 @@ def components(recipe_id):
     )
 
 @recipes_bp.route('/components/add/<int:recipe_id>', methods=['POST'])
-def add_component(recipe_id):
+def add_component_new(recipe_id):
     """Add a component to a recipe"""
     recipe = NutrientRecipe.query.get_or_404(recipe_id)
     
