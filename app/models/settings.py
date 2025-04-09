@@ -281,24 +281,72 @@ class Settings(db.Model):
             # Create new components based on available pumps
             new_components = []
             
+            # Define nutrient type order (for dosing sequence)
+            type_order = {
+                'calmag': 1,  # Cal-mag supplements go first (standard practice)
+                'micro': 2,   # Micro/trace nutrients second
+                'grow': 3,    # Grow nutrients third
+                'bloom': 4    # Bloom nutrients last
+            }
+            
             for pump in nutrient_pumps:
+                # Only include enabled pumps
+                if not pump.enabled:
+                    continue
+                    
                 nutrient_type = get_nutrient_type(pump)
                 
                 # Get the ratio for this nutrient type from the profile
                 ratio = nutrient_ratios.get(nutrient_type, 1.0)
+                
+                # Set dosing order for this component
+                order = type_order.get(nutrient_type, 99)
                 
                 # Add as a component
                 new_components.append({
                     'pump_id': pump.id,
                     'pump_name': pump.name,
                     'ratio': ratio,
-                    'nutrient_type': nutrient_type  # Store the type for reference
+                    'nutrient_type': nutrient_type,  # Store the type for reference
+                    'dosing_order': order           # Add order for sorting
                 })
+            
+            # Sort components by dosing order
+            new_components.sort(key=lambda x: x.get('dosing_order', 99))
             
             # Update the profile if we have components and they're different from what's there
             if new_components and (len(new_components) != len(profile.get('nutrient_components', []))):
                 profile['nutrient_components'] = new_components
                 profiles_updated = True
+        
+        # Calculate dosing amounts in ml/L for each profile and component
+        for profile_id, profile in plant_profiles.items():
+            if 'nutrient_components' in profile and profile['nutrient_components']:
+                # Calculate total ratio sum
+                total_ratio = sum(comp.get('ratio', 0) for comp in profile['nutrient_components'])
+                
+                if total_ratio > 0:
+                    # Base dosing calculation on EC target
+                    # This is a simplification - in reality, EC response varies by nutrient
+                    # A typical value might be around 2-4 ml/L for a ~1500 µS/cm target
+                    ec_target = profile.get('ec_setpoint', 1350)
+                    
+                    # Factor to convert EC to ml/L (approximation)
+                    # Higher EC = more nutrients
+                    base_dose_ml_per_liter = ec_target / 1350 * 3.0  # ~3ml/L at EC 1350
+                    
+                    # Calculate individual doses
+                    for comp in profile['nutrient_components']:
+                        if total_ratio > 0:
+                            # Calculate this component's portion of the base dose
+                            ratio = comp.get('ratio', 0)
+                            dosing_ml_per_liter = (ratio / total_ratio) * base_dose_ml_per_liter
+                            
+                            # Round to 2 decimal places for display
+                            comp['dosing_ml_per_liter'] = round(dosing_ml_per_liter, 2)
+                            
+                            # Also calculate ml per gallon for US users (1 gal ≈ 3.785 L)
+                            comp['dosing_ml_per_gallon'] = round(dosing_ml_per_liter * 3.785, 2)
         
         # Save profiles if updated
         if profiles_updated:

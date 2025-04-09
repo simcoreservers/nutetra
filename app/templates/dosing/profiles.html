@@ -48,18 +48,41 @@
                         
                         {% if profile.nutrient_components %}
                         <div class="components-list">
-                            <h5>Nutrient Configuration</h5>
-                            <ul>
-                                {% for component in profile.nutrient_components %}
-                                <li>
-                                    <span class="component-name">{{ component.pump_name }}</span>
-                                    <span class="component-ratio">{{ component.ratio }}</span>
-                                    {% if component.nutrient_type %}
-                                    <span class="component-type">{{ component.nutrient_type }}</span>
-                                    {% endif %}
-                                </li>
-                                {% endfor %}
-                            </ul>
+                            <div class="dosing-header">
+                                <h5>Nutrient Dosing Plan</h5>
+                                <div class="dosing-summary">
+                                    <span class="dosing-target">EC: {{ profile.ec_setpoint }} μS/cm</span>
+                                    {% set total_ml_per_liter = 0 %}
+                                    {% for component in profile.nutrient_components %}
+                                        {% if component.dosing_ml_per_liter is defined %}
+                                            {% set total_ml_per_liter = total_ml_per_liter + component.dosing_ml_per_liter %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="dosing-total">Total: {{ total_ml_per_liter|round(2) }} ml/L</span>
+                                </div>
+                            </div>
+                            <div class="dosing-sequence">
+                                <span class="sequence-title">Dosing Sequence:</span>
+                                <span class="sequence-note">Cal-Mag is added first for optimal nutrient absorption</span>
+                                <ul>
+                                    {% for component in profile.nutrient_components %}
+                                    <li class="{% if component.nutrient_type %}nutrient-type-{{ component.nutrient_type }}{% endif %}">
+                                        <span class="component-name">{{ component.pump_name }}</span>
+                                        <span class="component-dosing">
+                                            {% if component.dosing_ml_per_liter is defined %}
+                                            {{ component.dosing_ml_per_liter }} ml/L
+                                            <span class="dosing-alt">({{ component.dosing_ml_per_gallon }} ml/gal)</span>
+                                            {% else %}
+                                            {{ component.ratio }}
+                                            {% endif %}
+                                        </span>
+                                        {% if component.nutrient_type %}
+                                        <span class="component-type">{{ component.nutrient_type }}</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
@@ -206,10 +229,54 @@
         padding-top: var(--spacing-sm);
     }
     
+    .dosing-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-sm);
+    }
+    
     .components-list h5 {
         font-size: 0.9rem;
-        margin-bottom: var(--spacing-xs);
+        margin: 0;
         color: var(--text-color-muted);
+    }
+    
+    .dosing-summary {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        font-size: 0.85rem;
+    }
+    
+    .dosing-target {
+        color: var(--text-color-muted);
+    }
+    
+    .dosing-total {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .dosing-sequence {
+        background-color: var(--bg-color-dark);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-sm);
+        margin-top: var(--spacing-xs);
+    }
+    
+    .sequence-title {
+        font-size: 0.8rem;
+        color: var(--text-color-muted);
+        display: block;
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .sequence-note {
+        font-size: 0.8rem;
+        color: var(--text-color-muted);
+        display: block;
+        margin-bottom: var(--spacing-xs);
     }
     
     .components-list ul {
@@ -222,8 +289,37 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         font-size: 0.85rem;
+        padding: 4px 8px;
+        border-radius: var(--border-radius-sm);
+        border-left: 3px solid transparent;
+    }
+    
+    .components-list li:last-child {
+        margin-bottom: 0;
+    }
+    
+    /* Nutrient type colors */
+    .nutrient-type-calmag {
+        border-left-color: #9c27b0;
+        background-color: rgba(156, 39, 176, 0.15);
+        border-left-width: 4px;  /* Make Cal-Mag stand out as first in sequence */
+    }
+    
+    .nutrient-type-micro {
+        border-left-color: #4caf50;
+        background-color: rgba(76, 175, 80, 0.1);
+    }
+    
+    .nutrient-type-grow {
+        border-left-color: #2196f3;
+        background-color: rgba(33, 150, 243, 0.1);
+    }
+    
+    .nutrient-type-bloom {
+        border-left-color: #f44336;
+        background-color: rgba(244, 67, 54, 0.1);
     }
     
     .component-name {
@@ -231,19 +327,35 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
-    
-    .component-ratio {
-        flex: 1;
-        text-align: center;
         font-weight: 500;
     }
     
+    .component-dosing {
+        flex: 1.5;
+        text-align: center;
+        font-weight: 500;
+        color: var(--primary-color);
+    }
+    
+    .dosing-alt {
+        display: block;
+        font-size: 0.8em;
+        color: var(--text-color-muted);
+        font-weight: normal;
+    }
+    
     .component-type {
-        flex: 1;
+        flex: 0.8;
         text-align: right;
         color: var(--text-color-muted);
         font-style: italic;
+    }
+    
+    .dosing-note {
+        margin-top: var(--spacing-xs);
+        font-size: 0.8rem;
+        color: var(--text-color-muted);
+        text-align: right;
     }
     
     /* Incompatibility warning */
