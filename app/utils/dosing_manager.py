@@ -395,32 +395,33 @@ def cleanup():
             logger.error(f"Error closing GPIO chip: {e}")
 
 def dose_nutrients(amount_ml=None):
-    """Dose nutrients to raise EC level"""
-    # If no amount specified, use the configured amount
+    """Dose nutrients to adjust EC levels"""
     if amount_ml is None:
         amount_ml = Settings.get('ec_dose_amount', 5.0)
     
-    # Get active recipe
-    recipe_id = Settings.get('active_recipe_id')
+    # Get active plant profile
+    active_profile_id = Settings.get('active_plant_profile', 'general')
+    plant_profiles = Settings.get('plant_profiles', {})
     
-    if recipe_id:
-        # Use the active recipe for dosing
-        from app.models.nutrient_recipe import NutrientRecipe, RecipeComponent
-        recipe = NutrientRecipe.query.get(recipe_id)
+    if active_profile_id in plant_profiles:
+        profile = plant_profiles[active_profile_id]
         
-        if recipe and recipe.components:
+        # Check if the profile has nutrient components
+        nutrient_components = profile.get('nutrient_components', [])
+        
+        if nutrient_components:
             # Calculate the sum of all ratios
-            total_ratio = sum(component.ratio for component in recipe.components)
+            total_ratio = sum(component['ratio'] for component in nutrient_components)
             
             # Dose each component according to its ratio
-            for component in recipe.components:
+            for component in nutrient_components:
                 # Calculate the amount for this component based on its ratio
-                component_amount = (component.ratio / total_ratio) * amount_ml
+                component_amount = (component['ratio'] / total_ratio) * amount_ml
                 
                 # Activate the pump
                 if component_amount > 0:
                     success = activate_pump(
-                        pump_id=component.pump_id,
+                        pump_id=component['pump_id'],
                         amount_ml=component_amount,
                         reason='ec_adjustment'
                     )
@@ -432,7 +433,7 @@ def dose_nutrients(amount_ml=None):
             # All components dosed successfully
             return True
     
-    # No active recipe or recipe has no components - use old logic (find nutrient pumps directly)
+    # No active profile or profile has no components - use old logic (find nutrient pumps directly)
     nutrient_pumps = Pump.get_by_type('nutrient_a') + Pump.get_by_type('nutrient_b') + Pump.get_by_type('nutrient_c')
     
     if not nutrient_pumps:

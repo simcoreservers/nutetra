@@ -137,14 +137,12 @@ def create_app(test_config=None):
     from app.controllers.sensors import sensors_bp
     from app.controllers.dosing import dosing_bp
     from app.controllers.settings import settings_bp
-    from app.controllers.recipes import recipes_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp)  # URL prefix is defined in the blueprint
     app.register_blueprint(sensors_bp, url_prefix='/sensors')
     app.register_blueprint(dosing_bp, url_prefix='/dosing')
     app.register_blueprint(settings_bp, url_prefix='/settings')
-    app.register_blueprint(recipes_bp, url_prefix='/recipes')
 
     # Initialize sensors and dosing systems
     with app.app_context():
