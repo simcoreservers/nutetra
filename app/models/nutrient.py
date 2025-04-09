@@ -57,6 +57,19 @@ class NutrientBrand(db.Model):
                     ]
                 },
                 {
+                    'name': 'Athena',
+                    'description': 'Professional-grade hydroponic nutrients for commercial growers',
+                    'products': [
+                        {'name': 'Grow A', 'nitrogen_pct': 3.0, 'phosphorus_pct': 1.0, 'potassium_pct': 4.0},
+                        {'name': 'Grow B', 'nitrogen_pct': 1.0, 'phosphorus_pct': 0.0, 'potassium_pct': 1.0},
+                        {'name': 'Bloom A', 'nitrogen_pct': 1.0, 'phosphorus_pct': 4.0, 'potassium_pct': 5.0},
+                        {'name': 'Bloom B', 'nitrogen_pct': 1.0, 'phosphorus_pct': 0.0, 'potassium_pct': 1.0},
+                        {'name': 'Core', 'nitrogen_pct': 2.0, 'phosphorus_pct': 0.0, 'potassium_pct': 0.0},
+                        {'name': 'Balance', 'nitrogen_pct': 0.0, 'phosphorus_pct': 0.0, 'potassium_pct': 0.0},
+                        {'name': 'Stack', 'nitrogen_pct': 0.0, 'phosphorus_pct': 0.0, 'potassium_pct': 0.0}
+                    ]
+                },
+                {
                     'name': 'Custom',
                     'description': 'User-defined custom nutrients',
                     'products': []
