@@ -285,6 +285,8 @@
         border: 1px solid var(--border-color);
         overflow: hidden;
         transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
     }
     
     .component-card:hover {
@@ -298,6 +300,7 @@
         border-bottom: 1px solid var(--border-color);
         display: flex;
         justify-content: space-between;
+        align-items: center;
     }
     
     .component-name {
@@ -307,6 +310,8 @@
     .component-pump {
         font-size: 0.85rem;
         color: var(--text-color-muted);
+        white-space: nowrap;
+        margin-left: var(--spacing-xs);
     }
     
     .component-body {
@@ -314,6 +319,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex: 1;
     }
     
     .ratio-display {
@@ -324,12 +330,14 @@
         font-size: 0.85rem;
         color: var(--text-color-muted);
         margin-bottom: var(--spacing-xs);
+        font-weight: 500;
     }
     
     .ratio-value {
         font-size: 2rem;
         font-weight: 600;
         color: var(--primary-color);
+        line-height: 1;
     }
     
     .component-footer {
