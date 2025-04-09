@@ -202,179 +202,110 @@ class Settings(db.Model):
     @staticmethod
     def auto_configure_nutrient_components():
         """
-        Automatically configure nutrient components for all default profiles
-        based on available nutrient pumps
+        Automatically configure nutrient components based on the available pumps
         """
-        from app.models.pump import Pump
+        # Get all settings
+        settings = Settings.query.all()
+        if not settings:
+            return False
         
-        # Get all enabled nutrient pumps
-        nutrient_pumps = Pump.query.filter(
-            Pump.type == 'nutrient',
-            Pump.enabled == True
-        ).all()
+        # Get all nutrient pumps
+        pumps = Pump.query.filter(Pump.type == 'nutrient').all()
         
-        # Get all plant profiles
-        plant_profiles = Settings.get('plant_profiles', {})
+        updated_profiles = 0
+        total_profiles = len(settings)
         
-        # Track if we've made changes
-        profiles_updated = False
-        
-        # Nutrient type mapping based on name patterns
-        def get_nutrient_type(pump):
-            # Get the name from either the nutrient name or pump name
-            name = (pump.nutrient_name or pump.name).lower()
-            
-            # Print for debugging - will show in logs
-            print(f"Identifying nutrient type for: {name}")
-            
-            # Look for Cal-Mag related terms (expanded list)
-            calmag_terms = ['cal', 'mag', 'calcium', 'magnesium', 'calimagic', 'calmag', 'cal-mag', 'ca', 'mg']
-            if any(term in name.replace('-', '').replace('_', '').split() for term in calmag_terms):
-                print(f"→ Identified as CALMAG")
-                return 'calmag'
-                
-            # Micro nutrients
-            micro_terms = ['micro', 'trace', 'element', 'core']
-            if any(term in name for term in micro_terms):
-                print(f"→ Identified as MICRO")
-                return 'micro'
-                
-            # Grow nutrients
-            grow_terms = ['grow', 'veg', 'vegetative', 'growth', 'gro']
-            if any(term in name for term in grow_terms):
-                print(f"→ Identified as GROW")
-                return 'grow'
-                
-            # Bloom nutrients  
-            bloom_terms = ['bloom', 'flower', 'fruit', 'flowering', 'booster']
-            if any(term in name for term in bloom_terms):
-                print(f"→ Identified as BLOOM")
-                return 'bloom'
-                
-            # If we have "A" or "B" in the name - try to identify based on that
-            if ' a ' in f' {name} ' or name.endswith(' a') or name.endswith('-a'):
-                print(f"→ 'A' component - likely GROW")
-                return 'grow'
-                
-            if ' b ' in f' {name} ' or name.endswith(' b') or name.endswith('-b'):
-                print(f"→ 'B' component - likely BLOOM") 
-                return 'bloom'
-            
-            # Default to grow if we can't determine
-            print(f"→ Could not identify - defaulting to GROW")
-            return 'grow'
-        
-        # Check for incompatible nutrients
-        def check_incompatibility(pumps):
-            incompatibilities = []
-            
-            # Example incompatibility check: calcium-containing products with phosphates
-            calcium_pumps = [p for p in pumps if 'cal' in (p.nutrient_name or '').lower()]
-            phosphate_pumps = [p for p in pumps if 'phos' in (p.nutrient_name or '').lower()]
-            
-            if calcium_pumps and phosphate_pumps:
-                incompatibilities.append({
-                    'type': 'mixing',
-                    'message': 'Calcium products should not be mixed directly with phosphates',
-                    'pumps': [{'id': p.id, 'name': p.name} for p in calcium_pumps + phosphate_pumps]
-                })
-            
-            return incompatibilities
-        
-        # Check for incompatibilities and store them
-        incompatibilities = check_incompatibility(nutrient_pumps)
-        if incompatibilities:
-            Settings.set('nutrient_incompatibilities', incompatibilities)
-        else:
-            Settings.set('nutrient_incompatibilities', [])
-        
-        # Process each default profile
-        for profile_id, profile in plant_profiles.items():
-            # Skip custom profiles
-            if profile.get('custom', True):
-                continue
-            
-            # Get nutrient ratios for this profile
-            nutrient_ratios = profile.get('nutrient_ratios', {})
-            if not nutrient_ratios:
-                continue
+        for setting in settings:
+            # Parse the existing nutrient_components
+            current_components = []
+            if setting.nutrient_components:
+                try:
+                    current_components = json.loads(setting.nutrient_components)
+                except:
+                    current_components = []
             
             # Create new components based on available pumps
             new_components = []
-            
-            # Define nutrient type order (for dosing sequence)
-            type_order = {
-                'calmag': 1,  # Cal-mag supplements go first (standard practice)
-                'micro': 2,   # Micro/trace nutrients second
-                'grow': 3,    # Grow nutrients third
-                'bloom': 4    # Bloom nutrients last
-            }
-            
-            for pump in nutrient_pumps:
-                # Only include enabled pumps
+            for pump in pumps:
                 if not pump.enabled:
                     continue
                     
-                nutrient_type = get_nutrient_type(pump)
+                # Skip pumps with no name or nutrient info
+                if not pump.name or not pump.nutrient_brand or not pump.nutrient_name:
+                    continue
+                    
+                # Determine the nutrient type based on the name
+                nutrient_type = 'other'
+                pump_name_lower = pump.name.lower()
+                nutrient_name_lower = pump.nutrient_name.lower()
                 
-                # Get the ratio for this nutrient type from the profile
-                ratio = nutrient_ratios.get(nutrient_type, 1.0)
+                # Detect CalMag/Cal-Mag type
+                if ('cal' in pump_name_lower and 'mag' in pump_name_lower) or \
+                   ('cal' in nutrient_name_lower and 'mag' in nutrient_name_lower) or \
+                   ('calcium' in pump_name_lower and 'magnesium' in pump_name_lower) or \
+                   ('calcium' in nutrient_name_lower and 'magnesium' in nutrient_name_lower):
+                    nutrient_type = 'calmag'
+                # Detect Micro type
+                elif 'micro' in pump_name_lower or 'micro' in nutrient_name_lower:
+                    nutrient_type = 'micro'
+                # Detect Grow type (high nitrogen)
+                elif ('grow' in pump_name_lower or 'grow' in nutrient_name_lower or 
+                      'veg' in pump_name_lower or 'veg' in nutrient_name_lower):
+                    nutrient_type = 'grow'
+                # Detect Bloom type (high phosphorus/potassium)
+                elif ('bloom' in pump_name_lower or 'bloom' in nutrient_name_lower or 
+                      'flower' in pump_name_lower or 'flower' in nutrient_name_lower):
+                    nutrient_type = 'bloom'
                 
-                # Set dosing order for this component
-                order = type_order.get(nutrient_type, 99)
-                
-                # Add as a component
+                # Add the component
                 new_components.append({
                     'pump_id': pump.id,
-                    'pump_name': pump.name,
-                    'ratio': ratio,
-                    'nutrient_type': nutrient_type,  # Store the type for reference
-                    'dosing_order': order           # Add order for sorting
+                    'name': pump.name,
+                    'nutrient_type': nutrient_type,
+                    'ml_per_liter': 1.0  # Default dosage
                 })
             
-            # Sort components by dosing order
-            new_components.sort(key=lambda x: x.get('dosing_order', 99))
+            # Check if components need updating
+            components_changed = False
             
-            # Update the profile if we have components and they're different from what's there
-            if new_components and (len(new_components) != len(profile.get('nutrient_components', []))):
-                profile['nutrient_components'] = new_components
-                profiles_updated = True
-        
-        # Calculate dosing amounts in ml/L for each profile and component
-        for profile_id, profile in plant_profiles.items():
-            if 'nutrient_components' in profile and profile['nutrient_components']:
-                # Calculate total ratio sum
-                total_ratio = sum(comp.get('ratio', 0) for comp in profile['nutrient_components'])
+            # If count changed, definitely update
+            if len(current_components) != len(new_components):
+                components_changed = True
+            else:
+                # Even if count is the same, check if content has changed
+                # Create a map of current components by pump_id for easy comparison
+                current_comp_map = {comp.get('pump_id'): comp for comp in current_components if 'pump_id' in comp}
                 
-                if total_ratio > 0:
-                    # Base dosing calculation on EC target
-                    # This is a simplification - in reality, EC response varies by nutrient
-                    # A typical value might be around 2-4 ml/L for a ~1500 µS/cm target
-                    ec_target = profile.get('ec_setpoint', 1350)
-                    
-                    # Factor to convert EC to ml/L (approximation)
-                    # Higher EC = more nutrients
-                    base_dose_ml_per_liter = ec_target / 1350 * 3.0  # ~3ml/L at EC 1350
-                    
-                    # Calculate individual doses
-                    for comp in profile['nutrient_components']:
-                        if total_ratio > 0:
-                            # Calculate this component's portion of the base dose
-                            ratio = comp.get('ratio', 0)
-                            dosing_ml_per_liter = (ratio / total_ratio) * base_dose_ml_per_liter
-                            
-                            # Round to 2 decimal places for display
-                            comp['dosing_ml_per_liter'] = round(dosing_ml_per_liter, 2)
-                            
-                            # Also calculate ml per gallon for US users (1 gal ≈ 3.785 L)
-                            comp['dosing_ml_per_gallon'] = round(dosing_ml_per_liter * 3.785, 2)
+                # Check if any new components differ from current ones
+                for new_comp in new_components:
+                    pump_id = new_comp.get('pump_id')
+                    if pump_id not in current_comp_map:
+                        # New pump not in current components
+                        components_changed = True
+                        break
+                        
+                    current_comp = current_comp_map[pump_id]
+                    # Check if name or nutrient_type has changed
+                    if (current_comp.get('name') != new_comp.get('name') or 
+                        current_comp.get('nutrient_type') != new_comp.get('nutrient_type')):
+                        components_changed = True
+                        break
+            
+            # Update if components changed
+            if components_changed:
+                # Preserve ml_per_liter settings from existing components when possible
+                for new_comp in new_components:
+                    for curr_comp in current_components:
+                        if (curr_comp.get('pump_id') == new_comp.get('pump_id') and 
+                            'ml_per_liter' in curr_comp):
+                            new_comp['ml_per_liter'] = curr_comp['ml_per_liter']
+                            break
+                
+                setting.nutrient_components = json.dumps(new_components)
+                updated_profiles += 1
         
-        # Save profiles if updated
-        if profiles_updated:
-            Settings.set('plant_profiles', plant_profiles)
+        if updated_profiles > 0:
+            db.session.commit()
+            return f"Updated {updated_profiles} of {total_profiles} profiles"
         
-        return {
-            'updated': profiles_updated,
-            'pumps_found': len(nutrient_pumps),
-            'incompatibilities': incompatibilities
-        } 
+        return "No profiles needed updating" 

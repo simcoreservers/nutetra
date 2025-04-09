@@ -278,88 +278,94 @@ def create_pump():
 
 @api_bp.route('/pumps/<int:pump_id>', methods=['PUT'])
 def update_pump(pump_id):
-    """Update a specific pump"""
-    try:
-        pump = Pump.query.get(pump_id)
-        if not pump:
-            return jsonify({
-                'success': False,
-                'error': f"Pump with ID {pump_id} not found"
-            }), 404
-        
-        # Prevent editing pH up and pH down pumps except for enabled status
-        if pump.type in ['ph_up', 'ph_down']:
-            # Only allow enabling/disabling pH pumps
-            data = request.get_json()
-            if data and 'enabled' in data:
-                pump.enabled = data['enabled']
-                db.session.commit()
-                return jsonify({
-                    'success': True,
-                    'message': f"Pump {pump.name} updated successfully",
-                    'data': pump.to_dict()
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'error': "pH pumps are hardwired and cannot be modified except for enabling/disabling"
-                }), 403
-        
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                'success': False,
-                'error': "No data provided"
-            }), 400
-        
-        # Update pump fields
-        if 'name' in data:
-            pump.name = data['name']
-        if 'type' in data:
-            # Ensure type is valid (only 'nutrient', 'ph_up', or 'ph_down')
-            if data['type'] not in ['nutrient', 'ph_up', 'ph_down']:
-                data['type'] = 'nutrient'
-            pump.type = data['type']
-        if 'gpio_pin' in data:
-            # Check if the new GPIO pin is already in use by another pump
-            if data['gpio_pin'] != pump.gpio_pin:
-                existing_pump = Pump.query.filter_by(gpio_pin=data['gpio_pin']).first()
-                if existing_pump and existing_pump.id != pump_id:
-                    return jsonify({
-                        'success': False,
-                        'error': f"GPIO pin {data['gpio_pin']} is already in use by pump '{existing_pump.name}'"
-                    }), 400
-            pump.gpio_pin = data['gpio_pin']
-        if 'flow_rate' in data:
-            pump.flow_rate = data['flow_rate']
+    from app.models.settings import Settings
+    
+    pump = Pump.query.get(pump_id)
+    if not pump:
+        return jsonify({'error': 'Pump not found'}), 404
+    
+    data = request.json
+    
+    # For pH pumps, only the enabled state can be modified
+    if pump.type in ['ph_up', 'ph_down']:
         if 'enabled' in data:
-            pump.enabled = data['enabled']
-            
-        # Update nutrient information if provided
-        if 'nutrient_brand' in data:
-            pump.nutrient_brand = data['nutrient_brand']
-        if 'nutrient_name' in data:
-            pump.nutrient_name = data['nutrient_name']
-        if 'nitrogen_pct' in data:
-            pump.nitrogen_pct = data['nitrogen_pct']
-        if 'phosphorus_pct' in data:
-            pump.phosphorus_pct = data['phosphorus_pct']
-        if 'potassium_pct' in data:
-            pump.potassium_pct = data['potassium_pct']
-        
-        # Save changes to database
-        db.session.commit()
-        
+            pump.enabled = bool(data['enabled'])
+            db.session.commit()
+            return jsonify({
+                'status': 'success',
+                'message': f'pH pump {pump_id} {"enabled" if pump.enabled else "disabled"}'
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Only the enabled state can be modified for pH pumps'
+            }), 403
+    
+    # Track if nutrient information has changed to trigger profile updates
+    nutrient_changed = False
+    
+    # For normal nutrient pumps, check values
+    if 'name' in data and data['name'] != pump.name:
+        pump.name = data['name']
+        nutrient_changed = True
+    
+    if 'gpio_pin' in data:
+        new_pin = data['gpio_pin']
+        # Check if this pin is already in use by another pump
+        existing_pump = Pump.query.filter(Pump.gpio_pin == new_pin, Pump.id != pump_id).first()
+        if existing_pump:
+            return jsonify({
+                'status': 'error',
+                'message': f'GPIO pin {new_pin} is already in use by pump: {existing_pump.name}'
+            }), 400
+        pump.gpio_pin = new_pin
+    
+    # Update other fields if provided
+    if 'enabled' in data:
+        pump.enabled = bool(data['enabled'])
+    
+    if 'nutrient_brand' in data and data['nutrient_brand'] != pump.nutrient_brand:
+        pump.nutrient_brand = data['nutrient_brand']
+        nutrient_changed = True
+    
+    if 'nutrient_name' in data and data['nutrient_name'] != pump.nutrient_name:
+        pump.nutrient_name = data['nutrient_name'] 
+        nutrient_changed = True
+    
+    if 'nitrogen_pct' in data and data['nitrogen_pct'] != pump.nitrogen_pct:
+        pump.nitrogen_pct = data['nitrogen_pct']
+        nutrient_changed = True
+    
+    if 'phosphorus_pct' in data and data['phosphorus_pct'] != pump.phosphorus_pct:
+        pump.phosphorus_pct = data['phosphorus_pct']
+        nutrient_changed = True
+    
+    if 'potassium_pct' in data and data['potassium_pct'] != pump.potassium_pct:
+        pump.potassium_pct = data['potassium_pct']
+        nutrient_changed = True
+    
+    # Always update type to 'nutrient' for any legacy nutrient pump types
+    if pump.type.startswith('nutrient_'):
+        pump.type = 'nutrient'
+    
+    # Commit the changes
+    db.session.commit()
+    
+    # If nutrient information changed, update all profiles
+    if nutrient_changed:
+        update_result = Settings.auto_configure_nutrient_components()
         return jsonify({
-            'success': True,
-            'message': "Pump updated successfully",
-            'data': pump.to_dict()
+            'status': 'success',
+            'message': f'Pump {pump.name} updated and profiles reconfigured',
+            'profile_update': update_result,
+            'pump': pump.to_dict()
         })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+    
+    return jsonify({
+        'status': 'success',
+        'message': f'Pump {pump.name} updated',
+        'pump': pump.to_dict()
+    })
 
 @api_bp.route('/pumps/<int:pump_id>', methods=['GET'])
 def get_pump(pump_id):
@@ -386,6 +392,8 @@ def get_pump(pump_id):
 def delete_pump(pump_id):
     """Delete a pump"""
     try:
+        from app.models.settings import Settings
+        
         pump = Pump.query.get(pump_id)
         if not pump:
             return jsonify({
@@ -404,9 +412,13 @@ def delete_pump(pump_id):
         db.session.delete(pump)
         db.session.commit()
         
+        # Update all profiles to reflect the deleted pump
+        update_result = Settings.auto_configure_nutrient_components()
+        
         return jsonify({
             'success': True,
-            'message': f"Pump '{pump.name}' deleted successfully"
+            'message': f"Pump '{pump.name}' deleted successfully",
+            'profile_update': update_result
         })
     except Exception as e:
         return jsonify({
