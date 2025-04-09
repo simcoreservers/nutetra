@@ -4,10 +4,12 @@ from flask.cli import with_appcontext
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import click
+from flask_login import LoginManager
 
 # Initialize extensions
 db = SQLAlchemy()
 scheduler = BackgroundScheduler()
+login_manager = LoginManager()
 # We will not initialize socketio here anymore since it will be created in run.py
 
 # Import Flask CLI command for database initialization
@@ -122,6 +124,10 @@ def create_app(test_config=None):
     # Initialize database
     db.init_app(app)
     
+    # Configure login manager to allow anonymous access
+    login_manager.init_app(app)
+    login_manager.login_view = None  # Disable login requirement
+    
     # Instead of initializing Socket.IO here, we'll do it in run.py
     # This avoids circular import issues
     
@@ -133,13 +139,15 @@ def create_app(test_config=None):
 
     # Register blueprints
     from app.controllers.main import main_bp
+    from app.controllers.auth import auth_bp
     from app.controllers.api import api_bp
     from app.controllers.sensors import sensors_bp
     from app.controllers.dosing import dosing_bp
     from app.controllers.settings import settings_bp
     
     app.register_blueprint(main_bp)
-    app.register_blueprint(api_bp)  # URL prefix is defined in the blueprint
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(sensors_bp, url_prefix='/sensors')
     app.register_blueprint(dosing_bp, url_prefix='/dosing')
     app.register_blueprint(settings_bp, url_prefix='/settings')
@@ -157,6 +165,59 @@ def create_app(test_config=None):
         # Initialize nutrient brands and products
         NutrientBrand.initialize_defaults()
         
+        # Initialize default settings if they don't exist
+        if not Settings.query.filter_by(key='ph_target').first():
+            Settings(key='ph_target', value='6.0').save()
+        
+        if not Settings.query.filter_by(key='ph_tolerance').first():
+            Settings(key='ph_tolerance', value='0.5').save()
+        
+        if not Settings.query.filter_by(key='ec_target').first():
+            Settings(key='ec_target', value='1.8').save()
+        
+        if not Settings.query.filter_by(key='ec_tolerance').first():
+            Settings(key='ec_tolerance', value='0.2').save()
+        
+        if not Settings.query.filter_by(key='temperature_target').first():
+            Settings(key='temperature_target', value='22.0').save()
+        
+        if not Settings.query.filter_by(key='temperature_tolerance').first():
+            Settings(key='temperature_tolerance', value='2.0').save()
+        
+        if not Settings.query.filter_by(key='humidity_target').first():
+            Settings(key='humidity_target', value='60.0').save()
+        
+        if not Settings.query.filter_by(key='humidity_tolerance').first():
+            Settings(key='humidity_tolerance', value='5.0').save()
+        
+        # Initialize default pumps if they don't exist
+        if not Pump.query.filter_by(name='Nutrient Pump 1').first():
+            Pump(
+                name='Nutrient Pump 1',
+                type='nutrient',
+                gpio_pin=17,
+                flow_rate=1.0,
+                enabled=True
+            ).save()
+        
+        if not Pump.query.filter_by(name='pH Up Pump').first():
+            Pump(
+                name='pH Up Pump',
+                type='ph_up',
+                gpio_pin=27,
+                flow_rate=0.5,
+                enabled=True
+            ).save()
+        
+        if not Pump.query.filter_by(name='pH Down Pump').first():
+            Pump(
+                name='pH Down Pump',
+                type='ph_down',
+                gpio_pin=22,
+                flow_rate=0.5,
+                enabled=True
+            ).save()
+    
     # Register the database command
     app.cli.add_command(init_db_command)
 

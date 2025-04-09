@@ -1,168 +1,104 @@
-# NuTetra Controller
+# NuTetra - Hydroponic System Controller
 
-A complete hydroponics automation system for the Raspberry Pi 5, designed to monitor and control nutrient solutions for optimal plant growth.
-
-![NuTetra Controller Logo](app/static/img/logo.svg)
-
-## Features
-
-- Real-time monitoring of pH, EC (electrical conductivity), and temperature
-- Automated dosing system for nutrients and pH adjustments
-- User-friendly web interface with dark theme
-- Historical data visualization with interactive charts
-- Notification system via email, SMS, and web interface
-- Backup and restore functionality for system settings
-- Responsive design for desktop and mobile devices
-
-## Hardware Requirements
-
-- Raspberry Pi 5 (recommended) or Raspberry Pi 4
-- pH sensor (compatible with Atlas Scientific pH EZO or similar)
-- EC sensor (compatible with Atlas Scientific EC EZO or similar)
-- Temperature sensor (DS18B20 or similar)
-- Peristaltic pumps for nutrient and pH adjustment dosing
-- Relay board for controlling pumps (if not using PWM-controlled pumps)
-
-## Software Requirements
-
-- Python 3.7+
-- Flask web framework
-- SQLite database
-- RPi.GPIO for Raspberry Pi GPIO control
-- Socket.IO for real-time updates
+NuTetra is a comprehensive hydroponic system controller that manages nutrient dosing, pH balancing, and environmental monitoring.
 
 ## Installation
 
-### Option 1: Install from source
+### Prerequisites
 
-1. Clone the repository:
+- Python 3.8 or higher
+- pip (Python package installer)
+- Git
+
+### Step 1: Clone the Repository
+
 ```bash
-git clone https://github.com/simcoreservers/nutetra.git
+git clone https://github.com/yourusername/nutetra.git
 cd nutetra
 ```
 
-2. Create and activate a virtual environment:
+### Step 2: Create a Virtual Environment (Recommended)
+
 ```bash
+# On Windows
 python -m venv venv
+venv\Scripts\activate
+
+# On macOS/Linux
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-3. Install dependencies:
+### Step 3: Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Set up the database:
+### Step 4: Initialize the Database
+
 ```bash
-flask init-db
+python initialize_db.py
 ```
 
-5. Run the application:
+This will create the database with all required tables and default data, including:
+- Nutrient brands and products
+- Default settings for pH, EC, temperature, and humidity
+- Default pumps (Nutrient, pH Up, pH Down)
+
+### Step 5: Run the Application
+
 ```bash
 python run.py
 ```
 
-### Option 2: Install using Docker
+The application will be available at http://localhost:5000
 
-1. Clone the repository:
-```bash
-git clone https://github.com/simcoreservers/nutetra.git
-cd nutetra
-```
+## Features
 
-2. Build and run the Docker container:
-```bash
-docker build -t nutetra .
-docker run -p 5000:5000 --privileged nutetra
-```
+- **Nutrient Management**: Configure and control nutrient dosing pumps
+- **pH Balancing**: Automatic pH adjustment with up/down solutions
+- **Environmental Monitoring**: Track temperature, humidity, and water levels
+- **Scheduling**: Set up automated watering and nutrient dosing schedules
+- **User Interface**: Web-based dashboard for easy control and monitoring
 
 ## Configuration
 
-1. Access the web interface at `http://nutetra.local:5000`
-2. Navigate to Settings to configure:
-   - Sensor calibration
-   - Target values for pH, EC, and temperature
-   - Dosing parameters
-   - Notification preferences
-   - System preferences
+### Hardware Setup
 
-## Sensor Calibration
+1. Connect your pumps to the specified GPIO pins:
+   - Nutrient Pump: GPIO 17
+   - pH Up Pump: GPIO 27
+   - pH Down Pump: GPIO 22
 
-For accurate readings, it's important to calibrate your sensors:
+2. Connect your sensors:
+   - pH Sensor: GPIO 23
+   - EC Sensor: GPIO 24
+   - Temperature Sensor: GPIO 25
+   - Humidity Sensor: GPIO 26
 
-### pH Sensor Calibration
-1. Navigate to Sensors > pH Sensor
-2. Follow the on-screen instructions for 2-point or 3-point calibration
-3. Use standard calibration solutions (pH 4.0, 7.0, and 10.0)
+### Software Configuration
 
-### EC Sensor Calibration
-1. Navigate to Sensors > EC Sensor
-2. Follow the on-screen instructions for calibration
-3. Use standard calibration solutions (typically 1413 μS/cm and 12880 μS/cm)
-
-## Dosing System Setup
-
-1. Navigate to Dosing > Pump Configuration
-2. Add each pump connected to your system:
-   - Assign a name (e.g., "pH Down", "Nutrient A")
-   - Select the GPIO pin connected to the pump
-   - Set the flow rate in ml/min
-   - Enable or disable each pump
-
-## API Access
-
-NuTetra Controller provides a RESTful API for integration with other systems:
-
-- `/api/sensor-current` - Get current sensor readings
-- `/api/sensor-history` - Get historical sensor data
-- `/api/notifications` - Get recent notifications
-- `/api/dose` - Trigger manual dosing
-- `/api/system-stats` - Get system statistics
-
-See the API documentation in the Settings > API section of the web interface for more details.
-
-## Development
-
-### Project Structure
-
-```
-nutetra/
-├── app/
-│   ├── controllers/       # Route handlers
-│   ├── models/            # Database models
-│   ├── static/            # Static assets (CSS, JS, images)
-│   ├── templates/         # HTML templates
-│   ├── utils/             # Utility functions
-│   └── __init__.py        # Application factory
-├── instance/              # Instance-specific data
-├── logs/                  # Application logs
-├── requirements.txt       # Python dependencies
-└── run.py                 # Application entry point
-```
-
-### Running in Development Mode
-
-```bash
-export FLASK_ENV=development
-python run.py
-```
+Most settings can be configured through the web interface. For advanced configuration, edit the `config.py` file.
 
 ## Troubleshooting
 
-### Sensor Connection Issues
-- Check physical connections between sensors and Raspberry Pi
-- Verify I2C is enabled on your Raspberry Pi: `sudo raspi-config`
-- Check sensor addresses: `i2cdetect -y 1`
+### Database Issues
 
-### Pump Issues
-- Verify GPIO pins are correctly configured
-- Check relay connections
-- Test pumps manually through the Dosing interface
+If you encounter database-related errors:
 
-### System Won't Start
-- Check logs in the `logs/` directory
-- Verify permissions: `sudo chmod +x run.py`
-- Check Python version: `python --version`
+1. Stop the application
+2. Run the initialization script again:
+   ```bash
+   python initialize_db.py
+   ```
+3. Restart the application
+
+### Pump Control Issues
+
+1. Check that the pumps are connected to the correct GPIO pins
+2. Verify that the pumps are enabled in the web interface
+3. Check the flow rate settings
 
 ## License
 
