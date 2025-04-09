@@ -8,9 +8,16 @@
     <div class="dashboard-section">
         <div class="section-header">
             <h3>Plant Profiles</h3>
-            <a href="{{ url_for('dosing.add_profile') }}" class="action-button">
-                <i class="fas fa-plus"></i> Add New Profile
-            </a>
+            <div class="header-actions">
+                <form method="POST" action="{{ url_for('dosing.migrate_profiles') }}" class="inline-form">
+                    <button type="submit" class="action-button secondary">
+                        <i class="fas fa-sync-alt"></i> Update Profiles
+                    </button>
+                </form>
+                <a href="{{ url_for('dosing.add_profile') }}" class="action-button">
+                    <i class="fas fa-plus"></i> Add New Profile
+                </a>
+            </div>
         </div>
         
         <div class="profiles-grid">
@@ -73,6 +80,26 @@
 
 {% block extra_css %}
 <style>
+    /* Add styles for the header actions */
+    .header-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+    
+    .inline-form {
+        display: inline-block;
+    }
+    
+    .action-button.secondary {
+        background-color: var(--bg-color-dark);
+        color: var(--text-color);
+    }
+    
+    .action-button.secondary:hover {
+        background-color: var(--primary-color-light);
+    }
+
+    /* Existing styles */
     .profiles-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -102,20 +129,21 @@
     }
     
     .profile-badge {
-        padding: 3px 8px;
-        border-radius: 12px;
-        font-size: 0.75rem;
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.8rem;
         font-weight: 500;
     }
     
     .profile-badge.default {
-        background-color: var(--primary-color-light);
-        color: var(--primary-color);
+        background-color: var(--info-color-light);
+        color: var(--info-color);
     }
     
     .profile-badge.custom {
-        background-color: var(--success-color-light);
-        color: var(--success-color);
+        background-color: var(--warning-color-light);
+        color: var(--warning-color);
     }
     
     .profile-content {
@@ -123,42 +151,35 @@
     }
     
     .profile-description {
-        font-size: 0.9rem;
         color: var(--text-color-muted);
         margin-bottom: var(--spacing-md);
+        font-size: 0.9rem;
     }
     
     .profile-details {
         margin-bottom: var(--spacing-md);
-        padding: var(--spacing-sm);
-        background-color: var(--bg-color-dark);
-        border-radius: var(--border-radius);
     }
     
     .detail-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 6px;
-    }
-    
-    .detail-row:last-child {
-        margin-bottom: 0;
+        margin-bottom: 5px;
     }
     
     .detail-label {
-        font-weight: 500;
         color: var(--text-color-muted);
+        font-weight: 500;
     }
     
     .profile-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 8px;
+        gap: var(--spacing-xs);
     }
     
     .action-button.small {
         padding: 4px 8px;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
     
     .action-button.danger {
@@ -169,10 +190,6 @@
     .action-button.danger:hover {
         background-color: var(--danger-color);
         color: white;
-    }
-    
-    .inline-form {
-        display: inline;
     }
     
     .back-link {
