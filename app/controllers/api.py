@@ -970,4 +970,37 @@ def create_nutrient_product():
         return jsonify({
             'success': False,
             'error': str(e)
+        }), 500
+
+@api_bp.route('/nutrient-brands/initialize', methods=['POST'])
+def initialize_nutrient_brands():
+    """Initialize default nutrient brands and products if none exist"""
+    try:
+        from app.models.nutrient import NutrientBrand
+        
+        # Check if brands already exist
+        existing_count = NutrientBrand.query.count()
+        
+        if existing_count > 0:
+            return jsonify({
+                'success': True,
+                'message': f"{existing_count} nutrient brands already exist",
+                'initialized': False
+            })
+        
+        # Initialize defaults
+        NutrientBrand.initialize_defaults()
+        
+        # Count how many were created
+        new_count = NutrientBrand.query.count()
+        
+        return jsonify({
+            'success': True,
+            'message': f"Successfully initialized {new_count} nutrient brands",
+            'initialized': True
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500 

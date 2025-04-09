@@ -36,6 +36,23 @@
                         <span class="detail-label">Flow Rate:</span>
                         <span class="detail-value">{{ pump.flow_rate }} ml/s</span>
                     </div>
+                    
+                    {% if pump.type.startswith('nutrient') and pump.nutrient_name %}
+                    <div class="nutrient-info">
+                        <div class="detail-row">
+                            <span class="detail-label">Nutrient:</span>
+                            <span class="detail-value">{{ pump.nutrient_brand }} {{ pump.nutrient_name }}</span>
+                        </div>
+                        {% if pump.nitrogen_pct is not none or pump.phosphorus_pct is not none or pump.potassium_pct is not none %}
+                        <div class="detail-row">
+                            <span class="detail-label">NPK:</span>
+                            <span class="detail-value">
+                                {{ pump.nitrogen_pct|default(0) }}-{{ pump.phosphorus_pct|default(0) }}-{{ pump.potassium_pct|default(0) }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="pump-actions">
                     <button class="action-button edit-pump" data-pump-id="{{ pump.id }}">
@@ -212,6 +229,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle nutrient brand selection
     nutrientBrandSelect.addEventListener('change', function() {
         const brandId = this.value;
+        
+        if (brandId === "initialize") {
+            // Initialize default brands
+            if (confirm("Initialize default nutrient brands and products?")) {
+                fetch('/api/nutrient-brands/initialize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(result.message);
+                        // Reload brands list
+                        loadNutrientBrands();
+                    } else {
+                        alert('Error: ' + (result.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while initializing nutrient brands');
+                });
+            }
+            return;
+        }
+        
         if (brandId) {
             // Load products for this brand
             loadBrandProducts(brandId);
@@ -485,12 +530,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Clear and populate the brands dropdown
                     nutrientBrandSelect.innerHTML = '<option value="">Select a brand</option>';
                     
-                    brands.forEach(brand => {
-                        const option = document.createElement('option');
-                        option.value = brand.id;
-                        option.textContent = brand.name;
-                        nutrientBrandSelect.appendChild(option);
-                    });
+                    if (brands.length === 0) {
+                        // No brands found, show initialization option
+                        const initOption = document.createElement('option');
+                        initOption.value = "initialize";
+                        initOption.textContent = "-- Initialize Default Brands --";
+                        nutrientBrandSelect.appendChild(initOption);
+                    } else {
+                        // Populate with available brands
+                        brands.forEach(brand => {
+                            const option = document.createElement('option');
+                            option.value = brand.id;
+                            option.textContent = brand.name;
+                            nutrientBrandSelect.appendChild(option);
+                        });
+                    }
                 } else {
                     console.error('Error loading nutrient brands:', result.error);
                 }
@@ -765,6 +819,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .npk-values .form-row {
         margin-bottom: 0;
+    }
+    
+    .nutrient-info {
+        margin-top: var(--spacing-sm);
+        padding-top: var(--spacing-sm);
+        border-top: 1px dashed var(--border-color);
     }
     
     /* Responsive adjustments */
