@@ -34,29 +34,23 @@
                         </a>
                     </li>
                     
-                    <li class="nav-section {% if '/monitoring' in request.path or '/sensors' in request.path or '/events' in request.path %}active{% endif %}">
+                    <li class="nav-section {% if '/monitoring' in request.path or '/events' in request.path %}active{% endif %}">
                         <a href="#" class="section-toggle">
                             <i class="fas fa-chart-line"></i>
                             <span>Monitoring</span>
                             <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li class="{% if '/sensors' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('sensors.index') }}">
-                                    <i class="fas fa-thermometer-half"></i>
-                                    <span>Sensors</span>
+                            <li class="nav-item {% if '/monitoring' in request.path and not '/monitoring/events' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('monitoring.index') }}">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <span>Dashboard</span>
                                 </a>
                             </li>
-                            <li class="{% if '/dosing/events' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.events') }}">
+                            <li class="nav-item {% if '/monitoring/events' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('monitoring.events') }}">
                                     <i class="fas fa-history"></i>
-                                    <span>Events Log</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="coming-soon">
-                                    <i class="fas fa-chart-area"></i>
-                                    <span>Graphs & History</span>
+                                    <span>Event History</span>
                                 </a>
                             </li>
                         </ul>
@@ -101,12 +95,6 @@
                                 <a href="{{ url_for('dosing.pumps') }}">
                                     <i class="fas fa-pump-soap"></i>
                                     <span>Pumps</span>
-                                </a>
-                            </li>
-                            <li class="{% if '/sensors/calibrate' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('sensors.calibration') }}">
-                                    <i class="fas fa-sliders-h"></i>
-                                    <span>Sensor Calibration</span>
                                 </a>
                             </li>
                         </ul>
