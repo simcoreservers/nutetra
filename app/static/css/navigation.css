@@ -8,7 +8,7 @@
 
 .nav-section .toggle-icon {
     position: absolute;
-    right: 15px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     transition: all 0.3s ease;
@@ -21,6 +21,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10; /* Ensure it's above other content */
+}
+
+/* Fix for shorter text items where text might overlap with icon */
+.nav-section > a span {
+    max-width: calc(100% - 40px); /* Leave space for icon */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .nav-section.expanded .toggle-icon {
@@ -78,10 +87,14 @@
     }
     
     .nav-section .toggle-icon {
-        right: 15px;
+        right: 10px;
         font-size: 1.1rem; /* Slightly larger on mobile */
         width: 22px;
         height: 22px;
+    }
+    
+    .nav-section > a span {
+        max-width: calc(100% - 45px); /* Leave more space for icon on mobile */
     }
     
     .nav-section .submenu {
