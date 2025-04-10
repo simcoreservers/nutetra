@@ -439,7 +439,7 @@ def reconfigure_profiles():
     # Show result message
     flash(f"All plant profiles have been reconfigured with proper nutrient ratios. {result}", 'success')
     
-    return redirect(url_for('dosing.manage_profiles'))
+    return redirect(url_for('dosing.profiles'))
 
 @dosing_bp.route('/profiles/add', methods=['GET', 'POST'])
 def add_profile():
@@ -507,7 +507,7 @@ def add_profile():
         Settings.set('plant_profiles', plant_profiles)
         
         flash(f'Plant profile "{name}" added successfully', 'success')
-        return redirect(url_for('dosing.manage_profiles'))
+        return redirect(url_for('dosing.profiles'))
     
     # For GET requests, show the add profile form
     # Get all nutrient pumps for the components section
@@ -527,7 +527,7 @@ def edit_profile(profile_id):
     # Check if profile exists
     if profile_id not in plant_profiles:
         flash('Profile not found', 'error')
-        return redirect(url_for('dosing.manage_profiles'))
+        return redirect(url_for('dosing.profiles'))
     
     # Get the profile
     profile = plant_profiles[profile_id]
@@ -536,7 +536,7 @@ def edit_profile(profile_id):
     default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
     if profile_id in default_profiles:
         flash('Default profiles cannot be edited', 'error')
-        return redirect(url_for('dosing.manage_profiles'))
+        return redirect(url_for('dosing.profiles'))
     
     if request.method == 'POST':
         # Get profile details from form
@@ -593,7 +593,7 @@ def edit_profile(profile_id):
         Settings.set('plant_profiles', plant_profiles)
         
         flash(f'Plant profile "{name}" updated successfully', 'success')
-        return redirect(url_for('dosing.manage_profiles'))
+        return redirect(url_for('dosing.profiles'))
     
     # For GET requests, show the edit profile form
     # Get all nutrient pumps for the components section
@@ -619,13 +619,13 @@ def delete_profile(profile_id):
     # Check if profile exists
     if profile_id not in plant_profiles:
         flash('Profile not found', 'error')
-        return redirect(url_for('dosing.manage_profiles'))
+        return redirect(url_for('dosing.profiles'))
     
     # Check if this is a default profile
     default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
     if profile_id in default_profiles:
         flash('Default profiles cannot be deleted', 'error')
-        return redirect(url_for('dosing.manage_profiles'))
+        return redirect(url_for('dosing.profiles'))
     
     # Check if this is the active profile
     active_profile = Settings.get('active_plant_profile', 'general')
@@ -642,7 +642,7 @@ def delete_profile(profile_id):
     Settings.set('plant_profiles', plant_profiles)
     
     flash(f'Plant profile "{profile_name}" deleted successfully', 'success')
-    return redirect(url_for('dosing.manage_profiles'))
+    return redirect(url_for('dosing.profiles'))
 
 @dosing_bp.route('/profiles/duplicate/<profile_id>', methods=['POST'])
 def duplicate_profile(profile_id):
@@ -653,7 +653,7 @@ def duplicate_profile(profile_id):
     # Check if profile exists
     if profile_id not in plant_profiles:
         flash('Profile not found', 'error')
-        return redirect(url_for('dosing.manage_profiles'))
+        return redirect(url_for('dosing.profiles'))
     
     # Get the source profile
     source_profile = plant_profiles[profile_id]
@@ -673,7 +673,7 @@ def duplicate_profile(profile_id):
     Settings.set('plant_profiles', plant_profiles)
     
     flash(f'Plant profile "{new_profile["name"]}" created successfully', 'success')
-    return redirect(url_for('dosing.manage_profiles'))
+    return redirect(url_for('dosing.profiles'))
 
 @dosing_bp.route('/grow-cycle', methods=['GET', 'POST'])
 def grow_cycle():
@@ -684,7 +684,7 @@ def grow_cycle():
     
     if not cannabis_profile:
         flash('Cannabis profile not found', 'error')
-        return redirect(url_for('dosing.manage_profiles'))
+        return redirect(url_for('dosing.profiles'))
     
     if request.method == 'POST':
         # Handle week advancement
