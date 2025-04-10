@@ -262,6 +262,13 @@ input:focus, select:focus, textarea:focus {
 .submenu a {
     padding-left: var(--spacing-md);
     font-size: 0.9rem;
+    justify-content: flex-start; /* Ensure content is left-aligned */
+}
+
+.submenu a i {
+    margin-right: var(--spacing-sm);
+    width: 20px;
+    text-align: left; /* Left align the icon text */
 }
 
 /* Mobile sidebar */
@@ -310,6 +317,7 @@ input:focus, select:focus, textarea:focus {
     padding: var(--spacing-md) var(--spacing-md);
     min-height: 60px;
     font-size: 1.05rem;
+    justify-content: flex-start; /* Ensure content is left-aligned on mobile too */
   }
   
   .sidebar-nav i {
@@ -320,6 +328,7 @@ input:focus, select:focus, textarea:focus {
     padding: var(--spacing-sm) var(--spacing-lg);
     min-height: 54px;
     font-size: 1rem;
+    justify-content: flex-start; /* Ensure content is left-aligned on mobile too */
   }
   
   /* Better touch feedback on mobile */
