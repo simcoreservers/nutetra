@@ -246,32 +246,20 @@ input:focus, select:focus, textarea:focus {
   margin-top: var(--spacing-xs);
 }
 
-/* Submenu transition */
+/* General submenu styling - base appearance */
 .submenu {
-  padding-left: var(--spacing-lg);
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease, padding 0.2s ease;
-  padding-top: 0;
-  padding-bottom: 0;
+    list-style: none;
+    background-color: var(--bg-color-darker);
+    padding-left: 10px;
 }
 
-.active .submenu {
-  max-height: 500px;
-  padding-top: var(--spacing-xs);
-  padding-bottom: var(--spacing-xs);
+.submenu li {
+    margin: 0;
 }
 
 .submenu a {
-  padding: var(--spacing-sm) var(--spacing-md);
-  padding-left: var(--spacing-lg);
-  font-size: 0.95rem;
-  min-height: 48px; /* Better touch target for submenu items */
-}
-
-/* Improved touch targets for submenu items */
-.submenu li {
-  margin-bottom: var(--spacing-xs);
+    padding-left: 25px;
+    font-size: 0.9rem;
 }
 
 /* Mobile sidebar */

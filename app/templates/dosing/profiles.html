@@ -228,16 +228,17 @@
     
     .profile-actions {
         display: flex;
-        gap: var(--spacing-sm);
+        gap: 12px;
         padding: var(--spacing-md);
         border-top: 1px solid var(--border-color);
         background-color: var(--bg-color-light);
         justify-content: flex-end;
+        flex-wrap: wrap;
     }
     
     /* Update button styling to match pumps page exactly */
     .action-button {
-        padding: 6px 12px;
+        padding: 8px 14px;
         border-radius: var(--border-radius);
         border: none;
         cursor: pointer;
@@ -246,8 +247,11 @@
         font-size: 0.9rem;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 8px;
         transition: all 0.2s;
+        min-width: 100px;
+        justify-content: center;
+        white-space: nowrap;
     }
     
     .action-button:hover {
@@ -285,13 +289,15 @@
         font-size: 0.9rem;
         font-weight: 500;
         background-color: var(--bg-color-dark);
-        padding: 6px 12px;
+        padding: 8px 14px;
         border-radius: var(--border-radius);
         border: none;
+        min-width: 100px;
+        justify-content: center;
     }
     
     .active-label i {
-        margin-right: 5px;
+        margin-right: 8px;
     }
     
     .back-link {
