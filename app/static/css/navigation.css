@@ -33,14 +33,14 @@
 /* Icon styling in navigation */
 .sidebar-nav i {
     width: 20px;
-    text-align: center;
+    text-align: left;
     margin-right: 10px;
 }
 
 .sidebar-nav a {
     padding: 10px 15px;
     display: flex;
-    align-items: center;
+    align-items: left;
     text-decoration: none;
     color: var(--text-color);
     transition: background-color 0.2s, color 0.2s;
