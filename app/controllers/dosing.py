@@ -718,12 +718,6 @@ def grow_cycle():
         growth_phase=growth_phase
     )
 
-@dosing_bp.route('/profile_form')
-def profile_form():
-    # This route is mentioned in the code but not implemented in the provided file
-    # It's left unchanged as it's mentioned in the code
-    pass
-
 @dosing_bp.route('/nutrients', methods=['GET'])
 def nutrient_database():
     """Display and manage nutrient database"""
@@ -751,10 +745,4 @@ def nutrient_database():
             {'id': 'calmag', 'name': 'CalMag'},
             {'id': 'other', 'name': 'Other'}
         ]
-    )
-
-@dosing_bp.route('/manage_profiles')
-def manage_profiles():
-    # This route is mentioned in the code but not implemented in the provided file
-    # It's left unchanged as it's mentioned in the code
-    pass 
+    ) 
