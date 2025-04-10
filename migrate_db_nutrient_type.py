@@ -7,7 +7,7 @@ def migrate_db():
     app = create_app()
     
     # Get database path from app config
-    db_path = os.path.join(app.root_path, 'nutetra.db')
+    db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
     
     print(f"Connecting to database at {db_path}")
     
@@ -15,7 +15,20 @@ def migrate_db():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # Check if the column already exists
+    # First, check if the nutrient_brands table exists
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='nutrient_brands'")
+    if not cursor.fetchone():
+        print("The nutrient_brands table doesn't exist. Creating tables...")
+        # Trigger SQLAlchemy to create all tables including our new models
+        with app.app_context():
+            from app import db
+            from app.models.nutrient import NutrientBrand, NutrientProduct
+            db.create_all()
+            print("Database tables created.")
+            NutrientBrand.initialize_defaults()
+            print("Default nutrient brands initialized.")
+    
+    # Now check if the nutrient_type column exists in nutrient_products
     cursor.execute("PRAGMA table_info(nutrient_products)")
     columns = cursor.fetchall()
     column_names = [column[1] for column in columns]
