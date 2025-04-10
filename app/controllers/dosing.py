@@ -400,6 +400,23 @@ def manage_profiles():
         has_incompatibilities=False  # Simplified since we don't track incompatibilities anymore
     )
 
+@dosing_bp.route('/profiles/reconfigure', methods=['POST'])
+def reconfigure_profiles():
+    """Force reconfiguration of all nutrient components in plant profiles"""
+    # First, get all existing profiles to keep track of their custom status
+    existing_profiles = Settings.get('plant_profiles', {})
+    
+    # Force reset of default nutrient ratios in the profiles
+    Settings.initialize_defaults(force_reset=True)
+    
+    # Now auto-configure the components based on available pumps
+    result = Settings.auto_configure_nutrient_components()
+    
+    # Show result message
+    flash(f"All plant profiles have been reconfigured with proper nutrient ratios. {result}", 'success')
+    
+    return redirect(url_for('dosing.manage_profiles'))
+
 @dosing_bp.route('/profiles/add', methods=['GET', 'POST'])
 def add_profile():
     """Add a new plant profile"""

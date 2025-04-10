@@ -450,6 +450,7 @@ class Settings(db.Model):
                 if not profile_ratios:
                     profile_ratios = profile.get('nutrient_ratios', {})
                 
+                # Default to the type-specific ratio if available, otherwise use 1.0
                 ratio = profile_ratios.get(nutrient_type, default_ratio)
                 
                 # Add the component
@@ -489,18 +490,20 @@ class Settings(db.Model):
             
             # Update if components changed
             if components_changed:
+                # Create a map of existing components by pump_id for easier ratio preservation
+                current_comp_map = {comp.get('pump_id'): comp for comp in current_components if 'pump_id' in comp}
+                
                 # Preserve ratio settings from existing components when possible
                 for new_comp in new_components:
-                    for curr_comp in current_components:
-                        if (curr_comp.get('pump_id') == new_comp.get('pump_id') and 
-                            'ratio' in curr_comp):
+                    pump_id = new_comp.get('pump_id')
+                    if pump_id in current_comp_map:
+                        # Found an existing component for this pump, preserve its ratio
+                        curr_comp = current_comp_map[pump_id]
+                        if 'ratio' in curr_comp:
                             new_comp['ratio'] = curr_comp['ratio']
-                            break
-                        elif (curr_comp.get('pump_id') == new_comp.get('pump_id') and 
-                            'ml_per_liter' in curr_comp):
+                        elif 'ml_per_liter' in curr_comp:
                             # Handle legacy components with ml_per_liter instead of ratio
                             new_comp['ratio'] = curr_comp['ml_per_liter']
-                            break
                 
                 # Sort components by dosing_order to ensure proper sequence
                 new_components.sort(key=lambda comp: comp.get('dosing_order', 99))

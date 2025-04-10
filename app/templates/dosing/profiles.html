@@ -8,9 +8,17 @@
     <div class="dashboard-section">
         <div class="section-header">
             <h3>Plant Profiles</h3>
-            <a href="{{ url_for('dosing.add_profile') }}" class="action-button">
-                <i class="fas fa-plus"></i> Add New Profile
-            </a>
+            <div class="header-actions">
+                <a href="{{ url_for('dosing.add_profile') }}" class="button">
+                    <i class="fas fa-plus"></i> Add Profile
+                </a>
+                <form method="POST" action="{{ url_for('dosing.reconfigure_profiles') }}" class="inline-form">
+                    <button type="submit" class="button button-secondary" 
+                            title="Update nutrient components for all profiles based on available pumps">
+                        <i class="fas fa-sync"></i> Reconfigure Nutrients
+                    </button>
+                </form>
+            </div>
         </div>
         
         {% if has_incompatibilities %}
