@@ -3,16 +3,24 @@
 /* Section navigation */
 .nav-section > a {
     position: relative;
+    padding-right: 35px; /* Add more padding to make room for the icon */
 }
 
 .nav-section .toggle-icon {
     position: absolute;
-    right: 8px;
+    right: 15px;
     top: 50%;
     transform: translateY(-50%);
     transition: all 0.3s ease;
-    font-size: 0.9rem;
-    opacity: 0.8;
+    font-size: 1rem; /* Slightly larger icon */
+    opacity: 0.9; /* More visible */
+    background-color: rgba(0, 0, 0, 0.1); /* Add subtle background */
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .nav-section.expanded .toggle-icon {
@@ -65,8 +73,15 @@
 /* Mobile-specific navigation styles for collapsible sections */
 @media (max-width: 768px) {
     /* Only add mobile styles that don't conflict with styles.css */
+    .nav-section > a {
+        padding-right: 40px; /* More padding on mobile */
+    }
+    
     .nav-section .toggle-icon {
-        right: 10px;
+        right: 15px;
+        font-size: 1.1rem; /* Slightly larger on mobile */
+        width: 22px;
+        height: 22px;
     }
     
     .nav-section .submenu {
