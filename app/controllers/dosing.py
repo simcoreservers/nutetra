@@ -371,33 +371,57 @@ def settings():
     )
 
 @dosing_bp.route('/profiles')
-def manage_profiles():
-    """Manage plant profiles"""
-    # Auto-configure nutrient components based on available pumps
-    # This ensures the default profiles are always up-to-date with available nutrients
-    config_result = Settings.auto_configure_nutrient_components()
-    
-    # Get all plant profiles
+def profiles():
+    """Plant profiles configuration"""
     plant_profiles = Settings.get('plant_profiles', {})
-    
-    # Get the default profiles (these can't be deleted)
-    default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
-    
-    # Get all nutrient pumps to display information about them
-    nutrient_pumps = Pump.query.filter(Pump.type == 'nutrient', Pump.enabled == True).all()
-    
-    # Show configuration result as a message
-    if config_result and "Updated" in config_result:
-        flash(f"Plant profiles updated: {config_result}", 'success')
-    
-    # Always show a message about pump configuration
-    flash(f"Nutrient profile configuration: Found {len(nutrient_pumps)} active nutrient pumps. Ordered as: (1) Cal-Mag → (2) Micro → (3) Grow → (4) Bloom", 'info')
+    active_profile = Settings.get('active_plant_profile')
     
     return render_template(
         'dosing/profiles.html',
-        profiles=plant_profiles,
-        default_profiles=default_profiles,
-        has_incompatibilities=False  # Simplified since we don't track incompatibilities anymore
+        plant_profiles=plant_profiles,
+        active_profile=active_profile
+    )
+
+@dosing_bp.route('/cannabis-schedule')
+def cannabis_schedule():
+    """Cannabis weekly schedule management"""
+    # Get the cannabis profile data
+    plant_profiles = Settings.get('plant_profiles', {})
+    cannabis_profile = plant_profiles.get('cannabis', {})
+    
+    if not cannabis_profile:
+        flash('Cannabis profile not found', 'error')
+        return redirect(url_for('dosing.profiles'))
+    
+    weekly_schedules = cannabis_profile.get('weekly_schedules', {})
+    current_week = cannabis_profile.get('current_week', 1)
+    total_weeks = cannabis_profile.get('total_weeks', 12)
+    
+    # Make sure we have entries for each week up to total_weeks
+    for week in range(1, total_weeks + 1):
+        week_str = str(week)
+        if week_str not in weekly_schedules:
+            # Create a default schedule for this week
+            weekly_schedules[week_str] = {
+                'ec_setpoint': 1200,
+                'nutrient_ratios': {
+                    'grow': 1.0,
+                    'bloom': 1.0,
+                    'micro': 1.0,
+                    'calmag': 1.0
+                }
+            }
+    
+    # Sort the weeks for display
+    sorted_weeks = sorted([str(i) for i in range(1, total_weeks + 1)], key=int)
+    
+    return render_template(
+        'dosing/cannabis_schedule.html',
+        profile=cannabis_profile,
+        current_week=current_week,
+        total_weeks=total_weeks,
+        weekly_schedules=weekly_schedules,
+        sorted_weeks=sorted_weeks
     )
 
 @dosing_bp.route('/profiles/reconfigure', methods=['POST'])
