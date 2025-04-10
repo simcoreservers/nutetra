@@ -751,10 +751,4 @@ def nutrient_database():
             {'id': 'calmag', 'name': 'CalMag'},
             {'id': 'other', 'name': 'Other'}
         ]
-    )
-
-@dosing_bp.route('/manage_profiles')
-def manage_profiles():
-    # This route is mentioned in the code but not implemented in the provided file
-    # It's left unchanged as it's mentioned in the code
-    pass 
+    ) 
