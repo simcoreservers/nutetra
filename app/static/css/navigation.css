@@ -54,10 +54,33 @@
     transition: opacity 0.3s ease;
 }
 
+/* Show submenu items for expanded sections */
 .nav-section.expanded .submenu li {
     opacity: 1;
     height: auto;
     overflow: visible;
+}
+
+/* IMPORTANT: Show submenu items for active sections by default */
+.nav-section.active .submenu li {
+    opacity: 1;
+    height: auto;
+    overflow: visible;
+}
+
+/* Automatically set active sections to expanded state */
+.nav-section.active {
+    /* This applies expanded state to active sections automatically */
+    /* Ensures menus corresponding to current location are open */
+}
+
+/* Also toggle the icon for active sections */
+.nav-section.active .toggle-icon.fa-plus {
+    display: none;
+}
+
+.nav-section.active .toggle-icon.fa-minus {
+    display: flex;
 }
 
 /* Make submenu items left-aligned */

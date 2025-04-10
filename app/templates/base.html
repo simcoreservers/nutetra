@@ -336,67 +336,44 @@
             count.style.display = 'inline-block';
         }
         
-        // Navigation system - completely rewritten for better reliability
+        // Navigation system
         document.addEventListener('DOMContentLoaded', function() {
-            const navSections = document.querySelectorAll('.nav-section');
-            
-            // First, disable all existing event listeners by cloning nodes
-            navSections.forEach(section => {
-                // Clone and replace the section-toggle link
-                const toggle = section.querySelector('.section-toggle');
-                const newToggle = toggle.cloneNode(true);
-                toggle.parentNode.replaceChild(newToggle, toggle);
+            // Initialize active navigation sections
+            document.querySelectorAll('.nav-section.active').forEach(section => {
+                section.classList.add('expanded');
                 
-                // Auto expand active sections
-                if (section.classList.contains('active')) {
-                    section.classList.add('expanded');
-                    const icon = newToggle.querySelector('.toggle-icon');
-                    if (icon) {
-                        icon.classList.remove('fa-plus');
-                        icon.classList.add('fa-minus');
-                    }
+                // Update the icon for active sections
+                const icon = section.querySelector('.toggle-icon');
+                if (icon) {
+                    icon.classList.remove('fa-plus');
+                    icon.classList.add('fa-minus');
                 }
             });
             
-            // Now add fresh event listeners to each toggle
+            // Handle toggle clicks
             document.querySelectorAll('.section-toggle').forEach(toggle => {
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     
                     const section = this.closest('.nav-section');
-                    
-                    // Toggle expanded state
-                    const isExpanded = section.classList.contains('expanded');
                     section.classList.toggle('expanded');
                     
-                    // Update icon
-                    const icon = this.querySelector('.toggle-icon');
-                    if (icon) {
-                        if (isExpanded) {
-                            icon.classList.remove('fa-minus');
-                            icon.classList.add('fa-plus');
-                        } else {
-                            icon.classList.remove('fa-plus');
-                            icon.classList.add('fa-minus');
+                    // Don't toggle icon for active sections (they stay expanded)
+                    if (!section.classList.contains('active')) {
+                        const icon = this.querySelector('.toggle-icon');
+                        if (icon) {
+                            icon.classList.toggle('fa-plus');
+                            icon.classList.toggle('fa-minus');
                         }
                     }
                 });
             });
             
-            // Properly handle submenu link clicks without interfering with toggle
-            document.querySelectorAll('.submenu').forEach(submenu => {
-                // Remove and recreate to eliminate any existing handlers
-                const newSubmenu = submenu.cloneNode(true);
-                submenu.parentNode.replaceChild(newSubmenu, submenu);
-                
-                // Add fresh handlers to links
-                newSubmenu.querySelectorAll('a').forEach(link => {
-                    // If it's a real link (not "#" or "javascript:void(0)"), 
-                    // don't add any special handling beyond stopping propagation
-                    link.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                    });
+            // Clean click handling for submenu items
+            document.querySelectorAll('.submenu a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.stopPropagation();
                 });
             });
             
@@ -405,11 +382,7 @@
             const sidebar = document.querySelector('.sidebar');
             
             if (sidebarToggle) {
-                // Clone and replace to remove existing handlers
-                const newToggle = sidebarToggle.cloneNode(true);
-                sidebarToggle.parentNode.replaceChild(newToggle, sidebarToggle);
-                
-                newToggle.addEventListener('click', function() {
+                sidebarToggle.addEventListener('click', function() {
                     sidebar.classList.toggle('expanded');
                 });
             }
