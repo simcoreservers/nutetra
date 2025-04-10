@@ -4,39 +4,39 @@
 .nav-section > a {
     position: relative;
     padding-right: 35px; /* Add more padding to make room for the icon */
-    align-items: flex-start; /* Align to top when text wraps */
-    min-height: 44px; /* Ensure enough height for icon */
+    width: 100%; /* Use full width */
+    box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .nav-section .toggle-icon {
     position: absolute;
     right: 10px;
-    top: 12px; /* Fixed position from top instead of 50% */
-    transform: translateY(0); /* No vertical centering */
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%); /* Perfect vertical centering */
     transition: all 0.3s ease;
-    font-size: 1rem; /* Slightly larger icon */
-    opacity: 0.9; /* More visible */
-    background-color: rgba(0, 0, 0, 0.1); /* Add subtle background */
+    font-size: 1rem;
+    opacity: 0.9;
+    background-color: rgba(0, 0, 0, 0.1);
     width: 20px;
     height: 20px;
     border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10; /* Ensure it's above other content */
+    z-index: 10;
 }
 
-/* Fix for shorter text items where text might overlap with icon */
+/* Fix for text overlap with icon */
 .nav-section > a span {
-    max-width: calc(100% - 40px); /* Leave space for icon */
-    white-space: normal; /* Allow text to wrap */
-    word-wrap: break-word; /* Break long words if needed */
-    overflow: visible; /* Show overflow content */
-    padding-right: 5px; /* Add a little extra padding */
+    flex: 1; /* Take up all available space */
+    display: block; /* Ensure it's a block element */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Add ellipsis for overflow */
+    white-space: nowrap; /* Keep on one line */
 }
 
 .nav-section.expanded .toggle-icon {
-    transform: translateY(0);
+    transform: translateY(-50%);
 }
 
 /* Submenu transitions for collapsible navigation - controls animation only */
@@ -97,7 +97,8 @@
     }
     
     .nav-section > a span {
-        max-width: calc(100% - 45px); /* Leave more space for icon on mobile */
+        /* Still use the full width approach on mobile */
+        flex: 1;
     }
     
     .nav-section .submenu {

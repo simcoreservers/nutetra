@@ -211,6 +211,8 @@ input:focus, select:focus, textarea:focus {
   transition: all 0.2s ease;
   min-height: 54px; /* Increased height for better touch targets */
   font-size: 1rem;
+  width: 100%; /* Ensure it uses full width */
+  box-sizing: border-box; /* Include padding in width */
 }
 
 .sidebar-nav a:hover {
