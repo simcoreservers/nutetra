@@ -850,6 +850,11 @@ input:checked + .slider:before {
   z-index: 1;
 }
 
+.reading-card.alert {
+  border-color: var(--danger-color);
+  background-color: rgba(244, 115, 107, 0.1);
+}
+
 .sensor-card, .reading-card {
   opacity: 1;
   visibility: visible; 
@@ -887,6 +892,271 @@ input:checked + .slider:before {
 .reading-range {
   font-size: 0.8rem;
   color: var(--text-color-muted);
+}
+
+.refresh-btn {
+  background: none;
+  color: var(--text-color);
+  font-size: 1rem;
+  padding: var(--spacing-xs);
+  border-radius: 50%;
+  transition: transform 0.5s ease;
+}
+
+.refresh-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--primary-color);
+}
+
+.refresh-btn.rotating {
+  animation: rotate 0.5s linear;
+}
+
+/* Charts Section */
+.charts-section {
+  grid-column: span 8;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.charts-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.chart-tab {
+  background: none;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-xs) var(--spacing-md);
+  cursor: pointer;
+}
+
+.chart-tab:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.chart-tab.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.charts-panels {
+  flex: 1;
+  position: relative;
+}
+
+.charts-panels .chart-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.charts-panels .chart-panel.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Actions Section */
+.actions-section {
+  grid-column: span 4;
+}
+
+.actions-grid {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--bg-color-lighter);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.action-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  margin-right: var(--spacing-md);
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+.action-details {
+  flex: 1;
+}
+
+.action-details h4 {
+  font-size: 1rem;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+}
+
+.action-status {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+}
+
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* Activity Section */
+.activity-section {
+  grid-column: span 12;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-color-lighter);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.activity-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  margin-right: var(--spacing-md);
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+.activity-details {
+  flex: 1;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.activity-header h4 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.activity-time {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+}
+
+.activity-description {
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+/* Quick Actions */
+.view-all-link {
+  font-size: 0.9rem;
+}
+
+/* Loading and Empty States */
+.loading-state, .empty-state {
+  padding: var(--spacing-md);
+  text-align: center;
+  color: var(--text-color-muted);
+  font-size: 0.9rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-color-muted);
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  grid-column: 1 / -1;
+}
+
+/* Pump Controls */
+.pump-controls {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.pump-control {
+  background-color: var(--bg-color-lighter);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+}
+
+.pump-control h4 {
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+}
+
+.pump-amount {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.pump-amount input {
+  width: 80px;
+  margin-right: var(--spacing-xs);
+}
+
+.dose-button {
+  width: 100%;
+}
+
+.pump-message {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.pump-message.success {
+  background-color: rgba(67, 233, 123, 0.1);
+  color: var(--success-color);
+}
+
+.pump-message.error {
+  background-color: rgba(244, 115, 107, 0.1);
+  color: var(--danger-color);
 }
 
 /* Pump Management */
