@@ -106,45 +106,24 @@
                     </div>
                     
                     <div class="profile-actions">
-                        {% if profile_id != 'cannabis' or is_admin %}
-                        <a href="{{ url_for('dosing.edit_profile', profile_id=profile_id) }}" class="button small-button">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        {% endif %}
-                        
-                        {% if profile.weekly_schedules %}
-                        <a href="{{ url_for('dosing.profile_schedule', profile_id=profile_id) }}" class="button small-button">
-                            <i class="fas fa-calendar-alt"></i> Schedule
-                        </a>
-                        {% endif %}
-                        
-                        {% if profile.get('custom', False) %}
-                        <form method="post" action="{{ url_for('dosing.delete_profile', profile_id=profile_id) }}" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this profile?');">
-                            <button type="submit" class="button small-button danger-button">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </form>
-                        {% endif %}
-                        
-                        {% if not profile.get('custom', False) and profile_id != active_profile %}
-                        <form method="post" action="{{ url_for('dosing.duplicate_profile', profile_id=profile_id) }}" class="inline-form">
-                            <button type="submit" class="button small-button">
-                                <i class="fas fa-copy"></i> Duplicate
-                            </button>
-                        </form>
-                        {% endif %}
-                        
                         {% if profile_id != active_profile %}
-                        <form method="post" action="{{ url_for('dosing.activate_profile', profile_id=profile_id) }}" class="inline-form">
-                            <button type="submit" class="button small-button primary-button">
-                                <i class="fas fa-check-circle"></i> Activate
-                            </button>
-                        </form>
+                        <a href="{{ url_for('dosing.activate_profile', profile_id=profile_id) }}" class="action-button primary small" title="Activate profile">
+                            <i class="fas fa-check"></i>
+                        </a>
                         {% else %}
                         <span class="active-label">
                             <i class="fas fa-check-circle"></i> Active
                         </span>
                         {% endif %}
+                        <a href="{{ url_for('dosing.edit_profile', profile_id=profile_id) }}" class="action-button small" title="Edit profile">
+                            <i class="fas fa-pencil-alt"></i>
+                        </a>
+                        <a href="{{ url_for('dosing.profile_schedule', profile_id=profile_id) }}" class="action-button small" title="Edit weekly schedule">
+                            <i class="fas fa-calendar-alt"></i>
+                        </a>
+                        <a href="{{ url_for('dosing.delete_profile', profile_id=profile_id) }}" class="action-button danger small" title="Delete profile">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -245,9 +224,36 @@
         gap: var(--spacing-xs);
     }
     
+    /* Update button styling to match pumps page */
     .action-button.small {
         padding: 4px 8px;
         font-size: 0.9rem;
+        background-color: var(--bg-color-light);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: background-color 0.2s, color 0.2s;
+        width: 32px;
+        height: 32px;
+    }
+    
+    .action-button.small:hover {
+        background-color: var(--bg-color-dark);
+    }
+    
+    .action-button.primary {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .action-button.primary:hover {
+        background-color: var(--primary-color-dark);
     }
     
     .action-button.danger {
@@ -258,6 +264,17 @@
     .action-button.danger:hover {
         background-color: var(--danger-color);
         color: white;
+    }
+    
+    .active-label {
+        display: inline-flex;
+        align-items: center;
+        color: var(--success-color);
+        font-size: 0.9rem;
+    }
+    
+    .active-label i {
+        margin-right: 4px;
     }
     
     .back-link {
