@@ -34,23 +34,29 @@
                         </a>
                     </li>
                     
-                    <li class="nav-section {% if '/monitoring' in request.path or '/events' in request.path %}active{% endif %}">
+                    <li class="nav-section {% if '/sensors' in request.path or '/events' in request.path %}active{% endif %}">
                         <a href="#" class="section-toggle">
                             <i class="fas fa-chart-line"></i>
-                            <span>Monitoring</span>
+                            <span>Sensor Monitoring</span>
                             <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li class="nav-item {% if '/monitoring' in request.path and not '/monitoring/events' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('monitoring.index') }}">
+                            <li class="nav-item {% if '/sensors' in request.path and not '/sensors/history' in request.path and not '/sensors/calibration' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('sensors.index') }}">
                                     <i class="fas fa-tachometer-alt"></i>
                                     <span>Dashboard</span>
                                 </a>
                             </li>
-                            <li class="nav-item {% if '/monitoring/events' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('monitoring.events') }}">
+                            <li class="nav-item {% if '/sensors/history' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('sensors.history') }}">
                                     <i class="fas fa-history"></i>
-                                    <span>Event History</span>
+                                    <span>Sensor History</span>
+                                </a>
+                            </li>
+                            <li class="nav-item {% if '/sensors/calibration' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('sensors.calibration') }}">
+                                    <i class="fas fa-sliders-h"></i>
+                                    <span>Calibration</span>
                                 </a>
                             </li>
                         </ul>
