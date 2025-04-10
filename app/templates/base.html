@@ -11,6 +11,7 @@
     <!-- CSS dependencies -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
     
     <!-- Add any additional CSS files needed for specific pages -->
     {% block extra_css %}{% endblock %}
@@ -33,37 +34,121 @@
                         </a>
                     </li>
                     
-                    <li class="{% if '/sensors' in request.path %}active{% endif %}">
-                        <a href="{{ url_for('sensors.index') }}">
-                            <i class="fas fa-thermometer-half"></i>
-                            <span>Sensors</span>
-                        </a>
-                    </li>
-                    
-                    <li class="{% if '/dosing' in request.path %}active{% endif %}">
-                        <a href="{{ url_for('dosing.index') }}">
-                            <i class="fas fa-tint"></i>
-                            <span>Dosing</span>
+                    <li class="nav-section {% if '/monitoring' in request.path or '/sensors' in request.path or '/events' in request.path %}active{% endif %}">
+                        <a href="#" class="section-toggle">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Monitoring</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li><a href="{{ url_for('dosing.pumps') }}">Pumps</a></li>
-                            <li><a href="{{ url_for('dosing.events') }}">Events</a></li>
-                            <li><a href="{{ url_for('dosing.nutrients') }}">Nutrients</a></li>
-                            <li><a href="{{ url_for('dosing.grow_cycle') }}">Grow Cycle</a></li>
-                            <li><a href="{{ url_for('dosing.settings') }}">Settings</a></li>
+                            <li class="{% if '/sensors' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('sensors.index') }}">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    <span>Sensors</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/dosing/events' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('dosing.events') }}">
+                                    <i class="fas fa-history"></i>
+                                    <span>Events Log</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="coming-soon">
+                                    <i class="fas fa-chart-area"></i>
+                                    <span>Graphs & History</span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     
-                    <li class="{% if '/settings' in request.path %}active{% endif %}">
-                        <a href="{{ url_for('settings.index') }}">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
+                    <li class="nav-section {% if '/nutrient' in request.path or '/dosing/nutrients' in request.path or '/dosing/profiles' in request.path or '/dosing/grow_cycle' in request.path %}active{% endif %}">
+                        <a href="#" class="section-toggle">
+                            <i class="fas fa-flask"></i>
+                            <span>Nutrient Management</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li><a href="{{ url_for('settings.system') }}">System</a></li>
-                            <li><a href="{{ url_for('settings.notifications') }}">Notifications</a></li>
-                            <li><a href="{{ url_for('settings.backup') }}">Backup & Restore</a></li>
-                            <li><a href="{{ url_for('settings.diagnostics') }}">Diagnostics</a></li>
+                            <li class="{% if '/dosing/nutrients' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('dosing.nutrients') }}">
+                                    <i class="fas fa-vial"></i>
+                                    <span>Nutrient Library</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/dosing/profiles' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('dosing.profiles') }}">
+                                    <i class="fas fa-leaf"></i>
+                                    <span>Plant Profiles</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/dosing/grow_cycle' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('dosing.grow_cycle') }}">
+                                    <i class="fas fa-seedling"></i>
+                                    <span>Growth Schedules</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-section {% if '/dosing/pumps' in request.path or '/calibration' in request.path %}active{% endif %}">
+                        <a href="#" class="section-toggle">
+                            <i class="fas fa-microchip"></i>
+                            <span>Hardware</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li class="{% if '/dosing/pumps' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('dosing.pumps') }}">
+                                    <i class="fas fa-pump-soap"></i>
+                                    <span>Pumps</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/sensors/calibrate' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('sensors.calibrate') }}">
+                                    <i class="fas fa-sliders-h"></i>
+                                    <span>Sensor Calibration</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-section {% if '/settings' in request.path or '/dosing/settings' in request.path %}active{% endif %}">
+                        <a href="#" class="section-toggle">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li class="{% if '/dosing/settings' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('dosing.settings') }}">
+                                    <i class="fas fa-tint"></i>
+                                    <span>Dosing Settings</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/settings/system' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('settings.system') }}">
+                                    <i class="fas fa-server"></i>
+                                    <span>System</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/settings/notifications' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('settings.notifications') }}">
+                                    <i class="fas fa-bell"></i>
+                                    <span>Notifications</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/settings/backup' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('settings.backup') }}">
+                                    <i class="fas fa-database"></i>
+                                    <span>Backup & Restore</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/settings/diagnostics' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('settings.diagnostics') }}">
+                                    <i class="fas fa-stethoscope"></i>
+                                    <span>Diagnostics</span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -130,6 +215,16 @@
                 </div>
             </header>
             
+            <!-- Breadcrumb Navigation -->
+            {% if request.path != url_for('main.index') %}
+            <nav class="breadcrumb-nav">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}"><i class="fas fa-home"></i></a></li>
+                    {% block breadcrumbs %}{% endblock %}
+                </ol>
+            </nav>
+            {% endif %}
+            
             <!-- Flash Messages -->
             <div class="flash-messages">
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -148,6 +243,28 @@
             <div class="page-content">
                 {% block content %}{% endblock %}
             </div>
+            
+            <!-- Page Footer with Related Links -->
+            <footer class="page-footer">
+                <div class="related-links">
+                    <h4>Related Pages</h4>
+                    <div class="links-container">
+                        {% block related_links %}
+                        <!-- Default related links - pages will override this -->
+                        <a href="{{ url_for('main.index') }}" class="related-link">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        {% endblock %}
+                    </div>
+                </div>
+                {% if request.path != url_for('main.index') %}
+                <div class="back-navigation">
+                    <a href="javascript:history.back()" class="button back-button">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+                {% endif %}
+            </footer>
         </main>
     </div>
     
@@ -240,6 +357,38 @@
             count.textContent = parseInt(count.textContent) + 1;
             count.style.display = 'inline-block';
         }
+        
+        // Toggle sidebar navigation sections
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle collapsible sections
+            const sectionToggles = document.querySelectorAll('.section-toggle');
+            
+            sectionToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.closest('.nav-section');
+                    section.classList.toggle('expanded');
+                    
+                    // Auto-open submenu for active sections
+                    if (section.classList.contains('active') && !section.classList.contains('expanded')) {
+                        section.classList.add('expanded');
+                    }
+                });
+            });
+            
+            // Auto-expand active sections on page load
+            document.querySelectorAll('.nav-section.active').forEach(section => {
+                section.classList.add('expanded');
+            });
+            
+            // Handle sidebar toggle for mobile
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('expanded');
+            });
+        });
     </script>
 </body>
 </html> 

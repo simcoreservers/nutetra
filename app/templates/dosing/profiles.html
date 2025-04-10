@@ -3,6 +3,11 @@
 {% block title %}Plant Profiles | NuTetra Controller{% endblock %}
 {% block page_title %}Plant Profiles{% endblock %}
 
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{{ url_for('dosing.index') }}">Nutrient Management</a></li>
+<li class="breadcrumb-item active">Plant Profiles</li>
+{% endblock %}
+
 {% block content %}
 <div class="page-content">
     <div class="dashboard-section">
@@ -449,4 +454,19 @@
         margin-right: var(--spacing-xs);
     }
 </style>
+{% endblock %}
+
+{% block related_links %}
+<a href="{{ url_for('dosing.nutrients') }}" class="related-link">
+    <i class="fas fa-vial"></i> Nutrient Library
+</a>
+<a href="{{ url_for('dosing.grow_cycle') }}" class="related-link">
+    <i class="fas fa-seedling"></i> Growth Schedules
+</a>
+<a href="{{ url_for('dosing.settings') }}" class="related-link">
+    <i class="fas fa-cog"></i> Dosing Settings
+</a>
+<a href="{{ url_for('dosing.pumps') }}" class="related-link">
+    <i class="fas fa-pump-soap"></i> Pumps
+</a>
 {% endblock %} 

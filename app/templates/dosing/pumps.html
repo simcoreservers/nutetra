@@ -3,6 +3,11 @@
 {% block title %}Pumps | NuTetra Controller{% endblock %}
 {% block page_title %}Pump Management{% endblock %}
 
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{{ url_for('dosing.index') }}">Hardware</a></li>
+<li class="breadcrumb-item active">Pumps</li>
+{% endblock %}
+
 {% block content %}
 <div class="page-content">
     <div class="dashboard-section">
@@ -1034,4 +1039,19 @@ document.addEventListener('DOMContentLoaded', function() {
         background-color: var(--primary-color-light);
     }
 </style>
+{% endblock %}
+
+{% block related_links %}
+<a href="{{ url_for('sensors.calibrate') }}" class="related-link">
+    <i class="fas fa-sliders-h"></i> Sensor Calibration
+</a>
+<a href="{{ url_for('dosing.nutrients') }}" class="related-link">
+    <i class="fas fa-vial"></i> Nutrient Library
+</a>
+<a href="{{ url_for('dosing.events') }}" class="related-link">
+    <i class="fas fa-history"></i> Events Log
+</a>
+<a href="{{ url_for('dosing.settings') }}" class="related-link">
+    <i class="fas fa-cog"></i> Dosing Settings
+</a>
 {% endblock %} 
