@@ -378,7 +378,7 @@ def profiles():
     
     return render_template(
         'dosing/profiles.html',
-        plant_profiles=plant_profiles,
+        profiles=plant_profiles,
         active_profile=active_profile
     )
 
