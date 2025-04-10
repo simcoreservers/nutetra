@@ -38,7 +38,7 @@
                         <a href="#" class="section-toggle">
                             <i class="fas fa-chart-line"></i>
                             <span>Monitoring</span>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
+                            <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
                             <li class="{% if '/sensors' in request.path %}active{% endif %}">
@@ -66,7 +66,7 @@
                         <a href="#" class="section-toggle">
                             <i class="fas fa-flask"></i>
                             <span>Nutrient Management</span>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
+                            <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
                             <li class="{% if '/dosing/nutrients' in request.path %}active{% endif %}">
@@ -94,7 +94,7 @@
                         <a href="#" class="section-toggle">
                             <i class="fas fa-microchip"></i>
                             <span>Hardware</span>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
+                            <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
                             <li class="{% if '/dosing/pumps' in request.path %}active{% endif %}">
@@ -116,7 +116,7 @@
                         <a href="#" class="section-toggle">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
+                            <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
                             <li class="{% if '/dosing/settings' in request.path %}active{% endif %}">
@@ -347,9 +347,24 @@
                     const section = this.closest('.nav-section');
                     section.classList.toggle('expanded');
                     
+                    // Toggle the icon between plus and minus
+                    const icon = this.querySelector('.toggle-icon');
+                    if (section.classList.contains('expanded')) {
+                        icon.classList.remove('fa-plus');
+                        icon.classList.add('fa-minus');
+                    } else {
+                        icon.classList.remove('fa-minus');
+                        icon.classList.add('fa-plus');
+                    }
+                    
                     // Auto-open submenu for active sections
                     if (section.classList.contains('active') && !section.classList.contains('expanded')) {
                         section.classList.add('expanded');
+                        
+                        // Update icon for auto-expanded sections
+                        const activeIcon = section.querySelector('.toggle-icon');
+                        activeIcon.classList.remove('fa-plus');
+                        activeIcon.classList.add('fa-minus');
                     }
                 });
             });
@@ -357,6 +372,13 @@
             // Auto-expand active sections on page load
             document.querySelectorAll('.nav-section.active').forEach(section => {
                 section.classList.add('expanded');
+                
+                // Update icon for auto-expanded sections
+                const icon = section.querySelector('.toggle-icon');
+                if (icon) {
+                    icon.classList.remove('fa-plus');
+                    icon.classList.add('fa-minus');
+                }
             });
             
             // Handle sidebar toggle for mobile
