@@ -141,7 +141,7 @@ def create_app(test_config=None):
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp)  # URL prefix is defined in the blueprint
     app.register_blueprint(sensors_bp, url_prefix='/sensors')
-    app.register_blueprint(dosing_bp, url_prefix='/dosing')
+    app.register_blueprint(dosing_bp, url_prefix='/hardware')
     app.register_blueprint(settings_bp, url_prefix='/settings')
 
     # Initialize sensors and dosing systems

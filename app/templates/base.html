@@ -62,27 +62,27 @@
                         </ul>
                     </li>
                     
-                    <li class="nav-section {% if '/nutrient' in request.path or '/dosing/nutrients' in request.path or '/dosing/profiles' in request.path or '/dosing/grow_cycle' in request.path %}active{% endif %}">
+                    <li class="nav-section {% if '/nutrient' in request.path or '/hardware/nutrients' in request.path or '/hardware/profiles' in request.path or '/hardware/grow_cycle' in request.path %}active{% endif %}">
                         <a href="#" class="section-toggle">
                             <i class="fas fa-flask"></i>
                             <span>Nutrient Management</span>
                             <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li class="{% if '/dosing/nutrients' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.nutrients') }}">
+                            <li class="{% if '/hardware/nutrients' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('hardware.nutrients') }}">
                                     <i class="fas fa-vial"></i>
                                     <span>Nutrient Library</span>
                                 </a>
                             </li>
-                            <li class="{% if '/dosing/profiles' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.profiles') }}">
+                            <li class="{% if '/hardware/profiles' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('hardware.profiles') }}">
                                     <i class="fas fa-leaf"></i>
                                     <span>Plant Profiles</span>
                                 </a>
                             </li>
-                            <li class="{% if '/dosing/grow_cycle' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.grow_cycle') }}">
+                            <li class="{% if '/hardware/grow_cycle' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('hardware.grow_cycle') }}">
                                     <i class="fas fa-seedling"></i>
                                     <span>Growth Schedules</span>
                                 </a>
@@ -90,15 +90,15 @@
                         </ul>
                     </li>
                     
-                    <li class="nav-section {% if '/dosing/pumps' in request.path or '/calibration' in request.path %}active{% endif %}">
+                    <li class="nav-section {% if '/hardware/pumps' in request.path or '/calibration' in request.path %}active{% endif %}">
                         <a href="#" class="section-toggle">
                             <i class="fas fa-microchip"></i>
                             <span>Hardware</span>
                             <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li class="{% if '/dosing/pumps' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.pumps') }}">
+                            <li class="{% if '/hardware/pumps' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('hardware.pumps') }}">
                                     <i class="fas fa-pump-soap"></i>
                                     <span>Pumps</span>
                                 </a>
@@ -106,15 +106,15 @@
                         </ul>
                     </li>
                     
-                    <li class="nav-section {% if '/settings' in request.path or '/dosing/settings' in request.path %}active{% endif %}">
+                    <li class="nav-section {% if '/settings' in request.path or '/hardware/settings' in request.path %}active{% endif %}">
                         <a href="#" class="section-toggle">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>
                             <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li class="{% if '/dosing/settings' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.settings') }}">
+                            <li class="{% if '/hardware/settings' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('hardware.settings') }}">
                                     <i class="fas fa-tint"></i>
                                     <span>Dosing Settings</span>
                                 </a>
