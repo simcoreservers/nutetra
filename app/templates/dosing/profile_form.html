@@ -6,6 +6,157 @@
 {% block content %}
 <div class="page-content">
     <div class="dashboard-section">
+        {% if profile.weekly_schedules %}
+        <!-- Growth Cycle Section (shown for any profile with weekly schedules) -->
+        <div class="form-card">
+            <div class="card-header">
+                <h3>Growth Cycle Management</h3>
+            </div>
+            <div class="card-body">
+                <div class="grow-cycle-header">
+                    <div class="cycle-status">
+                        <h4>Current Growth Stage: <span class="growth-phase {{ growth_phase|lower }}">{{ growth_phase }}</span></h4>
+                        <div class="week-indicator">
+                            <div class="week-label">Week {{ current_week }} of {{ total_weeks }}</div>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: {{ (current_week / total_weeks * 100)|round }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cycle-actions">
+                        <form method="post" class="inline-form">
+                            <input type="hidden" name="action" value="next_week">
+                            <button type="submit" class="button primary-button">
+                                <i class="fas fa-forward"></i> Next Week
+                            </button>
+                        </form>
+                        
+                        <form method="post" class="inline-form">
+                            <input type="hidden" name="action" value="reset_cycle">
+                            <button type="submit" class="button danger-button" onclick="return confirm('Are you sure you want to reset the grow cycle to Week 1?')">
+                                <i class="fas fa-redo"></i> Reset Cycle
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="grow-cycle-content">
+                    <div class="current-settings">
+                        <h5>Current Week Nutrient Settings</h5>
+                        <div class="settings-grid">
+                            <div class="setting-card">
+                                <div class="setting-header">EC Target</div>
+                                <div class="setting-value">{{ current_schedule.get('ec_setpoint', profile.ec_setpoint) }} μS/cm</div>
+                            </div>
+                            
+                            <div class="setting-card">
+                                <div class="setting-header">pH Target</div>
+                                <div class="setting-value">{{ profile.ph_setpoint }}</div>
+                            </div>
+                        </div>
+                        
+                        <h5>Nutrient Ratios</h5>
+                        <div class="nutrient-ratios">
+                            {% set ratios = current_schedule.get('nutrient_ratios', profile.nutrient_ratios) %}
+                            <div class="ratio-bars">
+                                <div class="ratio-bar">
+                                    <div class="ratio-label">Grow</div>
+                                    <div class="ratio-container">
+                                        <div class="ratio-fill grow" style="width: {{ (ratios.grow / 2 * 100)|round }}%"></div>
+                                    </div>
+                                    <div class="ratio-value">{{ ratios.grow }}</div>
+                                </div>
+                                
+                                <div class="ratio-bar">
+                                    <div class="ratio-label">Bloom</div>
+                                    <div class="ratio-container">
+                                        <div class="ratio-fill bloom" style="width: {{ (ratios.bloom / 2 * 100)|round }}%"></div>
+                                    </div>
+                                    <div class="ratio-value">{{ ratios.bloom }}</div>
+                                </div>
+                                
+                                <div class="ratio-bar">
+                                    <div class="ratio-label">Micro</div>
+                                    <div class="ratio-container">
+                                        <div class="ratio-fill micro" style="width: {{ (ratios.micro / 2 * 100)|round }}%"></div>
+                                    </div>
+                                    <div class="ratio-value">{{ ratios.micro }}</div>
+                                </div>
+                                
+                                <div class="ratio-bar">
+                                    <div class="ratio-label">CalMag</div>
+                                    <div class="ratio-container">
+                                        <div class="ratio-fill calmag" style="width: {{ (ratios.calmag / 2 * 100)|round }}%"></div>
+                                    </div>
+                                    <div class="ratio-value">{{ ratios.calmag }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="weekly-schedule">
+                        <h5>Jump to Week</h5>
+                        <form method="post" class="week-selector-form">
+                            <input type="hidden" name="action" value="set_week">
+                            <div class="week-selector">
+                                {% for week_num in range(1, total_weeks + 1) %}
+                                    <button type="submit" name="week" value="{{ week_num }}" 
+                                            class="week-button {% if week_num == current_week %}active{% endif %}">
+                                        {{ week_num }}
+                                    </button>
+                                {% endfor %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if profile.weekly_schedules %}
+        <div class="schedule-table-container">
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>Full Weekly Schedule</h3>
+                </div>
+                <div class="card-body">
+                    <div class="schedule-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Week</th>
+                                    <th>Phase</th>
+                                    <th>EC Target</th>
+                                    <th>Grow</th>
+                                    <th>Bloom</th>
+                                    <th>Micro</th>
+                                    <th>CalMag</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for week_num in range(1, total_weeks + 1) %}
+                                    {% set week = weekly_schedules.get(week_num|string, {}) %}
+                                    {% set week_ratios = week.get('nutrient_ratios', {}) %}
+                                    {% set week_phase = get_phase_for_week(week_num) %}
+                                    <tr {% if week_num == current_week %}class="current-week"{% endif %}>
+                                        <td>{{ week_num }}</td>
+                                        <td>{{ week_phase }}</td>
+                                        <td>{{ week.get('ec_setpoint', profile.ec_setpoint) }} μS/cm</td>
+                                        <td>{{ week_ratios.get('grow', profile.nutrient_ratios.grow) }}</td>
+                                        <td>{{ week_ratios.get('bloom', profile.nutrient_ratios.bloom) }}</td>
+                                        <td>{{ week_ratios.get('micro', profile.nutrient_ratios.micro) }}</td>
+                                        <td>{{ week_ratios.get('calmag', profile.nutrient_ratios.calmag) }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
         <form id="profile-form" method="post" action="{{ url_for('dosing.add_profile') if action == 'add' else url_for('dosing.edit_profile', profile_id=profile_id) }}">
             <div class="form-card">
                 <div class="card-header">
@@ -20,6 +171,37 @@
                     <div class="form-group">
                         <label for="description">Description</label>
                         <textarea id="description" name="description" class="form-control" rows="3">{{ profile.description if profile else '' }}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="use_weekly_schedule">Use Weekly Schedule</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="use_weekly_schedule" name="use_weekly_schedule" 
+                                  {% if profile.weekly_schedules %}checked{% endif %}>
+                            <label for="use_weekly_schedule"></label>
+                        </div>
+                    </div>
+                    
+                    <div id="weekly-schedule-options" class="{% if not profile.weekly_schedules %}hidden{% endif %}">
+                        <div class="form-group">
+                            <label for="total_weeks">Total Weeks in Cycle</label>
+                            <input type="number" id="total_weeks" name="total_weeks" class="form-control" 
+                                   min="1" max="52" value="{{ profile.total_weeks if profile and profile.total_weeks else 12 }}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="growth_phases">Define Growth Phases</label>
+                            <textarea id="growth_phases" name="growth_phases" class="form-control" rows="4" placeholder="1-2: Seedling
+3-5: Vegetative
+6: Pre-Flower
+7-11: Flowering
+12: Flush">{{ profile.growth_phases if profile and profile.growth_phases else "1-2: Seedling
+3-5: Vegetative
+6: Pre-Flower
+7-11: Flowering
+12: Flush" }}</textarea>
+                            <small class="helper-text">Enter each phase in the format "week_range: phase_name", one per line.</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -281,6 +463,62 @@
         margin-top: var(--spacing-md);
         text-align: center;
     }
+    
+    /* Toggle switch styles */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-switch label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-color-dark);
+        border-radius: 34px;
+        cursor: pointer;
+        transition: .4s;
+    }
+    
+    .toggle-switch label:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        border-radius: 50%;
+        transition: .4s;
+    }
+    
+    .toggle-switch input:checked + label {
+        background-color: var(--primary-color);
+    }
+    
+    .toggle-switch input:checked + label:before {
+        transform: translateX(26px);
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    .helper-text {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+        margin-top: 5px;
+    }
 </style>
 {% endblock %}
 
@@ -376,6 +614,16 @@
         document.querySelectorAll('.remove-component').forEach(button => {
             button.addEventListener('click', removeComponent);
         });
+        
+        // Toggle weekly schedule options
+        const useWeeklyScheduleCheckbox = document.getElementById('use_weekly_schedule');
+        const weeklyScheduleOptions = document.getElementById('weekly-schedule-options');
+        
+        if (useWeeklyScheduleCheckbox && weeklyScheduleOptions) {
+            useWeeklyScheduleCheckbox.addEventListener('change', function() {
+                weeklyScheduleOptions.classList.toggle('hidden', !this.checked);
+            });
+        }
     });
 </script>
 {% endblock %} 

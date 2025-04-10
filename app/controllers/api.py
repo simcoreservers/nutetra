@@ -1198,26 +1198,35 @@ def migrate_pump_types():
             'error': str(e)
         }), 500
 
-@api_bp.route('/cannabis-schedule', methods=['GET'])
-def get_cannabis_schedule():
-    """Get the current cannabis weekly schedule"""
+@api_bp.route('/profile-schedule/<profile_id>', methods=['GET'])
+def get_profile_schedule(profile_id):
+    """Get a profile's weekly schedule"""
     try:
         plant_profiles = Settings.get('plant_profiles', {})
-        cannabis_profile = plant_profiles.get('cannabis', {})
         
-        if not cannabis_profile:
+        if profile_id not in plant_profiles:
             return jsonify({
                 'success': False,
-                'error': "Cannabis profile not found"
+                'error': "Profile not found"
             }), 404
         
-        weekly_schedules = cannabis_profile.get('weekly_schedules', {})
-        current_week = cannabis_profile.get('current_week', 1)
-        total_weeks = cannabis_profile.get('total_weeks', 12)
+        profile = plant_profiles[profile_id]
+        
+        if not profile.get('weekly_schedules'):
+            return jsonify({
+                'success': False,
+                'error': "This profile does not use weekly schedules"
+            }), 404
+        
+        weekly_schedules = profile.get('weekly_schedules', {})
+        current_week = profile.get('current_week', 1)
+        total_weeks = profile.get('total_weeks', 12)
         
         return jsonify({
             'success': True,
             'data': {
+                'profile_id': profile_id,
+                'profile_name': profile.get('name'),
                 'current_week': current_week,
                 'total_weeks': total_weeks,
                 'weekly_schedules': weekly_schedules
@@ -1229,9 +1238,9 @@ def get_cannabis_schedule():
             'error': str(e)
         }), 500
 
-@api_bp.route('/cannabis-schedule', methods=['PUT'])
-def update_cannabis_schedule():
-    """Update the cannabis weekly schedule"""
+@api_bp.route('/profile-schedule/<profile_id>', methods=['PUT'])
+def update_profile_schedule(profile_id):
+    """Update a profile's weekly schedule"""
     try:
         data = request.get_json()
         if not data:
@@ -1242,13 +1251,17 @@ def update_cannabis_schedule():
         
         # Get current plant profiles
         plant_profiles = Settings.get('plant_profiles', {})
-        cannabis_profile = plant_profiles.get('cannabis', {})
         
-        if not cannabis_profile:
+        if profile_id not in plant_profiles:
             return jsonify({
                 'success': False,
-                'error': "Cannabis profile not found"
+                'error': "Profile not found"
             }), 404
+        
+        profile = plant_profiles[profile_id]
+        
+        if not profile.get('weekly_schedules'):
+            profile['weekly_schedules'] = {}
         
         # Update current week if provided
         if 'current_week' in data:
@@ -1258,7 +1271,7 @@ def update_cannabis_schedule():
                     'success': False,
                     'error': "Current week must be at least 1"
                 }), 400
-            cannabis_profile['current_week'] = current_week
+            profile['current_week'] = current_week
         
         # Update total weeks if provided
         if 'total_weeks' in data:
@@ -1268,7 +1281,7 @@ def update_cannabis_schedule():
                     'success': False,
                     'error': "Total weeks must be at least 1"
                 }), 400
-            cannabis_profile['total_weeks'] = total_weeks
+            profile['total_weeks'] = total_weeks
         
         # Update weekly schedules if provided
         if 'weekly_schedules' in data:
@@ -1278,15 +1291,15 @@ def update_cannabis_schedule():
             for week, schedule in weekly_schedules.items():
                 # Make sure it has required fields or add defaults
                 if 'ec_setpoint' not in schedule:
-                    schedule['ec_setpoint'] = 1200
+                    schedule['ec_setpoint'] = profile.get('ec_setpoint', 1200)
                 
                 if 'nutrient_ratios' not in schedule:
-                    schedule['nutrient_ratios'] = {
+                    schedule['nutrient_ratios'] = profile.get('nutrient_ratios', {
                         'grow': 1.0,
                         'bloom': 1.0,
                         'micro': 1.0,
                         'calmag': 1.0
-                    }
+                    })
                 else:
                     # Make sure all nutrient types are present
                     ratios = schedule['nutrient_ratios']
@@ -1299,10 +1312,10 @@ def update_cannabis_schedule():
                     if 'calmag' not in ratios:
                         ratios['calmag'] = 1.0
             
-            cannabis_profile['weekly_schedules'] = weekly_schedules
+            profile['weekly_schedules'] = weekly_schedules
         
         # Save the updated profile
-        plant_profiles['cannabis'] = cannabis_profile
+        plant_profiles[profile_id] = profile
         Settings.set('plant_profiles', plant_profiles)
         
         # Update nutrient components to reflect any changes
@@ -1310,16 +1323,28 @@ def update_cannabis_schedule():
         
         return jsonify({
             'success': True,
-            'message': "Cannabis schedule updated successfully",
+            'message': f"Profile {profile_id} schedule updated successfully",
             'profile_update': update_result,
             'data': {
-                'current_week': cannabis_profile.get('current_week'),
-                'total_weeks': cannabis_profile.get('total_weeks'),
-                'weekly_schedules': cannabis_profile.get('weekly_schedules')
+                'profile_id': profile_id,
+                'profile_name': profile.get('name'),
+                'current_week': profile.get('current_week'),
+                'total_weeks': profile.get('total_weeks'),
+                'weekly_schedules': profile.get('weekly_schedules')
             }
         })
     except Exception as e:
         return jsonify({
             'success': False,
             'error': str(e)
-        }), 500 
+        }), 500
+
+@api_bp.route('/cannabis-schedule', methods=['GET'])
+def get_cannabis_schedule():
+    """Get the current cannabis weekly schedule (for backward compatibility)"""
+    return get_profile_schedule('cannabis')
+
+@api_bp.route('/cannabis-schedule', methods=['PUT'])
+def update_cannabis_schedule():
+    """Update the cannabis weekly schedule (for backward compatibility)"""
+    return update_profile_schedule('cannabis') 

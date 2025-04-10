@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile.name }} Weekly Schedule Configuration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .schedule-container {
+        margin-top: 20px;
+    }
+    
+    .schedule-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .week-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .week-tab {
+        padding: 10px 15px;
+        background-color: var(--bg-color-dark);
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .week-tab.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .week-tab:hover:not(.active) {
+        background-color: var(--bg-color-lighter);
+    }
+    
+    .week-content {
+        display: none;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .week-content.active {
+        display: block;
+    }
+    
+    .nutrient-ratios {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .ec-setting {
+        margin-bottom: 20px;
+    }
+    
+    .control-panel {
+        background-color: var(--bg-color-lighter);
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .save-button {
+        margin-top: 20px;
+    }
+    
+    .growth-phase {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: white;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+    
+    .seedling {
+        background-color: #4CAF50;
+    }
+    
+    .vegetative {
+        background-color: #2196F3;
+    }
+    
+    .pre-flower {
+        background-color: #9C27B0;
+    }
+    
+    .flowering {
+        background-color: #FF9800;
+    }
+    
+    .flush {
+        background-color: #F44336;
+    }
+    
+    .unknown {
+        background-color: #607D8B;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-header">
+        <h1>{{ profile.name }} Weekly Schedule Configuration</h1>
+        <p>Configure weekly schedules for nutrients and EC targets</p>
+    </div>
+    
+    <div class="alert info">
+        <i class="fas fa-info-circle"></i>
+        <span>
+            This page allows you to customize the EC targets and nutrient ratios for each week of the growth cycle.
+            Changes will take effect immediately when you save.
+        </span>
+    </div>
+    
+    <div class="control-panel">
+        <h3>Growth Cycle Settings</h3>
+        <form id="cycle-settings-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="total-weeks">Total Weeks in Cycle</label>
+                    <input type="number" id="total-weeks" value="{{ total_weeks }}" min="1" max="52" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="current-week">Current Week</label>
+                    <input type="number" id="current-week" value="{{ current_week }}" min="1" max="{{ total_weeks }}" class="form-control" readonly>
+                    <small class="form-text">* Use the profile edit page to change the current week</small>
+                </div>
+            </div>
+            <button type="button" id="update-weeks-btn" class="button">Update Total Weeks</button>
+        </form>
+    </div>
+    
+    <div class="schedule-container">
+        <div class="schedule-header">
+            <h3>Weekly Schedules</h3>
+            <button id="save-all-btn" class="button primary-button">Save All Changes</button>
+        </div>
+        
+        <div class="week-tabs">
+            {% for week in sorted_weeks %}
+            <div class="week-tab{% if week == current_week|string %} active{% endif %}" data-week="{{ week }}">
+                Week {{ week }}
+                <span class="growth-phase {{ growth_phases[week|int]|lower }}">{{ growth_phases[week|int] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% for week in sorted_weeks %}
+        <div class="week-content{% if week == current_week|string %} active{% endif %}" id="week-{{ week }}">
+            <h3>Week {{ week }} Configuration</h3>
+            
+            {% set schedule = weekly_schedules.get(week, {}) %}
+            {% set ec_setpoint = schedule.get('ec_setpoint', profile.ec_setpoint) %}
+            {% set ratios = schedule.get('nutrient_ratios', profile.nutrient_ratios) %}
+            
+            <div class="ec-setting">
+                <label for="ec-setpoint-{{ week }}">EC Target (μS/cm)</label>
+                <input type="number" id="ec-setpoint-{{ week }}" class="form-control ec-input" value="{{ ec_setpoint }}" 
+                       min="0" max="3000" step="50" data-week="{{ week }}">
+                <small class="form-text">Electrical conductivity target for this week</small>
+            </div>
+            
+            <h4>Nutrient Ratios</h4>
+            <p>Set the ratio for each nutrient type during this week of growth</p>
+            
+            <div class="nutrient-ratios">
+                <div class="form-group">
+                    <label for="grow-ratio-{{ week }}">Grow</label>
+                    <input type="number" id="grow-ratio-{{ week }}" class="form-control ratio-input" 
+                           value="{{ ratios.get('grow', 1.0) }}" min="0" max="5" step="0.1" 
+                           data-week="{{ week }}" data-type="grow">
+                </div>
+                
+                <div class="form-group">
+                    <label for="bloom-ratio-{{ week }}">Bloom</label>
+                    <input type="number" id="bloom-ratio-{{ week }}" class="form-control ratio-input" 
+                           value="{{ ratios.get('bloom', 1.0) }}" min="0" max="5" step="0.1" 
+                           data-week="{{ week }}" data-type="bloom">
+                </div>
+                
+                <div class="form-group">
+                    <label for="micro-ratio-{{ week }}">Micro</label>
+                    <input type="number" id="micro-ratio-{{ week }}" class="form-control ratio-input" 
+                           value="{{ ratios.get('micro', 1.0) }}" min="0" max="5" step="0.1" 
+                           data-week="{{ week }}" data-type="micro">
+                </div>
+                
+                <div class="form-group">
+                    <label for="calmag-ratio-{{ week }}">CalMag</label>
+                    <input type="number" id="calmag-ratio-{{ week }}" class="form-control ratio-input" 
+                           value="{{ ratios.get('calmag', 1.0) }}" min="0" max="5" step="0.1" 
+                           data-week="{{ week }}" data-type="calmag">
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Week tab navigation
+    const weekTabs = document.querySelectorAll('.week-tab');
+    const weekContents = document.querySelectorAll('.week-content');
+    
+    weekTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const week = this.getAttribute('data-week');
+            
+            // Update active tab
+            weekTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show corresponding content
+            weekContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === `week-${week}`) {
+                    content.classList.add('active');
+                }
+            });
+        });
+    });
+    
+    // Update total weeks
+    const updateWeeksBtn = document.getElementById('update-weeks-btn');
+    const totalWeeksInput = document.getElementById('total-weeks');
+    
+    updateWeeksBtn.addEventListener('click', function() {
+        const totalWeeks = parseInt(totalWeeksInput.value);
+        if (totalWeeks < 1 || totalWeeks > 52) {
+            alert('Total weeks must be between 1 and 52');
+            return;
+        }
+        
+        // Confirm before updating
+        if (confirm(`Update the growth cycle to ${totalWeeks} weeks? This will regenerate the weekly schedule.`)) {
+            // Send request to update total weeks
+            fetch('/api/profile-schedule/{{ profile_id }}', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    total_weeks: totalWeeks
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Growth cycle updated successfully. The page will reload to show the new schedule.');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (result.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the growth cycle');
+            });
+        }
+    });
+    
+    // Save all changes
+    const saveAllBtn = document.getElementById('save-all-btn');
+    
+    saveAllBtn.addEventListener('click', function() {
+        // Collect all week data
+        const weeklySchedules = {};
+        
+        weekContents.forEach(content => {
+            const week = content.id.replace('week-', '');
+            const ecInput = document.getElementById(`ec-setpoint-${week}`);
+            const growInput = document.getElementById(`grow-ratio-${week}`);
+            const bloomInput = document.getElementById(`bloom-ratio-${week}`);
+            const microInput = document.getElementById(`micro-ratio-${week}`);
+            const calmagInput = document.getElementById(`calmag-ratio-${week}`);
+            
+            weeklySchedules[week] = {
+                ec_setpoint: parseFloat(ecInput.value),
+                nutrient_ratios: {
+                    grow: parseFloat(growInput.value),
+                    bloom: parseFloat(bloomInput.value),
+                    micro: parseFloat(microInput.value),
+                    calmag: parseFloat(calmagInput.value)
+                }
+            };
+        });
+        
+        // Send request to update all weeks
+        fetch('/api/profile-schedule/{{ profile_id }}', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                weekly_schedules: weeklySchedules
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Schedule updated successfully');
+            } else {
+                alert('Error: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the schedule');
+        });
+    });
+});
+</script>
+{% endblock %} 

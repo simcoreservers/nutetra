@@ -444,79 +444,142 @@ def reconfigure_profiles():
 @dosing_bp.route('/profiles/add', methods=['GET', 'POST'])
 def add_profile():
     """Add a new plant profile"""
+    # Get existing profiles
+    plant_profiles = Settings.get('plant_profiles', {})
+    
+    # Get all available pumps for components
+    pumps = Pump.query.filter(
+        Pump.type.in_(['nutrient', 'ph_up', 'ph_down']),
+        Pump.enabled == True
+    ).all()
+    
     if request.method == 'POST':
-        # Get profile details from form
+        # Get form data
         name = request.form.get('name')
         description = request.form.get('description')
         ph_setpoint = request.form.get('ph_setpoint', type=float)
         ph_buffer = request.form.get('ph_buffer', type=float)
-        ec_setpoint = request.form.get('ec_setpoint', type=float)
-        ec_buffer = request.form.get('ec_buffer', type=float)
+        ec_setpoint = request.form.get('ec_setpoint', type=int)
+        ec_buffer = request.form.get('ec_buffer', type=int)
         temp_min = request.form.get('temp_min', type=float)
         temp_max = request.form.get('temp_max', type=float)
         
-        # Get nutrient components
+        # Check if weekly schedule should be used
+        use_weekly_schedule = 'use_weekly_schedule' in request.form
+        total_weeks = request.form.get('total_weeks', type=int) if use_weekly_schedule else None
+        growth_phases_text = request.form.get('growth_phases') if use_weekly_schedule else None
+        
+        # Process nutrient components
         component_pumps = request.form.getlist('component_pumps[]')
         component_ratios = request.form.getlist('component_ratios[]')
         
-        # Validate input
+        # Validate form data
         if not name:
-            flash('Profile name is required', 'error')
+            flash('Profile name is required.', 'error')
             return redirect(url_for('dosing.add_profile'))
         
-        if not component_pumps:
-            flash('At least one nutrient component is required', 'error')
+        # Create a profile ID from the name
+        profile_id = name.lower().replace(' ', '_')
+        
+        # Check if profile already exists
+        if profile_id in plant_profiles:
+            flash(f'A profile with the name "{name}" already exists.', 'error')
             return redirect(url_for('dosing.add_profile'))
         
-        # Generate a unique profile ID
-        profile_id = f"custom_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        
-        # Get existing profiles
-        plant_profiles = Settings.get('plant_profiles', {})
-        
-        # Create nutrient components from form data
-        nutrient_components = []
-        for i in range(len(component_pumps)):
-            if i < len(component_ratios):
-                pump_id = int(component_pumps[i])
-                ratio = float(component_ratios[i])
-                pump = Pump.query.get(pump_id)
-                
-                if pump:
-                    nutrient_components.append({
-                        'pump_id': pump_id,
-                        'pump_name': pump.name,
-                        'ratio': ratio
-                    })
-        
-        # Create the new profile
-        plant_profiles[profile_id] = {
+        # Create base profile
+        new_profile = {
             'name': name,
-            'description': description or f"Custom profile for {name}",
+            'description': description,
             'ph_setpoint': ph_setpoint or 6.0,
             'ph_buffer': ph_buffer or 0.2,
             'ec_setpoint': ec_setpoint or 1350,
             'ec_buffer': ec_buffer or 150,
             'temp_min': temp_min or 18.0,
             'temp_max': temp_max or 28.0,
-            'nutrient_components': nutrient_components,
-            'custom': True
+            'custom': True,
+            'nutrient_ratios': {
+                'grow': 1.0,
+                'bloom': 1.0,
+                'micro': 1.0,
+                'calmag': 0.5
+            },
+            'nutrient_components': []
         }
         
-        # Save to database
+        # Set up weekly schedule if requested
+        if use_weekly_schedule and total_weeks:
+            new_profile['weekly_schedules'] = {}
+            new_profile['total_weeks'] = total_weeks
+            new_profile['current_week'] = 1
+            
+            # Create default weekly schedules
+            for week in range(1, total_weeks + 1):
+                new_profile['weekly_schedules'][str(week)] = {
+                    'ec_setpoint': ec_setpoint,
+                    'nutrient_ratios': new_profile['nutrient_ratios'].copy()
+                }
+            
+            # Store growth phases if provided
+            if growth_phases_text:
+                new_profile['growth_phases'] = growth_phases_text
+        
+        # Process nutrient components
+        components = []
+        for i in range(min(len(component_pumps), len(component_ratios))):
+            pump_id = component_pumps[i]
+            ratio = float(component_ratios[i])
+            
+            # Find the pump
+            pump = next((p for p in pumps if str(p.id) == pump_id), None)
+            if pump:
+                # Add component
+                component = {
+                    'pump_id': pump.id,
+                    'pump_name': pump.name,
+                    'nutrient_name': pump.nutrient_name,
+                    'ratio': ratio,
+                    'type': pump.type
+                }
+                components.append(component)
+        
+        new_profile['nutrient_components'] = components
+        
+        # Save the new profile
+        plant_profiles[profile_id] = new_profile
         Settings.set('plant_profiles', plant_profiles)
         
-        flash(f'Plant profile "{name}" added successfully', 'success')
+        # Run auto-configuration to update nutrient components
+        update_result = Settings.auto_configure_nutrient_components()
+        
+        flash(f'Plant profile "{name}" added successfully. {update_result}', 'success')
         return redirect(url_for('dosing.profiles'))
     
     # For GET requests, show the add profile form
-    # Get all nutrient pumps for the components section
-    nutrient_pumps = Pump.query.filter(
-        Pump.type == 'nutrient',
-        Pump.enabled == True
-    ).all()
+    # Create empty profile for the template
+    empty_profile = {
+        'name': '',
+        'description': '',
+        'ph_setpoint': 6.0,
+        'ph_buffer': 0.2,
+        'ec_setpoint': 1350,
+        'ec_buffer': 150,
+        'temp_min': 18.0,
+        'temp_max': 28.0,
+        'nutrient_components': [],
+        'nutrient_ratios': {
+            'grow': 1.0,
+            'bloom': 1.0,
+            'micro': 1.0,
+            'calmag': 0.5
+        }
+    }
     
-    return render_template('dosing/profile_form.html', profile=None, action='add', pumps=nutrient_pumps)
+    return render_template(
+        'dosing/profile_form.html',
+        profile=empty_profile,
+        action='add',
+        pumps=pumps
+    )
 
 @dosing_bp.route('/profiles/edit/<profile_id>', methods=['GET', 'POST'])
 def edit_profile(profile_id):
@@ -524,91 +587,272 @@ def edit_profile(profile_id):
     # Get all plant profiles
     plant_profiles = Settings.get('plant_profiles', {})
     
-    # Check if profile exists
-    if profile_id not in plant_profiles:
-        flash('Profile not found', 'error')
-        return redirect(url_for('dosing.profiles'))
-    
-    # Get the profile
-    profile = plant_profiles[profile_id]
-    
-    # Check if this is a default profile
-    default_profiles = ['general', 'leafy_greens', 'fruiting', 'herbs', 'strawberries']
-    if profile_id in default_profiles:
-        flash('Default profiles cannot be edited', 'error')
-        return redirect(url_for('dosing.profiles'))
-    
-    if request.method == 'POST':
-        # Get profile details from form
-        name = request.form.get('name')
-        description = request.form.get('description')
-        ph_setpoint = request.form.get('ph_setpoint', type=float)
-        ph_buffer = request.form.get('ph_buffer', type=float)
-        ec_setpoint = request.form.get('ec_setpoint', type=float)
-        ec_buffer = request.form.get('ec_buffer', type=float)
-        temp_min = request.form.get('temp_min', type=float)
-        temp_max = request.form.get('temp_max', type=float)
-        
-        # Get nutrient components
-        component_pumps = request.form.getlist('component_pumps[]')
-        component_ratios = request.form.getlist('component_ratios[]')
-        
-        # Validate input
-        if not name:
-            flash('Profile name is required', 'error')
-            return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
-        
-        if not component_pumps:
-            flash('At least one nutrient component is required', 'error')
-            return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
-        
-        # Create nutrient components from form data
-        nutrient_components = []
-        for i in range(len(component_pumps)):
-            if i < len(component_ratios):
-                pump_id = int(component_pumps[i])
-                ratio = float(component_ratios[i])
-                pump = Pump.query.get(pump_id)
-                
-                if pump:
-                    nutrient_components.append({
-                        'pump_id': pump_id,
-                        'pump_name': pump.name,
-                        'ratio': ratio
-                    })
-        
-        # Update the profile
-        profile['name'] = name
-        profile['description'] = description or f"Custom profile for {name}"
-        profile['ph_setpoint'] = ph_setpoint or 6.0
-        profile['ph_buffer'] = ph_buffer or 0.2
-        profile['ec_setpoint'] = ec_setpoint or 1350
-        profile['ec_buffer'] = ec_buffer or 150
-        profile['temp_min'] = temp_min or 18.0
-        profile['temp_max'] = temp_max or 28.0
-        profile['nutrient_components'] = nutrient_components
-        
-        # Save to database
-        plant_profiles[profile_id] = profile
-        Settings.set('plant_profiles', plant_profiles)
-        
-        flash(f'Plant profile "{name}" updated successfully', 'success')
-        return redirect(url_for('dosing.profiles'))
-    
-    # For GET requests, show the edit profile form
-    # Get all nutrient pumps for the components section
-    nutrient_pumps = Pump.query.filter(
-        Pump.type == 'nutrient',
+    # Get all pumps for nutrient components
+    pumps = Pump.query.filter(
+        Pump.type.in_(['nutrient', 'ph_up', 'ph_down']),
         Pump.enabled == True
     ).all()
     
-    return render_template(
-        'dosing/profile_form.html',
-        profile=profile,
-        profile_id=profile_id,
-        action='edit',
-        pumps=nutrient_pumps
-    )
+    # Check if profile exists
+    if profile_id not in plant_profiles:
+        flash('Profile not found.', 'error')
+        return redirect(url_for('dosing.profiles'))
+    
+    profile = plant_profiles[profile_id]
+    has_weekly_schedule = bool(profile.get('weekly_schedules', {}))
+    
+    if has_weekly_schedule:
+        # Get weekly schedule data
+        weekly_schedules = profile.get('weekly_schedules', {})
+        current_week = profile.get('current_week', 1)
+        total_weeks = profile.get('total_weeks', 12)
+        
+        # Get current week schedule
+        current_week_str = str(current_week)
+        current_schedule = weekly_schedules.get(current_week_str, {})
+        
+        # Make sure we have entries for each week up to total_weeks
+        for week in range(1, total_weeks + 1):
+            week_str = str(week)
+            if week_str not in weekly_schedules:
+                # Create a default schedule for this week
+                weekly_schedules[week_str] = {
+                    'ec_setpoint': profile.get('ec_setpoint', 1200),
+                    'nutrient_ratios': profile.get('nutrient_ratios', {
+                        'grow': 1.0,
+                        'bloom': 1.0,
+                        'micro': 1.0,
+                        'calmag': 1.0
+                    })
+                }
+        
+        # Sort the weeks for display
+        sorted_weeks = sorted([str(i) for i in range(1, total_weeks + 1)], key=int)
+        
+        # Get growth phase label
+        growth_phase = get_growth_phase_for_week(profile, current_week)
+    
+    if request.method == 'POST':
+        # Check if this is a weekly schedule action
+        if has_weekly_schedule and 'action' in request.form:
+            action = request.form.get('action')
+            
+            if action == 'set_week':
+                new_week = request.form.get('week', type=int)
+                if new_week and 1 <= new_week <= total_weeks:
+                    old_week = current_week
+                    # Update the week
+                    profile['current_week'] = new_week
+                    plant_profiles[profile_id] = profile
+                    Settings.set('plant_profiles', plant_profiles)
+                    
+                    # Run auto-configuration to update nutrient components
+                    update_result = Settings.auto_configure_nutrient_components()
+                    
+                    flash(f'Growth cycle week updated from Week {old_week} to Week {new_week}. {update_result}', 'success')
+                    return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+                else:
+                    flash(f'Invalid week value: {new_week}. Week must be between 1 and {total_weeks}', 'error')
+                    return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+            
+            elif action == 'next_week':
+                next_week = current_week + 1
+                if next_week <= total_weeks:
+                    # Update to next week
+                    profile['current_week'] = next_week
+                    plant_profiles[profile_id] = profile
+                    Settings.set('plant_profiles', plant_profiles)
+                    
+                    # Run auto-configuration to update nutrient components
+                    update_result = Settings.auto_configure_nutrient_components()
+                    
+                    flash(f'Advanced to Week {next_week}. {update_result}', 'success')
+                else:
+                    flash(f'Already at the last week of the growth cycle.', 'info')
+                
+                return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+            
+            elif action == 'reset_cycle':
+                # Reset to week 1
+                profile['current_week'] = 1
+                plant_profiles[profile_id] = profile
+                Settings.set('plant_profiles', plant_profiles)
+                
+                # Run auto-configuration to update nutrient components
+                update_result = Settings.auto_configure_nutrient_components()
+                
+                flash(f'Growth cycle reset to Week 1. {update_result}', 'success')
+                return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+        
+        # Process form submission for profile editing
+        else:
+            # Get form data
+            name = request.form.get('name')
+            description = request.form.get('description')
+            ph_setpoint = request.form.get('ph_setpoint', type=float)
+            ph_buffer = request.form.get('ph_buffer', type=float)
+            ec_setpoint = request.form.get('ec_setpoint', type=int)
+            ec_buffer = request.form.get('ec_buffer', type=int)
+            temp_min = request.form.get('temp_min', type=float)
+            temp_max = request.form.get('temp_max', type=float)
+            
+            # Check if weekly schedule should be used
+            use_weekly_schedule = 'use_weekly_schedule' in request.form
+            total_weeks = request.form.get('total_weeks', type=int) if use_weekly_schedule else None
+            growth_phases_text = request.form.get('growth_phases') if use_weekly_schedule else None
+            
+            # Process component pumps and ratios
+            component_pumps = request.form.getlist('component_pumps[]')
+            component_ratios = request.form.getlist('component_ratios[]')
+            
+            # Validate required fields
+            if not name:
+                flash('Profile name is required.', 'error')
+                return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+            
+            if not ph_setpoint or not ph_buffer or not ec_setpoint or not ec_buffer:
+                flash('pH and EC settings are required.', 'error')
+                return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+            
+            # Update profile data
+            profile['name'] = name
+            profile['description'] = description
+            profile['ph_setpoint'] = ph_setpoint
+            profile['ph_buffer'] = ph_buffer
+            profile['ec_setpoint'] = ec_setpoint
+            profile['ec_buffer'] = ec_buffer
+            profile['temp_min'] = temp_min
+            profile['temp_max'] = temp_max
+            
+            # Handle weekly schedule
+            if use_weekly_schedule:
+                if not profile.get('weekly_schedules'):
+                    profile['weekly_schedules'] = {}
+                
+                if total_weeks:
+                    profile['total_weeks'] = total_weeks
+                    
+                    # Ensure we have weekly_schedules for all weeks
+                    for week in range(1, total_weeks + 1):
+                        week_str = str(week)
+                        if week_str not in profile['weekly_schedules']:
+                            profile['weekly_schedules'][week_str] = {
+                                'ec_setpoint': ec_setpoint,
+                                'nutrient_ratios': profile.get('nutrient_ratios', {
+                                    'grow': 1.0,
+                                    'bloom': 1.0,
+                                    'micro': 1.0,
+                                    'calmag': 1.0
+                                })
+                            }
+                
+                # Set current week if not already set
+                if not profile.get('current_week'):
+                    profile['current_week'] = 1
+                
+                # Process growth phases
+                if growth_phases_text:
+                    profile['growth_phases'] = growth_phases_text
+            else:
+                # Remove weekly schedule if it exists
+                if 'weekly_schedules' in profile:
+                    del profile['weekly_schedules']
+                if 'current_week' in profile:
+                    del profile['current_week']
+                if 'total_weeks' in profile:
+                    del profile['total_weeks']
+                if 'growth_phases' in profile:
+                    del profile['growth_phases']
+            
+            # Update nutrient components
+            components = []
+            for i in range(min(len(component_pumps), len(component_ratios))):
+                pump_id = component_pumps[i]
+                ratio = float(component_ratios[i])
+                
+                # Find the pump
+                pump = next((p for p in pumps if str(p.id) == pump_id), None)
+                if pump:
+                    # Add component
+                    component = {
+                        'pump_id': pump.id,
+                        'pump_name': pump.name,
+                        'nutrient_name': pump.nutrient_name,
+                        'ratio': ratio,
+                        'type': pump.type
+                    }
+                    components.append(component)
+            
+            profile['nutrient_components'] = components
+            
+            # Save changes
+            plant_profiles[profile_id] = profile
+            Settings.set('plant_profiles', plant_profiles)
+            
+            # Run auto-configuration to update any dependent components
+            update_result = Settings.auto_configure_nutrient_components()
+            
+            flash(f'Profile updated successfully. {update_result}', 'success')
+            return redirect(url_for('dosing.profiles'))
+    
+    # Prepare template context
+    context = {
+        'action': 'edit',
+        'profile_id': profile_id,
+        'profile': profile,
+        'pumps': pumps
+    }
+    
+    # Add weekly schedule variables to context if needed
+    if has_weekly_schedule:
+        context.update({
+            'weekly_schedules': weekly_schedules,
+            'current_week': current_week,
+            'total_weeks': total_weeks,
+            'current_schedule': current_schedule,
+            'sorted_weeks': sorted_weeks,
+            'growth_phase': growth_phase
+        })
+    
+    return render_template('dosing/profile_form.html', **context)
+
+def get_growth_phase_for_week(profile, week_num):
+    """Get the growth phase label for a given week"""
+    # If profile has defined growth phases, use those
+    if 'growth_phases' in profile:
+        phases_text = profile['growth_phases']
+        phases = {}
+        
+        # Parse the growth phases text
+        for line in phases_text.strip().split('\n'):
+            if ':' in line:
+                weeks_range, phase_name = line.split(':', 1)
+                weeks_range = weeks_range.strip()
+                phase_name = phase_name.strip()
+                
+                # Handle ranges like "1-3" or single values like "4"
+                if '-' in weeks_range:
+                    start, end = map(int, weeks_range.split('-'))
+                    for w in range(start, end + 1):
+                        phases[w] = phase_name
+                else:
+                    phases[int(weeks_range)] = phase_name
+        
+        return phases.get(week_num, "Unknown")
+    
+    # Default phases for compatibility
+    if 1 <= week_num <= 2:
+        return "Seedling"
+    elif 3 <= week_num <= 5:
+        return "Vegetative"
+    elif week_num == 6:
+        return "Pre-Flower"
+    elif 7 <= week_num <= 11:
+        return "Flowering"
+    elif week_num == 12:
+        return "Flush"
+    else:
+        return "Unknown"
 
 @dosing_bp.route('/profiles/delete/<profile_id>', methods=['POST'])
 def delete_profile(profile_id):
@@ -817,4 +1061,60 @@ def nutrients():
             {'id': 'calmag', 'name': 'CalMag'},
             {'id': 'other', 'name': 'Other'}
         ]
+    )
+
+@dosing_bp.route('/profiles/schedule/<profile_id>')
+def profile_schedule(profile_id):
+    """Weekly schedule management for a specific profile"""
+    # Get the profile data
+    plant_profiles = Settings.get('plant_profiles', {})
+    
+    # Check if profile exists
+    if profile_id not in plant_profiles:
+        flash('Profile not found.', 'error')
+        return redirect(url_for('dosing.profiles'))
+    
+    profile = plant_profiles[profile_id]
+    
+    # Check if profile has weekly schedules
+    if not profile.get('weekly_schedules'):
+        flash('This profile does not use weekly schedules.', 'info')
+        return redirect(url_for('dosing.edit_profile', profile_id=profile_id))
+    
+    weekly_schedules = profile.get('weekly_schedules', {})
+    current_week = profile.get('current_week', 1)
+    total_weeks = profile.get('total_weeks', 12)
+    
+    # Make sure we have entries for each week up to total_weeks
+    for week in range(1, total_weeks + 1):
+        week_str = str(week)
+        if week_str not in weekly_schedules:
+            # Create a default schedule for this week
+            weekly_schedules[week_str] = {
+                'ec_setpoint': profile.get('ec_setpoint', 1200),
+                'nutrient_ratios': profile.get('nutrient_ratios', {
+                    'grow': 1.0,
+                    'bloom': 1.0,
+                    'micro': 1.0,
+                    'calmag': 1.0
+                })
+            }
+    
+    # Sort the weeks for display
+    sorted_weeks = sorted([str(i) for i in range(1, total_weeks + 1)], key=int)
+    
+    # Get growth phase labels for each week
+    growth_phases = {}
+    for week in range(1, total_weeks + 1):
+        growth_phases[week] = get_growth_phase_for_week(profile, week)
+    
+    return render_template(
+        'dosing/profile_schedule.html',
+        profile=profile,
+        profile_id=profile_id,
+        current_week=current_week,
+        total_weeks=total_weeks,
+        weekly_schedules=weekly_schedules,
+        sorted_weeks=sorted_weeks,
+        growth_phases=growth_phases
     ) 
