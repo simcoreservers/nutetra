@@ -725,7 +725,7 @@ def profile_form():
     pass
 
 @dosing_bp.route('/nutrients', methods=['GET'])
-def nutrient_database():
+def nutrients():
     """Display and manage nutrient database"""
     # Get all nutrient brands and products
     brands = NutrientBrand.query.all()
