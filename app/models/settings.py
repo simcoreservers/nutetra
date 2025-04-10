@@ -405,17 +405,19 @@ class Settings(db.Model):
                             nutrient_type = nutrient_product.nutrient_type
                         # If not explicitly defined in the database, determine type based on name
                         else:
-                            # Check for Flora Gro and other grow nutrients
-                            if pump.nutrient_name == 'Flora Gro' or 'grow' in pump.nutrient_name.lower() or 'gro' in pump.nutrient_name.lower():
+                            nutrient_name_lower = pump.nutrient_name.lower() if pump.nutrient_name else ''
+                            
+                            # Determine type based on generic terms in the name
+                            if 'grow' in nutrient_name_lower or 'gro' in nutrient_name_lower:
                                 nutrient_type = 'grow'
                             # Check for bloom nutrients
-                            elif 'bloom' in pump.nutrient_name.lower():
+                            elif 'bloom' in nutrient_name_lower:
                                 nutrient_type = 'bloom'
                             # Check for micro nutrients
-                            elif 'micro' in pump.nutrient_name.lower():
+                            elif 'micro' in nutrient_name_lower:
                                 nutrient_type = 'micro'
                             # Check for cal-mag nutrients
-                            elif 'cal' in pump.nutrient_name.lower() and 'mag' in pump.nutrient_name.lower():
+                            elif ('cal' in nutrient_name_lower and 'mag' in nutrient_name_lower) or 'calmag' in nutrient_name_lower:
                                 nutrient_type = 'calmag'
                     
                     # Skip if pump is a duplicate of an existing type
