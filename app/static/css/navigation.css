@@ -4,13 +4,15 @@
 .nav-section > a {
     position: relative;
     padding-right: 35px; /* Add more padding to make room for the icon */
+    align-items: flex-start; /* Align to top when text wraps */
+    min-height: 44px; /* Ensure enough height for icon */
 }
 
 .nav-section .toggle-icon {
     position: absolute;
     right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 12px; /* Fixed position from top instead of 50% */
+    transform: translateY(0); /* No vertical centering */
     transition: all 0.3s ease;
     font-size: 1rem; /* Slightly larger icon */
     opacity: 0.9; /* More visible */
@@ -27,13 +29,14 @@
 /* Fix for shorter text items where text might overlap with icon */
 .nav-section > a span {
     max-width: calc(100% - 40px); /* Leave space for icon */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal; /* Allow text to wrap */
+    word-wrap: break-word; /* Break long words if needed */
+    overflow: visible; /* Show overflow content */
+    padding-right: 5px; /* Add a little extra padding */
 }
 
 .nav-section.expanded .toggle-icon {
-    transform: translateY(-50%);
+    transform: translateY(0);
 }
 
 /* Submenu transitions for collapsible navigation - controls animation only */
