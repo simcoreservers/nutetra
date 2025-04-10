@@ -157,6 +157,136 @@ class Settings(db.Model):
                     'micro': 1.0,  # Normal micro nutrients
                     'calmag': 1.2  # Higher calcium for fruit quality
                 }
+            },
+            'cannabis': {
+                'name': 'Cannabis',
+                'description': 'Optimized weekly schedule for cannabis cultivation',
+                'ph_setpoint': 6.0,
+                'ph_buffer': 0.2,
+                'ec_setpoint': 1200,  # Base EC that will be adjusted per growth stage
+                'ec_buffer': 150,
+                'temp_min': 21.0,
+                'temp_max': 27.0,
+                'nutrient_components': [],
+                'custom': False,
+                'current_week': 1,  # Track the current grow week
+                'total_weeks': 12,  # Total grow cycle length
+                'nutrient_ratios': {
+                    'grow': 1.0,    # Default ratio if no weekly schedule
+                    'bloom': 1.0,   # Default ratio if no weekly schedule
+                    'micro': 1.0,   # Default ratio if no weekly schedule
+                    'calmag': 1.0   # Default ratio if no weekly schedule
+                },
+                'weekly_schedules': {
+                    '1': {  # Seedling - Week 1
+                        'ec_setpoint': 500,
+                        'nutrient_ratios': {
+                            'grow': 1.0,    # Balanced nitrogen
+                            'bloom': 0.0,   # No bloom nutrients
+                            'micro': 0.5,   # Low micronutrients
+                            'calmag': 0.25  # Low calcium/magnesium
+                        }
+                    },
+                    '2': {  # Seedling - Week 2
+                        'ec_setpoint': 700,
+                        'nutrient_ratios': {
+                            'grow': 1.5,    # Higher nitrogen
+                            'bloom': 0.0,   # No bloom nutrients
+                            'micro': 0.75,  # Increased micronutrients
+                            'calmag': 0.5   # Increased calcium/magnesium
+                        }
+                    },
+                    '3': {  # Vegetative - Week 3
+                        'ec_setpoint': 900,
+                        'nutrient_ratios': {
+                            'grow': 2.0,    # High nitrogen for vegetative growth
+                            'bloom': 0.25,  # Very low bloom nutrients
+                            'micro': 1.0,   # Full micronutrients
+                            'calmag': 1.0   # Full calcium/magnesium
+                        }
+                    },
+                    '4': {  # Vegetative - Week 4
+                        'ec_setpoint': 1000,
+                        'nutrient_ratios': {
+                            'grow': 2.0,    # High nitrogen for vegetative growth
+                            'bloom': 0.5,   # Low bloom nutrients
+                            'micro': 1.0,   # Full micronutrients
+                            'calmag': 1.0   # Full calcium/magnesium
+                        }
+                    },
+                    '5': {  # Vegetative - Week 5
+                        'ec_setpoint': 1100,
+                        'nutrient_ratios': {
+                            'grow': 2.0,    # High nitrogen for vegetative growth
+                            'bloom': 0.5,   # Low bloom nutrients
+                            'micro': 1.0,   # Full micronutrients
+                            'calmag': 1.0   # Full calcium/magnesium
+                        }
+                    },
+                    '6': {  # Pre-Flower - Week 6
+                        'ec_setpoint': 1100,
+                        'nutrient_ratios': {
+                            'grow': 1.5,    # Reduced nitrogen
+                            'bloom': 1.0,   # Increased bloom nutrients
+                            'micro': 1.0,   # Full micronutrients
+                            'calmag': 1.0   # Full calcium/magnesium
+                        }
+                    },
+                    '7': {  # Early Flower - Week 7
+                        'ec_setpoint': 1200,
+                        'nutrient_ratios': {
+                            'grow': 1.0,    # Reduced nitrogen
+                            'bloom': 1.5,   # Increased bloom nutrients
+                            'micro': 1.0,   # Full micronutrients
+                            'calmag': 1.5   # Increased calcium for flowering
+                        }
+                    },
+                    '8': {  # Mid Flower - Week 8
+                        'ec_setpoint': 1400,
+                        'nutrient_ratios': {
+                            'grow': 0.5,    # Lower nitrogen
+                            'bloom': 2.0,   # High bloom nutrients
+                            'micro': 1.0,   # Full micronutrients
+                            'calmag': 1.5   # High calcium/magnesium
+                        }
+                    },
+                    '9': {  # Mid Flower - Week 9
+                        'ec_setpoint': 1400,
+                        'nutrient_ratios': {
+                            'grow': 0.5,    # Lower nitrogen
+                            'bloom': 2.0,   # High bloom nutrients
+                            'micro': 1.0,   # Full micronutrients
+                            'calmag': 1.5   # High calcium/magnesium
+                        }
+                    },
+                    '10': {  # Late Flower - Week 10
+                        'ec_setpoint': 1300,
+                        'nutrient_ratios': {
+                            'grow': 0.25,   # Very low nitrogen
+                            'bloom': 2.0,   # High bloom nutrients
+                            'micro': 1.0,   # Full micronutrients
+                            'calmag': 1.0   # Full calcium/magnesium
+                        }
+                    },
+                    '11': {  # Late Flower - Week 11
+                        'ec_setpoint': 1200,
+                        'nutrient_ratios': {
+                            'grow': 0.0,    # No nitrogen
+                            'bloom': 1.5,   # Reduced bloom nutrients
+                            'micro': 0.5,   # Reduced micronutrients
+                            'calmag': 0.5   # Reduced calcium/magnesium
+                        }
+                    },
+                    '12': {  # Flush - Week 12
+                        'ec_setpoint': 400,
+                        'nutrient_ratios': {
+                            'grow': 0.0,    # No nutrients during flush
+                            'bloom': 0.0,   # No nutrients during flush
+                            'micro': 0.0,   # No nutrients during flush
+                            'calmag': 0.0   # No nutrients during flush
+                        }
+                    }
+                }
             }
         }
 
@@ -246,6 +376,7 @@ class Settings(db.Model):
                     nutrient_type = 'micro'
                 # Detect Grow type (high nitrogen)
                 elif ('grow' in pump_name_lower or 'grow' in nutrient_name_lower or 
+                      'gro' in pump_name_lower or 'gro' in nutrient_name_lower or 
                       'veg' in pump_name_lower or 'veg' in nutrient_name_lower):
                     nutrient_type = 'grow'
                 # Detect Bloom type (high phosphorus/potassium)
@@ -265,7 +396,24 @@ class Settings(db.Model):
                 # Get the appropriate ratio from profile's nutrient_ratios
                 # Default to 1.0 if nutrient_ratios is not defined or doesn't have this type
                 default_ratio = 1.0
-                profile_ratios = profile.get('nutrient_ratios', {})
+                profile_ratios = None
+                
+                # Check if this profile has weekly schedules and a current week
+                if 'weekly_schedules' in profile and 'current_week' in profile:
+                    current_week = str(profile['current_week'])
+                    if current_week in profile.get('weekly_schedules', {}):
+                        weekly_schedule = profile['weekly_schedules'][current_week]
+                        # Use the weekly schedule's nutrient ratios
+                        profile_ratios = weekly_schedule.get('nutrient_ratios', {})
+                        
+                        # Also update the EC setpoint for this profile if specified in the weekly schedule
+                        if 'ec_setpoint' in weekly_schedule:
+                            profile['ec_setpoint'] = weekly_schedule['ec_setpoint']
+                
+                # If no weekly schedule found or not using weekly schedules, use the default profile ratios
+                if not profile_ratios:
+                    profile_ratios = profile.get('nutrient_ratios', {})
+                
                 ratio = profile_ratios.get(nutrient_type, default_ratio)
                 
                 # Add the component

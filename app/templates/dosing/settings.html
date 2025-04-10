@@ -94,6 +94,13 @@
                                 <i class="fas fa-seedling"></i> Manage Plant Profiles
                             </a>
                             <p class="helper-text">Create, edit, or delete custom plant profiles</p>
+                            
+                            {% if settings.active_plant_profile == 'cannabis' %}
+                            <a href="{{ url_for('dosing.grow_cycle') }}" class="profile-link cannabis-link">
+                                <i class="fas fa-calendar-alt"></i> Manage Cannabis Grow Cycle
+                            </a>
+                            <p class="helper-text">Track and update your grow week to adjust nutrient schedules</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -282,6 +289,17 @@
     
     .recipe-link:hover, .profile-link:hover {
         background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .profile-link.cannabis-link {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+        margin-top: 10px;
+    }
+    
+    .profile-link.cannabis-link:hover {
+        background-color: #4CAF50;
         color: white;
     }
     
