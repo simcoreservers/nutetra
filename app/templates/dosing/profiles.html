@@ -71,7 +71,6 @@
                             </div>
                             <div class="dosing-sequence">
                                 <span class="sequence-title">Dosing Sequence:</span>
-                                <span class="sequence-note">Cal-Mag is added first for optimal nutrient absorption</span>
                                 <ul>
                                     {% for component in profile.nutrient_components %}
                                     <li class="{% if component.nutrient_type %}nutrient-type-{{ component.nutrient_type }}{% endif %}" 
@@ -93,40 +92,6 @@
                                 </ul>
                             </div>
                         </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Debug Information -->
-                    <div class="debug-info" style="margin-top: 15px; padding: 10px; border: 1px solid #333; font-size: 0.8rem; background: #111;">
-                        <strong>Debug Info:</strong><br>
-                        Components count: {{ profile.nutrient_components|length }}<br>
-                        {% for component in profile.nutrient_components %}
-                            {{ component.nutrient_type }} (Order: {{ component.dosing_order }}) - {{ component.pump_name }}<br>
-                        {% endfor %}
-                    </div>
-                    
-                    <div class="profile-actions">
-                        {% if profile_id != active_profile %}
-                        <a href="{{ url_for('dosing.activate_profile', profile_id=profile_id) }}" class="action-button primary">
-                            <i class="fas fa-check"></i> Activate
-                        </a>
-                        {% else %}
-                        <span class="active-label">
-                            <i class="fas fa-check-circle"></i> Active
-                        </span>
-                        {% endif %}
-                        <a href="{{ url_for('dosing.edit_profile', profile_id=profile_id) }}" class="action-button">
-                            <i class="fas fa-pencil-alt"></i> Edit
-                        </a>
-                        {% if profile.weekly_schedules %}
-                        <a href="{{ url_for('dosing.profile_schedule', profile_id=profile_id) }}" class="action-button">
-                            <i class="fas fa-calendar-alt"></i> Schedule
-                        </a>
-                        {% endif %}
-                        {% if profile.get('custom', False) %}
-                        <a href="{{ url_for('dosing.delete_profile', profile_id=profile_id) }}" class="action-button danger">
-                            <i class="fas fa-trash-alt"></i> Delete
-                        </a>
                         {% endif %}
                     </div>
                 </div>
@@ -224,37 +189,36 @@
     
     .profile-actions {
         display: flex;
-        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+        border-top: 1px solid var(--border-color);
+        background-color: var(--bg-color-light);
         justify-content: flex-end;
-        gap: 8px;
-        margin-top: 15px;
     }
     
-    /* Update button styling to match pumps page */
+    /* Update button styling to match pumps page exactly */
     .action-button {
         padding: 6px 12px;
-        font-size: 0.9rem;
-        background-color: var(--bg-color-light);
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
+        border-radius: var(--border-radius);
+        border: none;
         cursor: pointer;
+        background-color: var(--bg-color-dark);
+        color: var(--text-color);
+        font-size: 0.9rem;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        transition: background-color 0.2s, color 0.2s;
-        margin: 2px;
+        gap: 5px;
+        transition: all 0.2s;
     }
     
     .action-button:hover {
-        background-color: var(--bg-color-dark);
+        background-color: var(--primary-color);
+        color: white;
     }
     
     .action-button.primary {
         background-color: var(--primary-color);
         color: white;
-        border-color: var(--primary-color);
     }
     
     .action-button.primary:hover {
@@ -272,7 +236,7 @@
     }
     
     .action-button i {
-        margin-right: 6px;
+        margin-right: 5px;
     }
     
     .active-label {
