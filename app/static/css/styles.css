@@ -252,7 +252,7 @@ input:focus, select:focus, textarea:focus {
 .submenu {
     list-style: none;
     background-color: var(--bg-color-darker);
-    padding-left: 10px;
+    padding-left: 0px;
 }
 
 .submenu li {
@@ -260,7 +260,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .submenu a {
-    padding-left: 25px;
+    padding-left: var(--spacing-md);
     font-size: 0.9rem;
 }
 
