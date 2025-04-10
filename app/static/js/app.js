@@ -34,59 +34,31 @@ function initSidebar() {
     backdrop.className = 'sidebar-backdrop';
     body.appendChild(backdrop);
     
-    // Toggle sidebar on mobile
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            sidebar.classList.toggle('active');
-            backdrop.classList.toggle('active');
-            // Prevent body scrolling when sidebar is open
-            if (sidebar.classList.contains('active')) {
-                body.style.overflow = 'hidden';
-            } else {
-                body.style.overflow = '';
+    // Set up mobile-only sidebar backdrop behavior
+    // This is separate from the navigation toggle behavior
+    if (window.innerWidth <= 768) {
+        // Close sidebar when clicking on backdrop (mobile only)
+        backdrop.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            backdrop.classList.remove('active');
+            body.style.overflow = '';
+        });
+        
+        // On mobile, add a handler to close the sidebar when navigating to a new page
+        document.querySelectorAll('.submenu a:not(.coming-soon)').forEach(link => {
+            // We only care about actual navigation links
+            if (link.getAttribute('href') !== '#' && !link.getAttribute('href').startsWith('javascript')) {
+                link.addEventListener('click', function() {
+                    // Use setTimeout to ensure this runs after other click handlers
+                    setTimeout(() => {
+                        sidebar.classList.remove('active');
+                        backdrop.classList.remove('active');
+                        body.style.overflow = '';
+                    }, 50);
+                });
             }
         });
     }
-    
-    // Close sidebar when clicking on backdrop
-    backdrop.addEventListener('click', function() {
-        sidebar.classList.remove('active');
-        backdrop.classList.remove('active');
-        body.style.overflow = '';
-    });
-    
-    // Setup submenu toggles with better touch support
-    const menuItems = document.querySelectorAll('.sidebar-nav > ul > li');
-    menuItems.forEach(item => {
-        const submenu = item.querySelector('.submenu');
-        if (submenu) {
-            // We don't need to add click handlers to the section headers here
-            // as they're already handled in the base.html script
-            
-            // Only handle mobile sidebar state for submenu links
-            if (window.innerWidth <= 768) {
-                // This closure ensures we don't interfere with existing handlers
-                (function() {
-                    // For mobile, close the sidebar after navigating
-                    // without affecting menu toggle behavior
-                    submenu.querySelectorAll('a:not(.coming-soon)').forEach(link => {
-                        // We're only adding this handler to links that navigate
-                        // away from the current page
-                        link.addEventListener('click', function() {
-                            // Only close the sidebar, don't affect menu state
-                            setTimeout(() => {
-                                sidebar.classList.remove('active');
-                                backdrop.classList.remove('active');
-                                body.style.overflow = '';
-                            }, 50);
-                        });
-                    });
-                })();
-            }
-        }
-    });
     
     // Handle window resize
     window.addEventListener('resize', function() {
