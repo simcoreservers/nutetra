@@ -243,28 +243,6 @@
             <div class="page-content">
                 {% block content %}{% endblock %}
             </div>
-            
-            <!-- Page Footer with Related Links -->
-            <footer class="page-footer">
-                <div class="related-links">
-                    <h4>Related Pages</h4>
-                    <div class="links-container">
-                        {% block related_links %}
-                        <!-- Default related links - pages will override this -->
-                        <a href="{{ url_for('main.index') }}" class="related-link">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                        {% endblock %}
-                    </div>
-                </div>
-                {% if request.path != url_for('main.index') %}
-                <div class="back-navigation">
-                    <a href="javascript:history.back()" class="button back-button">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </a>
-                </div>
-                {% endif %}
-            </footer>
         </main>
     </div>
     
