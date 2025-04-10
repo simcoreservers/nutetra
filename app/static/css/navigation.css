@@ -39,21 +39,25 @@
     transform: translateY(-50%);
 }
 
-/* Submenu transitions for collapsible navigation - controls animation only */
+/* Submenu styling - NEW APPROACH: always visible but styled differently */
 .nav-section .submenu {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-    padding-top: 0;
-    padding-bottom: 0;
+    display: block;
+    background-color: var(--bg-color-darker);
     padding-left: 0; /* Ensure left alignment */
 }
 
-.nav-section.expanded .submenu {
-    max-height: 500px; /* Large enough for any submenu */
-    padding-top: var(--spacing-xs);
-    padding-bottom: var(--spacing-xs);
-    padding-left: 0; /* Maintain left alignment when expanded */
+.nav-section .submenu li {
+    display: block;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.nav-section.expanded .submenu li {
+    opacity: 1;
+    height: auto;
+    overflow: visible;
 }
 
 /* Make submenu items left-aligned */
