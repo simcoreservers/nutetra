@@ -1196,4 +1196,38 @@ def migrate_pump_types():
         return jsonify({
             'success': False,
             'error': str(e)
+        }), 500
+
+@api_bp.route('/fix-floragro', methods=['POST'])
+def fix_floragro():
+    """Fix the Flora Gro categorization issue"""
+    try:
+        # Update Flora Gro in the nutrient_products table
+        flora_gro = NutrientProduct.query.join(NutrientBrand).filter(
+            NutrientBrand.name == 'General Hydroponics',
+            NutrientProduct.name == 'Flora Gro'
+        ).first()
+        
+        if flora_gro:
+            old_type = flora_gro.nutrient_type
+            flora_gro.nutrient_type = 'grow'
+            db.session.commit()
+            
+            # Now update all plant profiles to reflect this change
+            update_result = Settings.auto_configure_nutrient_components(forced=True)
+            
+            return jsonify({
+                'success': True,
+                'message': f"Updated Flora Gro nutrient type from '{old_type}' to 'grow'",
+                'profile_update': update_result
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': "Flora Gro product not found in database"
+            }), 404
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500 

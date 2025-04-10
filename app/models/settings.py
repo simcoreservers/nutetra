@@ -331,190 +331,211 @@ class Settings(db.Model):
             elif cls.get(key) is None:
                 cls.set(key, value)
 
-    @staticmethod
-    def auto_configure_nutrient_components():
-        """
-        Automatically configure nutrient components based on the available pumps
-        """
-        # Get all plant profiles
-        plant_profiles = Settings.get('plant_profiles', {})
-        if not plant_profiles:
-            return "No plant profiles found"
+    @classmethod
+    def auto_configure_nutrient_components(cls, forced=False):
+        """Automatically configures nutrient components based on available pumps."""
+        components_changed = False
+        message = "No changes to nutrient components were needed."
         
-        # Get all nutrient pumps
-        pumps = Pump.query.filter(Pump.type == 'nutrient').all()
+        # Get all enabled nutrient pumps
+        pumps = Pump.query.filter(
+            Pump.enabled == True,
+            Pump.type.in_(['nutrient', 'ph_up', 'ph_down'])
+        ).all()
         
-        updated_profiles = 0
-        total_profiles = len(plant_profiles)
+        # Get existing profiles
+        plant_profiles = cls.get('plant_profiles', {})
         
-        for profile_id, profile in plant_profiles.items():
-            # Parse the existing nutrient_components
-            current_components = profile.get('nutrient_components', [])
+        # Loop through all profiles and update their components
+        for profile_name, profile in plant_profiles.items():
+            profile_components_changed = False
+            components = profile.get('nutrient_components', [])
             
-            # Create new components based on available pumps
-            new_components = []
-            for pump in pumps:
-                if not pump.enabled:
-                    continue
-                    
-                # Skip pumps with no name or nutrient info
-                if not pump.name or not pump.nutrient_brand or not pump.nutrient_name:
-                    continue
-                    
-                # Default nutrient type if nothing else is found
-                nutrient_type = 'other'
+            # Check if profile has weekly schedules and current week
+            has_weekly_schedule = bool(profile.get('weekly_schedules', {}))
+            current_week = str(profile.get('current_week', 1))
+            
+            # For weekly schedule profiles, get ratio from current week's schedule
+            weekly_schedule_applied = None
+            if has_weekly_schedule:
+                weekly_schedules = profile.get('weekly_schedules', {})
+                current_schedule = weekly_schedules.get(current_week, {})
                 
-                # Get the nutrient product from the database
-                brand = NutrientBrand.query.filter_by(name=pump.nutrient_brand).first()
-                if brand:
-                    # Find the product for this brand
-                    product = NutrientProduct.query.filter_by(brand_id=brand.id, name=pump.nutrient_name).first()
-                    
-                    # Get the nutrient type from the product if available
-                    if product and product.nutrient_type:
-                        nutrient_type = product.nutrient_type
-                    else:
-                        # Fall back to name-based detection if product not found or nutrient_type not set
-                        pump_name_lower = pump.name.lower()
-                        nutrient_name_lower = pump.nutrient_name.lower()
-                        
-                        # Detect CalMag/Cal-Mag type
-                        if ('cal' in pump_name_lower and 'mag' in pump_name_lower) or \
-                           ('cal' in nutrient_name_lower and 'mag' in nutrient_name_lower) or \
-                           ('calcium' in pump_name_lower and 'magnesium' in pump_name_lower) or \
-                           ('calcium' in nutrient_name_lower and 'magnesium' in nutrient_name_lower):
-                            nutrient_type = 'calmag'
-                        # Detect Micro type
-                        elif 'micro' in pump_name_lower or 'micro' in nutrient_name_lower:
-                            nutrient_type = 'micro'
-                        # Detect Grow type (high nitrogen)
-                        elif ('grow' in pump_name_lower or 'grow' in nutrient_name_lower or 
-                              'gro' in pump_name_lower or 'gro' in nutrient_name_lower or 
-                              'veg' in pump_name_lower or 'veg' in nutrient_name_lower):
-                            nutrient_type = 'grow'
-                        # Detect Bloom type (high phosphorus/potassium)
-                        elif ('bloom' in pump_name_lower or 'bloom' in nutrient_name_lower or 
-                              'flower' in pump_name_lower or 'flower' in nutrient_name_lower):
-                            nutrient_type = 'bloom'
+                # Store the current week for tracking
+                weekly_schedule_applied = current_week
+                
+                # Check if weekly schedule has nutrient ratios
+                if 'nutrient_ratios' in current_schedule:
+                    nutrient_ratios = current_schedule.get('nutrient_ratios', {})
                 else:
-                    # If no brand found, fall back to name-based detection
-                    pump_name_lower = pump.name.lower()
-                    nutrient_name_lower = pump.nutrient_name.lower()
+                    nutrient_ratios = profile.get('nutrient_ratios', {})
                     
-                    # Detect CalMag/Cal-Mag type
-                    if ('cal' in pump_name_lower and 'mag' in pump_name_lower) or \
-                       ('cal' in nutrient_name_lower and 'mag' in nutrient_name_lower) or \
-                       ('calcium' in pump_name_lower and 'magnesium' in pump_name_lower) or \
-                       ('calcium' in nutrient_name_lower and 'magnesium' in nutrient_name_lower):
-                        nutrient_type = 'calmag'
-                    # Detect Micro type
-                    elif 'micro' in pump_name_lower or 'micro' in nutrient_name_lower:
-                        nutrient_type = 'micro'
-                    # Detect Grow type (high nitrogen)
-                    elif ('grow' in pump_name_lower or 'grow' in nutrient_name_lower or 
-                          'gro' in pump_name_lower or 'gro' in nutrient_name_lower or 
-                          'veg' in pump_name_lower or 'veg' in nutrient_name_lower):
-                        nutrient_type = 'grow'
-                    # Detect Bloom type (high phosphorus/potassium)
-                    elif ('bloom' in pump_name_lower or 'bloom' in nutrient_name_lower or 
-                          'flower' in pump_name_lower or 'flower' in nutrient_name_lower):
-                        nutrient_type = 'bloom'
-            
-                # Set dosing order based on nutrient type
-                dosing_order = {
-                    'calmag': 1,  # Cal-mag supplements go first
-                    'micro': 2,   # Micro/trace nutrients second
-                    'grow': 3,    # Grow nutrients third
-                    'bloom': 4,   # Bloom nutrients last
-                    'other': 5    # Anything else at the end
-                }.get(nutrient_type, 5)
-                
-                # Get the appropriate ratio from profile's nutrient_ratios
-                # Default to 1.0 if nutrient_ratios is not defined or doesn't have this type
-                default_ratio = 1.0
-                profile_ratios = None
-                
-                # Check if this profile has weekly schedules and a current week
-                if 'weekly_schedules' in profile and 'current_week' in profile:
-                    current_week = str(profile['current_week'])
-                    if current_week in profile.get('weekly_schedules', {}):
-                        weekly_schedule = profile['weekly_schedules'][current_week]
-                        # Use the weekly schedule's nutrient ratios
-                        profile_ratios = weekly_schedule.get('nutrient_ratios', {})
-                        
-                        # Also update the EC setpoint for this profile if specified in the weekly schedule
-                        if 'ec_setpoint' in weekly_schedule:
-                            profile['ec_setpoint'] = weekly_schedule['ec_setpoint']
-                
-                # If no weekly schedule found or not using weekly schedules, use the default profile ratios
-                if not profile_ratios:
-                    profile_ratios = profile.get('nutrient_ratios', {})
-                
-                # Default to the type-specific ratio if available, otherwise use 1.0
-                ratio = profile_ratios.get(nutrient_type, default_ratio)
-                
-                # Add the component
-                new_components.append({
-                    'pump_id': pump.id,
-                    'pump_name': pump.name,
-                    'nutrient_type': nutrient_type,
-                    'dosing_order': dosing_order,
-                    'ratio': ratio  # Use profile-specific ratio
-                })
-            
-            # Check if components need updating
-            components_changed = False
-            
-            # If count changed, definitely update
-            if len(current_components) != len(new_components):
-                components_changed = True
+                # Update EC setpoint if specified in weekly schedule
+                if 'ec_target' in current_schedule:
+                    profile['ec_target'] = current_schedule.get('ec_target')
+                    profile_components_changed = True
             else:
-                # Even if count is the same, check if content has changed
-                # Create a map of current components by pump_id for easy comparison
-                current_comp_map = {comp.get('pump_id'): comp for comp in current_components if 'pump_id' in comp}
-                
-                # Check if any new components differ from current ones
-                for new_comp in new_components:
-                    pump_id = new_comp.get('pump_id')
-                    if pump_id not in current_comp_map:
-                        # New pump not in current components
-                        components_changed = True
-                        break
-                        
-                    current_comp = current_comp_map[pump_id]
-                    # Check if pump_name or nutrient_type has changed
-                    if (current_comp.get('pump_name') != new_comp.get('pump_name') or 
-                        current_comp.get('nutrient_type') != new_comp.get('nutrient_type')):
-                        components_changed = True
-                        break
+                # Use profile's standard nutrient ratios
+                nutrient_ratios = profile.get('nutrient_ratios', {})
             
-            # Update if components changed
-            if components_changed:
-                # Create a map of existing components by pump_id for easier ratio preservation
-                current_comp_map = {comp.get('pump_id'): comp for comp in current_components if 'pump_id' in comp}
+            # Check if any component doesn't have the current weekly schedule applied
+            if has_weekly_schedule and components:
+                weekly_schedule_check = [comp.get('weekly_schedule_applied') == current_week for comp in components]
+                if not all(weekly_schedule_check) or forced:
+                    # Force update if weekly schedule has changed
+                    profile_components_changed = True
+            
+            # Get all nutrient types from available pumps
+            nutrient_types = {}
+            
+            for pump in pumps:
+                if pump.type == 'nutrient':
+                    # Only use the nutrient type from the product database
+                    nutrient_type = 'other'  # Default value if not found
+                    
+                    if pump.nutrient_brand and pump.nutrient_name:
+                        # Try to find the product in the database
+                        nutrient_product = NutrientProduct.query.join(NutrientBrand).filter(
+                            NutrientBrand.name == pump.nutrient_brand,
+                            NutrientProduct.name == pump.nutrient_name
+                        ).first()
+                        
+                        # If found and has a nutrient_type, use that (no fallback)
+                        if nutrient_product and nutrient_product.nutrient_type:
+                            nutrient_type = nutrient_product.nutrient_type
+                        # else: use default 'other' type
+                    
+                    # Skip if pump is a duplicate of an existing type
+                    if nutrient_type in nutrient_types:
+                        continue
+                    
+                    nutrient_types[nutrient_type] = {
+                        'pump_id': pump.id,
+                        'pump_name': pump.name,
+                        'nutrient_name': pump.nutrient_name,
+                        'type': nutrient_type
+                    }
+            
+            # Get dosing order
+            dosing_order = cls.get('dosing_order', ["calmag", "micro", "grow", "bloom", "ph_down", "ph_up"])
+            
+            # Create new components list
+            new_components = []
+            
+            # Add pH components first (always keep these)
+            ph_components = [comp for comp in components if comp.get('type') in ['ph_down', 'ph_up']]
+            for comp in ph_components:
+                new_components.append(comp)
+            
+            # Add nutrient components with correct ratios
+            for nutrient_type, pump_info in nutrient_types.items():
+                # Find existing component with this type
+                existing_comp = next((comp for comp in components 
+                                    if comp.get('type') == nutrient_type), None)
                 
-                # Preserve ratio settings from existing components when possible
-                for new_comp in new_components:
-                    pump_id = new_comp.get('pump_id')
-                    if pump_id in current_comp_map:
-                        # Found an existing component for this pump, preserve its ratio
-                        curr_comp = current_comp_map[pump_id]
-                        if 'ratio' in curr_comp:
-                            new_comp['ratio'] = curr_comp['ratio']
-                        elif 'ml_per_liter' in curr_comp:
-                            # Handle legacy components with ml_per_liter instead of ratio
-                            new_comp['ratio'] = curr_comp['ml_per_liter']
+                # Create or update component
+                if existing_comp:
+                    # For weekly schedule profiles, use schedule ratios instead of preserving old ones
+                    if has_weekly_schedule:
+                        ratio = nutrient_ratios.get(nutrient_type, 1.0)
+                        if existing_comp.get('ratio') != ratio or existing_comp.get('weekly_schedule_applied') != current_week:
+                            existing_comp['ratio'] = ratio
+                            existing_comp['weekly_schedule_applied'] = current_week
+                            profile_components_changed = True
+                    
+                    existing_comp['pump_id'] = pump_info['pump_id']
+                    existing_comp['pump_name'] = pump_info['pump_name']
+                    existing_comp['nutrient_name'] = pump_info['nutrient_name']
+                    new_components.append(existing_comp)
+                else:
+                    # Create new component with default ratio from profile
+                    ratio = nutrient_ratios.get(nutrient_type, 1.0)
+                    new_comp = {
+                        'type': nutrient_type,
+                        'pump_id': pump_info['pump_id'],
+                        'pump_name': pump_info['pump_name'],
+                        'nutrient_name': pump_info['nutrient_name'],
+                        'ratio': ratio,
+                        'weekly_schedule_applied': weekly_schedule_applied if has_weekly_schedule else None
+                    }
+                    new_components.append(new_comp)
+                    profile_components_changed = True
+            
+            # Apply dosing order sort
+            def sort_key(comp):
+                type_val = comp.get('type')
+                if type_val in dosing_order:
+                    return dosing_order.index(type_val)
+                return 999  # Place unknown types at the end
                 
-                # Sort components by dosing_order to ensure proper sequence
-                new_components.sort(key=lambda comp: comp.get('dosing_order', 99))
+            new_components.sort(key=sort_key)
+            
+            # Update components if they've changed
+            if profile_components_changed or forced or len(new_components) != len(components):
+                # Mark all components as having the current weekly schedule applied
+                if has_weekly_schedule:
+                    for comp in new_components:
+                        comp['weekly_schedule_applied'] = current_week
                 
-                # Update the nutrient_components in the profile
                 profile['nutrient_components'] = new_components
-                updated_profiles += 1
+                components_changed = True
+            
+        # Save changes if needed
+        if components_changed or forced:
+            cls.set('plant_profiles', plant_profiles)
+            message = "Nutrient components updated successfully."
         
-        # Update the plant_profiles setting if any profiles were updated
-        if updated_profiles > 0:
-            Settings.set('plant_profiles', plant_profiles)
-            return f"Updated {updated_profiles} of {total_profiles} profiles"
+        return message 
+
+    @classmethod
+    def determine_nutrient_type(cls, pump_name, nutrient_name):
+        """
+        Determine the nutrient type based on pump name and nutrient name.
         
-        return "No profiles needed updating" 
+        Args:
+            pump_name (str): The name of the pump
+            nutrient_name (str): The name of the nutrient product
+            
+        Returns:
+            str: The determined nutrient type (calmag, micro, grow, bloom, or other)
+        """
+        # Convert names to lowercase for case-insensitive matching
+        pump_name_lower = pump_name.lower() if pump_name else ""
+        nutrient_name_lower = nutrient_name.lower() if nutrient_name else ""
+        
+        # Debug for Flora Gro
+        if "flora" in pump_name_lower or "flora" in nutrient_name_lower:
+            print(f"DEBUG - Flora detection: pump_name='{pump_name}', nutrient_name='{nutrient_name}'")
+            print(f"DEBUG - Lowercase: pump='{pump_name_lower}', nutrient='{nutrient_name_lower}'")
+            
+        # Special case for Flora Gro which should be categorized as "grow"
+        if ("flora gro" in pump_name_lower or 
+            "flora gro" in nutrient_name_lower or
+            "floragro" in pump_name_lower.replace(" ", "") or 
+            "floragro" in nutrient_name_lower.replace(" ", "")):
+            return "grow"
+        
+        # Detect CalMag/Cal-Mag type
+        if (('cal' in pump_name_lower and 'mag' in pump_name_lower) or 
+            ('cal' in nutrient_name_lower and 'mag' in nutrient_name_lower) or 
+            ('calcium' in pump_name_lower and 'magnesium' in pump_name_lower) or 
+            ('calcium' in nutrient_name_lower and 'magnesium' in nutrient_name_lower)):
+            return 'calmag'
+            
+        # Detect Micro type
+        if 'micro' in pump_name_lower or 'micro' in nutrient_name_lower:
+            return 'micro'
+            
+        # Detect Grow type (high nitrogen)
+        if ('grow' in pump_name_lower or 'grow' in nutrient_name_lower or 
+            'gro' in pump_name_lower or 'gro' in nutrient_name_lower or 
+            'veg' in pump_name_lower or 'veg' in nutrient_name_lower):
+            return 'grow'
+            
+        # Detect Bloom type (high phosphorus/potassium)
+        if ('bloom' in pump_name_lower or 'bloom' in nutrient_name_lower or 
+            'flower' in pump_name_lower or 'flower' in nutrient_name_lower):
+            return 'bloom'
+            
+        # Default to "other" if no specific type is detected
+        return 'other' 

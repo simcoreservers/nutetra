@@ -658,6 +658,10 @@ def grow_cycle():
     plant_profiles = Settings.get('plant_profiles', {})
     cannabis_profile = plant_profiles.get('cannabis', {})
     
+    if not cannabis_profile:
+        flash('Cannabis profile not found', 'error')
+        return redirect(url_for('dosing.manage_profiles'))
+    
     if request.method == 'POST':
         # Handle week advancement
         action = request.form.get('action')
@@ -665,14 +669,19 @@ def grow_cycle():
         if action == 'set_week':
             new_week = request.form.get('week', type=int)
             if new_week and 1 <= new_week <= cannabis_profile.get('total_weeks', 12):
+                old_week = cannabis_profile.get('current_week', 1)
+                # Update the week
                 cannabis_profile['current_week'] = new_week
                 plant_profiles['cannabis'] = cannabis_profile
                 Settings.set('plant_profiles', plant_profiles)
                 
                 # Run auto-configuration to update nutrient components
-                Settings.auto_configure_nutrient_components()
+                update_result = Settings.auto_configure_nutrient_components()
                 
-                flash(f'Grow cycle week updated to Week {new_week}', 'success')
+                flash(f'Grow cycle week updated from Week {old_week} to Week {new_week}. {update_result}', 'success')
+                return redirect(url_for('dosing.grow_cycle'))
+            else:
+                flash(f'Invalid week value: {new_week}. Week must be between 1 and {cannabis_profile.get("total_weeks", 12)}', 'error')
                 return redirect(url_for('dosing.grow_cycle'))
         
         elif action == 'next_week':
@@ -680,28 +689,34 @@ def grow_cycle():
             total_weeks = cannabis_profile.get('total_weeks', 12)
             
             if current_week < total_weeks:
+                # Update to the next week
                 cannabis_profile['current_week'] = current_week + 1
                 plant_profiles['cannabis'] = cannabis_profile
                 Settings.set('plant_profiles', plant_profiles)
                 
                 # Run auto-configuration to update nutrient components
-                Settings.auto_configure_nutrient_components()
+                update_result = Settings.auto_configure_nutrient_components()
                 
-                flash(f'Grow cycle advanced to Week {current_week + 1}', 'success')
+                flash(f'Grow cycle advanced to Week {current_week + 1}. {update_result}', 'success')
             else:
                 flash('Already at the final week of the grow cycle', 'warning')
             
             return redirect(url_for('dosing.grow_cycle'))
         
         elif action == 'reset_cycle':
+            old_week = cannabis_profile.get('current_week', 1)
             cannabis_profile['current_week'] = 1
             plant_profiles['cannabis'] = cannabis_profile
             Settings.set('plant_profiles', plant_profiles)
             
             # Run auto-configuration to update nutrient components
-            Settings.auto_configure_nutrient_components()
+            update_result = Settings.auto_configure_nutrient_components()
             
-            flash('Grow cycle reset to Week 1', 'success')
+            flash(f'Grow cycle reset from Week {old_week} to Week 1. {update_result}', 'success')
+            return redirect(url_for('dosing.grow_cycle'))
+        
+        else:
+            flash(f'Unknown action: {action}', 'error')
             return redirect(url_for('dosing.grow_cycle'))
     
     # Get current week and weekly schedules
@@ -710,7 +725,8 @@ def grow_cycle():
     weekly_schedules = cannabis_profile.get('weekly_schedules', {})
     
     # Get current week schedule
-    current_schedule = weekly_schedules.get(str(current_week), {})
+    current_week_str = str(current_week)
+    current_schedule = weekly_schedules.get(current_week_str, {})
     
     # Get growth phase label
     growth_phase = "Unknown"
@@ -724,6 +740,15 @@ def grow_cycle():
         growth_phase = "Flowering"
     elif current_week == 12:
         growth_phase = "Flush"
+    
+    # Check nutrient components to ensure they match the current week
+    nutrient_components = cannabis_profile.get('nutrient_components', [])
+    all_components_match = all(comp.get('weekly_schedule_applied') == current_week_str for comp in nutrient_components)
+    
+    if not all_components_match and nutrient_components:
+        # Force an update to ensure components match the current week
+        update_result = Settings.auto_configure_nutrient_components()
+        flash(f'Updated nutrient components to match current week: {update_result}', 'info')
     
     return render_template(
         'dosing/grow_cycle.html',
