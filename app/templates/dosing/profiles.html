@@ -29,12 +29,12 @@
         {% endif %}
         
         <div class="profiles-grid">
-            {% for profile_id, profile in profiles.items() %}
+            {% for profile_id, profile in plant_profiles.items() %}
             <div class="profile-card">
                 <div class="profile-header">
                     <h4>{{ profile.name }}</h4>
-                    <span class="profile-badge {% if profile_id in default_profiles %}default{% else %}custom{% endif %}">
-                        {{ 'Default' if profile_id in default_profiles else 'Custom' }}
+                    <span class="profile-badge {% if profile.get('custom', False) %}custom{% else %}default{% endif %}">
+                        {{ 'Custom' if profile.get('custom', False) else 'Default' }}
                     </span>
                 </div>
                 <div class="profile-content">

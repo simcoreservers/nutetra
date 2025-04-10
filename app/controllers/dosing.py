@@ -372,14 +372,19 @@ def settings():
 
 @dosing_bp.route('/profiles')
 def profiles():
-    """Plant profiles configuration"""
+    """Plant profiles management"""
+    # Get all plant profiles
     plant_profiles = Settings.get('plant_profiles', {})
-    active_profile = Settings.get('active_plant_profile')
     
+    # Get the active profile
+    active_profile = Settings.get('active_plant_profile', 'general')
+    
+    # Pass all profiles to template
     return render_template(
         'dosing/profiles.html',
-        profiles=plant_profiles,
-        active_profile=active_profile
+        plant_profiles=plant_profiles,
+        active_profile=active_profile,
+        is_admin=True  # You might want to change this based on user authentication
     )
 
 @dosing_bp.route('/cannabis-schedule')
@@ -1117,4 +1122,27 @@ def profile_schedule(profile_id):
         weekly_schedules=weekly_schedules,
         sorted_weeks=sorted_weeks,
         growth_phases=growth_phases
-    ) 
+    )
+
+@dosing_bp.route('/profiles/activate/<profile_id>', methods=['POST'])
+def activate_profile(profile_id):
+    """Set a profile as the active plant profile"""
+    # Get all plant profiles
+    plant_profiles = Settings.get('plant_profiles', {})
+    
+    # Check if profile exists
+    if profile_id not in plant_profiles:
+        flash('Profile not found.', 'error')
+        return redirect(url_for('dosing.profiles'))
+    
+    # Get the profile name
+    profile_name = plant_profiles[profile_id].get('name', profile_id)
+    
+    # Set as active profile
+    Settings.set('active_plant_profile', profile_id)
+    
+    # Run auto-configuration to update nutrient components
+    update_result = Settings.auto_configure_nutrient_components()
+    
+    flash(f'"{profile_name}" is now the active plant profile. {update_result}', 'success')
+    return redirect(url_for('dosing.profiles')) 
