@@ -107,23 +107,27 @@
                     
                     <div class="profile-actions">
                         {% if profile_id != active_profile %}
-                        <a href="{{ url_for('dosing.activate_profile', profile_id=profile_id) }}" class="action-button primary small" title="Activate profile">
-                            <i class="fas fa-check"></i>
+                        <a href="{{ url_for('dosing.activate_profile', profile_id=profile_id) }}" class="action-button primary">
+                            <i class="fas fa-check"></i> Activate
                         </a>
                         {% else %}
                         <span class="active-label">
                             <i class="fas fa-check-circle"></i> Active
                         </span>
                         {% endif %}
-                        <a href="{{ url_for('dosing.edit_profile', profile_id=profile_id) }}" class="action-button small" title="Edit profile">
-                            <i class="fas fa-pencil-alt"></i>
+                        <a href="{{ url_for('dosing.edit_profile', profile_id=profile_id) }}" class="action-button">
+                            <i class="fas fa-pencil-alt"></i> Edit
                         </a>
-                        <a href="{{ url_for('dosing.profile_schedule', profile_id=profile_id) }}" class="action-button small" title="Edit weekly schedule">
-                            <i class="fas fa-calendar-alt"></i>
+                        {% if profile.weekly_schedules %}
+                        <a href="{{ url_for('dosing.profile_schedule', profile_id=profile_id) }}" class="action-button">
+                            <i class="fas fa-calendar-alt"></i> Schedule
                         </a>
-                        <a href="{{ url_for('dosing.delete_profile', profile_id=profile_id) }}" class="action-button danger small" title="Delete profile">
-                            <i class="fas fa-trash-alt"></i>
+                        {% endif %}
+                        {% if profile.get('custom', False) %}
+                        <a href="{{ url_for('dosing.delete_profile', profile_id=profile_id) }}" class="action-button danger">
+                            <i class="fas fa-trash-alt"></i> Delete
                         </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -220,12 +224,14 @@
     
     .profile-actions {
         display: flex;
+        flex-wrap: wrap;
         justify-content: flex-end;
         gap: var(--spacing-xs);
+        margin-top: 15px;
     }
     
     /* Update button styling to match pumps page */
-    .action-button.small {
+    .action-button {
         padding: 4px 8px;
         font-size: 0.9rem;
         background-color: var(--bg-color-light);
@@ -238,11 +244,9 @@
         justify-content: center;
         text-decoration: none;
         transition: background-color 0.2s, color 0.2s;
-        width: 32px;
-        height: 32px;
     }
     
-    .action-button.small:hover {
+    .action-button:hover {
         background-color: var(--bg-color-dark);
     }
     
@@ -264,6 +268,10 @@
     .action-button.danger:hover {
         background-color: var(--danger-color);
         color: white;
+    }
+    
+    .action-button i {
+        margin-right: 4px;
     }
     
     .active-label {
