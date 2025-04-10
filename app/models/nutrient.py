@@ -105,6 +105,7 @@ class NutrientProduct(db.Model):
     nitrogen_pct = db.Column(db.Float, nullable=True)  # N percentage
     phosphorus_pct = db.Column(db.Float, nullable=True)  # P percentage
     potassium_pct = db.Column(db.Float, nullable=True)  # K percentage
+    nutrient_type = db.Column(db.String(20), nullable=True)  # 'grow', 'bloom', 'micro', 'calmag', 'other'
     
     def __repr__(self):
         return f'<NutrientProduct {self.id}: {self.name}>'
@@ -118,5 +119,6 @@ class NutrientProduct(db.Model):
             'nitrogen_pct': self.nitrogen_pct,
             'phosphorus_pct': self.phosphorus_pct,
             'potassium_pct': self.potassium_pct,
+            'nutrient_type': self.nutrient_type,
             'npk_label': f"{self.nitrogen_pct}-{self.phosphorus_pct}-{self.potassium_pct}" if all(v is not None for v in [self.nitrogen_pct, self.phosphorus_pct, self.potassium_pct]) else None
         } 

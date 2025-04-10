@@ -1011,6 +1011,15 @@ def create_nutrient_product():
                 'error': f"Brand with ID {data['brand_id']} not found"
             }), 404
         
+        # Validate nutrient_type if provided
+        valid_types = ['grow', 'bloom', 'micro', 'calmag', 'other']
+        nutrient_type = data.get('nutrient_type')
+        if nutrient_type and nutrient_type not in valid_types:
+            return jsonify({
+                'success': False,
+                'error': f"Invalid nutrient type: {nutrient_type}. Must be one of: {', '.join(valid_types)}"
+            }), 400
+        
         # Create new product
         new_product = NutrientProduct(
             brand_id=data['brand_id'],
@@ -1018,7 +1027,8 @@ def create_nutrient_product():
             description=data.get('description'),
             nitrogen_pct=data.get('nitrogen_pct'),
             phosphorus_pct=data.get('phosphorus_pct'),
-            potassium_pct=data.get('potassium_pct')
+            potassium_pct=data.get('potassium_pct'),
+            nutrient_type=nutrient_type
         )
         
         # Save to database
@@ -1029,6 +1039,91 @@ def create_nutrient_product():
             'success': True,
             'message': "Nutrient product created successfully",
             'data': new_product.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@api_bp.route('/nutrient-products/<int:product_id>', methods=['PUT'])
+def update_nutrient_product(product_id):
+    """Update an existing nutrient product"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': "No data provided"
+            }), 400
+        
+        # Find the product
+        product = NutrientProduct.query.get(product_id)
+        if not product:
+            return jsonify({
+                'success': False,
+                'error': f"Product with ID {product_id} not found"
+            }), 404
+        
+        # Validate nutrient_type if provided
+        valid_types = ['grow', 'bloom', 'micro', 'calmag', 'other']
+        nutrient_type = data.get('nutrient_type')
+        if nutrient_type and nutrient_type not in valid_types:
+            return jsonify({
+                'success': False,
+                'error': f"Invalid nutrient type: {nutrient_type}. Must be one of: {', '.join(valid_types)}"
+            }), 400
+        
+        # Update fields
+        if 'name' in data:
+            product.name = data['name']
+        if 'description' in data:
+            product.description = data['description']
+        if 'nitrogen_pct' in data:
+            product.nitrogen_pct = data['nitrogen_pct']
+        if 'phosphorus_pct' in data:
+            product.phosphorus_pct = data['phosphorus_pct']
+        if 'potassium_pct' in data:
+            product.potassium_pct = data['potassium_pct']
+        if nutrient_type:
+            product.nutrient_type = nutrient_type
+        
+        # Save to database
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': "Nutrient product updated successfully",
+            'data': product.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@api_bp.route('/nutrient-products/<int:product_id>', methods=['DELETE'])
+def delete_nutrient_product(product_id):
+    """Delete a nutrient product"""
+    try:
+        # Find the product
+        product = NutrientProduct.query.get(product_id)
+        if not product:
+            return jsonify({
+                'success': False,
+                'error': f"Product with ID {product_id} not found"
+            }), 404
+        
+        # Delete the product
+        db.session.delete(product)
+        db.session.commit()
+        
+        # Reconfigure nutrient components in plant profiles
+        Settings.auto_configure_nutrient_components()
+        
+        return jsonify({
+            'success': True,
+            'message': f"Product '{product.name}' deleted successfully"
         })
     except Exception as e:
         return jsonify({

@@ -7,6 +7,7 @@ from app import db
 import uuid
 from datetime import datetime
 import copy
+from app.models.nutrient import NutrientBrand, NutrientProduct
 
 # Create a blueprint
 dosing_bp = Blueprint('dosing', __name__)
@@ -715,4 +716,45 @@ def grow_cycle():
         weekly_schedules=weekly_schedules,
         current_schedule=current_schedule,
         growth_phase=growth_phase
-    ) 
+    )
+
+@dosing_bp.route('/profile_form')
+def profile_form():
+    # This route is mentioned in the code but not implemented in the provided file
+    # It's left unchanged as it's mentioned in the code
+    pass
+
+@dosing_bp.route('/nutrients', methods=['GET'])
+def nutrient_database():
+    """Display and manage nutrient database"""
+    # Get all nutrient brands and products
+    brands = NutrientBrand.query.all()
+    
+    # Organize products by brand
+    organized_brands = []
+    for brand in brands:
+        brand_data = brand.to_dict()
+        # Sort products alphabetically
+        brand_data['products'].sort(key=lambda x: x['name'])
+        organized_brands.append(brand_data)
+    
+    # Sort brands alphabetically, but keep Custom brand at the end
+    organized_brands.sort(key=lambda x: (x['name'] == 'Custom', x['name']))
+    
+    return render_template(
+        'dosing/nutrients.html',
+        brands=organized_brands,
+        nutrient_types=[
+            {'id': 'grow', 'name': 'Grow'},
+            {'id': 'bloom', 'name': 'Bloom'},
+            {'id': 'micro', 'name': 'Micro'},
+            {'id': 'calmag', 'name': 'CalMag'},
+            {'id': 'other', 'name': 'Other'}
+        ]
+    )
+
+@dosing_bp.route('/manage_profiles')
+def manage_profiles():
+    # This route is mentioned in the code but not implemented in the provided file
+    # It's left unchanged as it's mentioned in the code
+    pass 
