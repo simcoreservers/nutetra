@@ -371,10 +371,21 @@
                 });
             });
             
-            // Make submenu links work without toggling the parent menu
+            // IMPORTANT: Fix submenu link behavior to prevent toggle issues
             document.querySelectorAll('.submenu a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Prevent event from affecting parent menu
+                // Remove any previous event listeners that might be causing conflicts
+                const newLink = link.cloneNode(true);
+                link.parentNode.replaceChild(newLink, link);
+                
+                // Add our clean event listener that properly stops propagation
+                newLink.addEventListener('click', function(e) {
+                    // Don't bubble up to parent toggle handlers
+                    e.stopPropagation();
+                    
+                    // If this is not a real link (href="#"), prevent default action
+                    if (this.getAttribute('href') === '#') {
+                        e.preventDefault();
+                    }
                 });
             });
             

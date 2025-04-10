@@ -62,28 +62,29 @@ function initSidebar() {
     menuItems.forEach(item => {
         const submenu = item.querySelector('.submenu');
         if (submenu) {
-            const link = item.querySelector('a');
+            // We don't need to add click handlers to the section headers here
+            // as they're already handled in the base.html script
             
-            // We're now using expanded class instead of active for toggle state
-            link.addEventListener('click', function(e) {
-                // This is handled by base.html toggle code, so we just prevent default
-                e.preventDefault();
-            });
-            
-            // Make submenu items clickable without closing the sidebar
-            const submenuLinks = submenu.querySelectorAll('a');
-            submenuLinks.forEach(sublink => {
-                sublink.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    
-                    // On mobile, close the sidebar after navigating 
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.remove('active');
-                        backdrop.classList.remove('active');
-                        body.style.overflow = '';
-                    }
-                });
-            });
+            // Only handle mobile sidebar state for submenu links
+            if (window.innerWidth <= 768) {
+                // This closure ensures we don't interfere with existing handlers
+                (function() {
+                    // For mobile, close the sidebar after navigating
+                    // without affecting menu toggle behavior
+                    submenu.querySelectorAll('a:not(.coming-soon)').forEach(link => {
+                        // We're only adding this handler to links that navigate
+                        // away from the current page
+                        link.addEventListener('click', function() {
+                            // Only close the sidebar, don't affect menu state
+                            setTimeout(() => {
+                                sidebar.classList.remove('active');
+                                backdrop.classList.remove('active');
+                                body.style.overflow = '';
+                            }, 50);
+                        });
+                    });
+                })();
+            }
         }
     });
     
