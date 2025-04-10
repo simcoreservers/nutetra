@@ -361,6 +361,9 @@ class Settings(db.Model):
                 if not pump.name or not pump.nutrient_brand or not pump.nutrient_name:
                     continue
                     
+                # Default nutrient type if nothing else is found
+                nutrient_type = 'other'
+                
                 # Get the nutrient product from the database
                 brand = NutrientBrand.query.filter_by(name=pump.nutrient_brand).first()
                 if brand:
@@ -368,7 +371,6 @@ class Settings(db.Model):
                     product = NutrientProduct.query.filter_by(brand_id=brand.id, name=pump.nutrient_name).first()
                     
                     # Get the nutrient type from the product if available
-                    nutrient_type = 'other'
                     if product and product.nutrient_type:
                         nutrient_type = product.nutrient_type
                     else:
@@ -394,6 +396,29 @@ class Settings(db.Model):
                         elif ('bloom' in pump_name_lower or 'bloom' in nutrient_name_lower or 
                               'flower' in pump_name_lower or 'flower' in nutrient_name_lower):
                             nutrient_type = 'bloom'
+                else:
+                    # If no brand found, fall back to name-based detection
+                    pump_name_lower = pump.name.lower()
+                    nutrient_name_lower = pump.nutrient_name.lower()
+                    
+                    # Detect CalMag/Cal-Mag type
+                    if ('cal' in pump_name_lower and 'mag' in pump_name_lower) or \
+                       ('cal' in nutrient_name_lower and 'mag' in nutrient_name_lower) or \
+                       ('calcium' in pump_name_lower and 'magnesium' in pump_name_lower) or \
+                       ('calcium' in nutrient_name_lower and 'magnesium' in nutrient_name_lower):
+                        nutrient_type = 'calmag'
+                    # Detect Micro type
+                    elif 'micro' in pump_name_lower or 'micro' in nutrient_name_lower:
+                        nutrient_type = 'micro'
+                    # Detect Grow type (high nitrogen)
+                    elif ('grow' in pump_name_lower or 'grow' in nutrient_name_lower or 
+                          'gro' in pump_name_lower or 'gro' in nutrient_name_lower or 
+                          'veg' in pump_name_lower or 'veg' in nutrient_name_lower):
+                        nutrient_type = 'grow'
+                    # Detect Bloom type (high phosphorus/potassium)
+                    elif ('bloom' in pump_name_lower or 'bloom' in nutrient_name_lower or 
+                          'flower' in pump_name_lower or 'flower' in nutrient_name_lower):
+                        nutrient_type = 'bloom'
             
                 # Set dosing order based on nutrient type
                 dosing_order = {
