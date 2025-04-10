@@ -262,13 +262,19 @@ class Settings(db.Model):
                     'other': 5    # Anything else at the end
                 }.get(nutrient_type, 5)
                 
+                # Get the appropriate ratio from profile's nutrient_ratios
+                # Default to 1.0 if nutrient_ratios is not defined or doesn't have this type
+                default_ratio = 1.0
+                profile_ratios = profile.get('nutrient_ratios', {})
+                ratio = profile_ratios.get(nutrient_type, default_ratio)
+                
                 # Add the component
                 new_components.append({
                     'pump_id': pump.id,
                     'pump_name': pump.name,
                     'nutrient_type': nutrient_type,
                     'dosing_order': dosing_order,
-                    'ratio': 1.0  # Default ratio
+                    'ratio': ratio  # Use profile-specific ratio
                 })
             
             # Check if components need updating
