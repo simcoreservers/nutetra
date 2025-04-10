@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}Sensor Calibration{% endblock %}
+
+{% block page_title %}Sensor Calibration{% endblock %}
+
+{% block content %}
+<div class="calibration-container">
+    <div class="section-header">
+        <h3>Sensor Calibration</h3>
+        <p class="section-description">Calibrate your pH, EC, and temperature sensors for accurate readings</p>
+    </div>
+
+    <div class="sensor-calibration-grid">
+        <!-- pH Calibration -->
+        <div class="calibration-card">
+            <div class="card-header">
+                <h4><i class="fas fa-tint"></i> pH Sensor Calibration</h4>
+            </div>
+            <div class="card-body">
+                <div class="current-reading">
+                    <span class="label">Current Reading:</span>
+                    <span class="value" id="current-ph">Loading...</span>
+                </div>
+                
+                <form action="{{ url_for('sensors.calibrate_ph_sensor') }}" method="post" class="calibration-form">
+                    <div class="form-group">
+                        <label for="ph-calibration-point">Calibration Point:</label>
+                        <select name="point" id="ph-calibration-point" required>
+                            <option value="">Select a calibration point</option>
+                            <option value="low">Low (pH 4.0)</option>
+                            <option value="mid">Mid (pH 7.0)</option>
+                            <option value="high">High (pH 10.0)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ph-calibration-value">Actual Value:</label>
+                        <input type="number" name="value" id="ph-calibration-value" step="0.01" min="0" max="14" placeholder="e.g. 4.0" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="button primary-button">Calibrate pH</button>
+                    </div>
+                </form>
+                
+                <div class="calibration-instructions">
+                    <p><strong>Note:</strong> For best results, calibrate with at least two points. Use standard pH buffer solutions.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- EC Calibration -->
+        <div class="calibration-card">
+            <div class="card-header">
+                <h4><i class="fas fa-bolt"></i> EC Sensor Calibration</h4>
+            </div>
+            <div class="card-body">
+                <div class="current-reading">
+                    <span class="label">Current Reading:</span>
+                    <span class="value" id="current-ec">Loading...</span>
+                </div>
+                
+                <form action="{{ url_for('sensors.calibrate_ec_sensor') }}" method="post" class="calibration-form">
+                    <div class="form-group">
+                        <label for="ec-calibration-point">Calibration Point:</label>
+                        <select name="point" id="ec-calibration-point" required>
+                            <option value="">Select a calibration point</option>
+                            <option value="low">Low (1413 μS/cm)</option>
+                            <option value="high">High (2764 μS/cm)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ec-calibration-value">Actual Value (μS/cm):</label>
+                        <input type="number" name="value" id="ec-calibration-value" step="1" min="0" max="5000" placeholder="e.g. 1413" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="button primary-button">Calibrate EC</button>
+                    </div>
+                </form>
+                
+                <div class="calibration-instructions">
+                    <p><strong>Note:</strong> Use standard EC calibration solutions. Make sure the probe is clean and dry before calibration.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Temperature Calibration -->
+        <div class="calibration-card">
+            <div class="card-header">
+                <h4><i class="fas fa-thermometer-half"></i> Temperature Sensor Calibration</h4>
+            </div>
+            <div class="card-body">
+                <div class="current-reading">
+                    <span class="label">Current Reading:</span>
+                    <span class="value" id="current-temp">Loading...</span>
+                </div>
+                
+                <form action="{{ url_for('sensors.calibrate_temp_sensor') }}" method="post" class="calibration-form">
+                    <div class="form-group">
+                        <label for="temp-calibration-value">Actual Temperature (°C):</label>
+                        <input type="number" name="value" id="temp-calibration-value" step="0.1" min="0" max="50" placeholder="e.g. 25.0" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="button primary-button">Calibrate Temperature</button>
+                    </div>
+                </form>
+                
+                <div class="calibration-instructions">
+                    <p><strong>Note:</strong> Use a reliable reference thermometer for accurate calibration.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calibration-container {
+        padding: var(--spacing-md);
+    }
+    
+    .section-description {
+        color: var(--text-color-muted);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .sensor-calibration-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: var(--spacing-md);
+    }
+    
+    .calibration-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        font-size: 1.1rem;
+    }
+    
+    .card-header h4 i {
+        margin-right: var(--spacing-sm);
+        color: var(--primary-color);
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .current-reading {
+        background-color: var(--bg-color-dark);
+        padding: var(--spacing-sm);
+        border-radius: var(--border-radius);
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .current-reading .label {
+        color: var(--text-color-muted);
+    }
+    
+    .current-reading .value {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .calibration-form {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--text-color-muted);
+    }
+    
+    .form-group select,
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--bg-color-dark);
+        color: var(--text-color);
+    }
+    
+    .form-actions {
+        margin-top: var(--spacing-md);
+    }
+    
+    .calibration-instructions {
+        font-size: 0.9rem;
+        padding: var(--spacing-sm);
+        background-color: rgba(var(--info-color-rgb), 0.1);
+        border-left: 3px solid var(--info-color);
+        border-radius: var(--border-radius);
+    }
+    
+    .calibration-instructions p {
+        margin: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .sensor-calibration-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to update current readings
+        function updateReadings() {
+            fetch('/api/sensors/read_now', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('current-ph').textContent = data.readings.ph ? data.readings.ph.toFixed(2) : '--';
+                    document.getElementById('current-ec').textContent = data.readings.ec ? data.readings.ec.toFixed(0) + ' μS/cm' : '--';
+                    document.getElementById('current-temp').textContent = data.readings.temp ? data.readings.temp.toFixed(1) + '°C' : '--';
+                } else {
+                    console.error('Error reading sensors:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching sensor data:', error);
+            });
+        }
+        
+        // Update readings on page load
+        updateReadings();
+        
+        // Set up refresh button if present
+        const refreshButton = document.getElementById('refresh-readings');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                updateReadings();
+            });
+        }
+        
+        // Set up interval refresh
+        setInterval(updateReadings, 30000); // Every 30 seconds
+    });
+</script>
+{% endblock %} 
