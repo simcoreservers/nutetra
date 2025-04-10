@@ -226,24 +226,25 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: flex-end;
-        gap: var(--spacing-xs);
+        gap: 8px;
         margin-top: 15px;
     }
     
     /* Update button styling to match pumps page */
     .action-button {
-        padding: 4px 8px;
+        padding: 6px 12px;
         font-size: 0.9rem;
         background-color: var(--bg-color-light);
         color: var(--text-color);
         border: 1px solid var(--border-color);
-        border-radius: var(--border-radius-sm);
+        border-radius: 20px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         text-decoration: none;
         transition: background-color 0.2s, color 0.2s;
+        margin: 2px;
     }
     
     .action-button:hover {
@@ -271,7 +272,7 @@
     }
     
     .action-button i {
-        margin-right: 4px;
+        margin-right: 6px;
     }
     
     .active-label {
@@ -279,10 +280,14 @@
         align-items: center;
         color: var(--success-color);
         font-size: 0.9rem;
+        background-color: rgba(var(--success-color-rgb), 0.1);
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--success-color);
     }
     
     .active-label i {
-        margin-right: 4px;
+        margin-right: 6px;
     }
     
     .back-link {
