@@ -64,19 +64,10 @@ function initSidebar() {
         if (submenu) {
             const link = item.querySelector('a');
             
+            // We're now using expanded class instead of active for toggle state
             link.addEventListener('click', function(e) {
+                // This is handled by base.html toggle code, so we just prevent default
                 e.preventDefault();
-                // Close other open submenus
-                if (!item.classList.contains('active')) {
-                    menuItems.forEach(otherItem => {
-                        if (otherItem !== item) {
-                            otherItem.classList.remove('active');
-                        }
-                    });
-                }
-                
-                // Toggle current submenu
-                item.classList.toggle('active');
             });
             
             // Make submenu items clickable without closing the sidebar
@@ -85,18 +76,8 @@ function initSidebar() {
                 sublink.addEventListener('click', function(e) {
                     e.stopPropagation();
                     
-                    // Check if this is a link within the same section
-                    const currentPath = window.location.pathname;
-                    const targetPath = sublink.pathname;
-                    
-                    // Keep current section active for consistent navigation experience
-                    // Determine section based on the first path segment
-                    const currentSection = currentPath.split('/')[1];
-                    const targetSection = targetPath.split('/')[1];
-                    const isWithinSameSection = currentSection === targetSection;
-                    
-                    // On mobile, close the sidebar after navigating unless it's within the same section
-                    if (window.innerWidth <= 768 && !isWithinSameSection) {
+                    // On mobile, close the sidebar after navigating 
+                    if (window.innerWidth <= 768) {
                         sidebar.classList.remove('active');
                         backdrop.classList.remove('active');
                         body.style.overflow = '';
