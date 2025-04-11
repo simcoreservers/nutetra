@@ -405,16 +405,32 @@ def activate_profile(profile_id):
         flash('Profile not found.', 'error')
         return redirect(url_for('garden.profiles'))
     
-    # Get the profile name
-    profile_name = plant_profiles[profile_id].get('name', profile_id)
+    # Get the profile
+    profile = plant_profiles[profile_id]
+    profile_name = profile.get('name', profile_id)
     
     # Set as active profile
     Settings.set('active_plant_profile', profile_id)
     
+    # Update system settings to match profile settings
+    Settings.set('ph_setpoint', profile.get('ph_setpoint', 6.0))
+    Settings.set('ph_buffer', profile.get('ph_buffer', 0.2))
+    Settings.set('ec_setpoint', profile.get('ec_setpoint', 1350))
+    Settings.set('ec_buffer', profile.get('ec_buffer', 150))
+    
+    # If it's a weekly schedule profile like cannabis, use the current week's settings
+    if 'weekly_schedules' in profile and profile.get('current_week'):
+        current_week = str(profile.get('current_week'))
+        weekly_schedule = profile.get('weekly_schedules', {}).get(current_week, {})
+        
+        # If the weekly schedule has EC setpoint, use that
+        if 'ec_setpoint' in weekly_schedule:
+            Settings.set('ec_setpoint', weekly_schedule.get('ec_setpoint'))
+    
     # Run auto-configuration to update nutrient components
     update_result = Settings.auto_configure_nutrient_components()
     
-    flash(f'"{profile_name}" is now the active plant profile. {update_result}', 'success')
+    flash(f'"{profile_name}" is now the active plant profile. Dosing settings have been updated to match. {update_result}', 'success')
     return redirect(url_for('garden.profiles'))
 
 @garden_bp.route('/profiles/schedule/<profile_id>')
@@ -526,10 +542,16 @@ def grow_cycle():
                 plant_profiles['cannabis'] = cannabis_profile
                 Settings.set('plant_profiles', plant_profiles)
                 
+                # Update system settings if cannabis is the active profile
+                if Settings.get('active_plant_profile') == 'cannabis':
+                    weekly_schedule = cannabis_profile.get('weekly_schedules', {}).get(str(new_week), {})
+                    if 'ec_setpoint' in weekly_schedule:
+                        Settings.set('ec_setpoint', weekly_schedule.get('ec_setpoint'))
+                
                 # Run auto-configuration to update nutrient components
                 update_result = Settings.auto_configure_nutrient_components()
                 
-                flash(f'Grow cycle week updated from Week {old_week} to Week {new_week}. {update_result}', 'success')
+                flash(f'Grow cycle week updated from Week {old_week} to Week {new_week}. Dosing settings have been updated. {update_result}', 'success')
                 return redirect(url_for('garden.grow_cycle'))
             else:
                 flash(f'Invalid week value: {new_week}. Week must be between 1 and {cannabis_profile.get("total_weeks", 12)}', 'error')
@@ -545,10 +567,16 @@ def grow_cycle():
                 plant_profiles['cannabis'] = cannabis_profile
                 Settings.set('plant_profiles', plant_profiles)
                 
+                # Update system settings if cannabis is the active profile
+                if Settings.get('active_plant_profile') == 'cannabis':
+                    weekly_schedule = cannabis_profile.get('weekly_schedules', {}).get(str(current_week + 1), {})
+                    if 'ec_setpoint' in weekly_schedule:
+                        Settings.set('ec_setpoint', weekly_schedule.get('ec_setpoint'))
+                
                 # Run auto-configuration to update nutrient components
                 update_result = Settings.auto_configure_nutrient_components()
                 
-                flash(f'Grow cycle advanced to Week {current_week + 1}. {update_result}', 'success')
+                flash(f'Grow cycle advanced to Week {current_week + 1}. Dosing settings have been updated. {update_result}', 'success')
             else:
                 flash('Already at the final week of the grow cycle', 'warning')
             
@@ -560,10 +588,16 @@ def grow_cycle():
             plant_profiles['cannabis'] = cannabis_profile
             Settings.set('plant_profiles', plant_profiles)
             
+            # Update system settings if cannabis is the active profile
+            if Settings.get('active_plant_profile') == 'cannabis':
+                weekly_schedule = cannabis_profile.get('weekly_schedules', {}).get('1', {})
+                if 'ec_setpoint' in weekly_schedule:
+                    Settings.set('ec_setpoint', weekly_schedule.get('ec_setpoint'))
+            
             # Run auto-configuration to update nutrient components
             update_result = Settings.auto_configure_nutrient_components()
             
-            flash(f'Grow cycle reset from Week {old_week} to Week 1. {update_result}', 'success')
+            flash(f'Grow cycle reset from Week {old_week} to Week 1. Dosing settings have been updated. {update_result}', 'success')
             return redirect(url_for('garden.grow_cycle'))
         
         else:

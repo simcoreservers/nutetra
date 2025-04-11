@@ -59,6 +59,11 @@
                         <h4>pH Dosing Settings</h4>
                     </div>
                     <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> These settings are initially set by your active plant profile. 
+                            Changes made here override the profile settings until a new profile is activated.
+                        </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="ph-setpoint">Setpoint</label>
@@ -101,6 +106,11 @@
                         <h4>Nutrient Dosing Settings</h4>
                     </div>
                     <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> These settings are initially set by your active plant profile. 
+                            Changes made here override the profile settings until a new profile is activated.
+                        </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="ec-setpoint">EC Setpoint (μS/cm)</label>
@@ -215,6 +225,23 @@
     .primary-button {
         background-color: var(--primary-color);
         color: #fff;
+    }
+    
+    .alert {
+        padding: var(--spacing-sm) var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--border-radius);
+        font-size: 0.9rem;
+    }
+    
+    .alert-info {
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #0056b3;
+        border-left: 4px solid #0056b3;
+    }
+    
+    .alert i {
+        margin-right: 5px;
     }
 </style>
 {% endblock %}
