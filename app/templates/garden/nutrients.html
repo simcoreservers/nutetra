@@ -11,7 +11,7 @@
         <div class="section-header">
             <h3><i class="fas fa-vial"></i> Nutrient Library</h3>
             <div class="section-actions">
-                <button id="add-brand-btn" class="btn btn-primary">
+                <button onclick="showAddBrandForm()" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add New Brand
                 </button>
             </div>
@@ -27,7 +27,7 @@
                 <h4>Add New Nutrient Brand</h4>
             </div>
             <div class="form-card-body">
-                <form id="add-brand-form">
+                <form id="add-brand-form" onsubmit="saveBrand(event)">
                     <div class="form-group">
                         <label for="new-brand-name">Brand Name</label>
                         <input type="text" id="new-brand-name" class="form-control" required>
@@ -40,7 +40,7 @@
                         <button type="submit" class="btn btn-success">
                             <i class="fas fa-save"></i> Save Brand
                         </button>
-                        <button type="button" id="cancel-add-brand" class="btn btn-secondary">
+                        <button type="button" onclick="cancelAddBrand()" class="btn btn-secondary">
                             Cancel
                         </button>
                     </div>
@@ -457,6 +457,88 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // Function to show the add brand form
+    function showAddBrandForm() {
+        console.log('Show add brand form');
+        const addBrandContainer = document.getElementById('add-brand-container');
+        const addBrandButton = document.querySelector('.section-actions button');
+        
+        if (addBrandContainer) {
+            addBrandContainer.style.display = 'block';
+            // Hide the add button
+            addBrandButton.style.display = 'none';
+            // Focus on brand name input
+            document.getElementById('new-brand-name').focus();
+        } else {
+            console.error('Could not find add brand container');
+        }
+    }
+    
+    // Function to cancel adding a brand
+    function cancelAddBrand() {
+        console.log('Cancel add brand');
+        const addBrandContainer = document.getElementById('add-brand-container');
+        const addBrandButton = document.querySelector('.section-actions button');
+        const addBrandForm = document.getElementById('add-brand-form');
+        
+        if (addBrandContainer) {
+            // Hide the container
+            addBrandContainer.style.display = 'none';
+            // Show the add button
+            addBrandButton.style.display = 'inline-block';
+            // Reset the form
+            if (addBrandForm) addBrandForm.reset();
+        } else {
+            console.error('Could not find add brand container');
+        }
+    }
+    
+    // Function to save a new brand
+    function saveBrand(event) {
+        event.preventDefault();
+        console.log('Save brand');
+        
+        const nameInput = document.getElementById('new-brand-name');
+        const descInput = document.getElementById('new-brand-description');
+        
+        // Validate name
+        if (!nameInput || !nameInput.value.trim()) {
+            alert('Brand name is required');
+            nameInput.focus();
+            return;
+        }
+        
+        console.log('Creating brand:', nameInput.value);
+        
+        // Create brand via API
+        fetch('/api/nutrient-brands', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: nameInput.value.trim(),
+                description: descInput.value.trim()
+            })
+        })
+        .then(function(response) {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(function(result) {
+            console.log('API result:', result);
+            if (result.success) {
+                // Success - reload the page
+                window.location.reload();
+            } else {
+                // Error
+                alert('Error: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(function(error) {
+            console.error('Error creating brand:', error);
+            alert('Error: ' + error.message);
+        });
+    }
+    
     // Function to show the add product row
     function showAddProductRow(brandId) {
         console.log('Show add product row for brand ID:', brandId);
@@ -648,61 +730,6 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Add Brand Button
-        const addBrandBtn = document.getElementById('add-brand-btn');
-        const addBrandContainer = document.getElementById('add-brand-container');
-        const addBrandForm = document.getElementById('add-brand-form');
-        const cancelAddBrandBtn = document.getElementById('cancel-add-brand');
-        
-        // Show Add Brand Form
-        addBrandBtn.addEventListener('click', function() {
-            addBrandContainer.style.display = 'block';
-            addBrandBtn.style.display = 'none';
-            document.getElementById('new-brand-name').focus();
-        });
-        
-        // Cancel Add Brand
-        cancelAddBrandBtn.addEventListener('click', function() {
-            addBrandContainer.style.display = 'none';
-            addBrandBtn.style.display = 'block';
-            addBrandForm.reset();
-        });
-        
-        // Save New Brand
-        addBrandForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const nameInput = document.getElementById('new-brand-name');
-            const descInput = document.getElementById('new-brand-description');
-            
-            if (!nameInput.value.trim()) {
-                return alert('Brand name is required');
-            }
-            
-            // Create brand via API
-            fetch('/api/nutrient-brands', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: nameInput.value.trim(),
-                    description: descInput.value.trim()
-                })
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    // Reload page to show new brand
-                    location.reload();
-                } else {
-                    alert('Error: ' + result.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while saving the brand');
-            });
-        });
-        
         // Update Product Field
         function updateProductField(row, field, value) {
             const productId = row.dataset.productId;
