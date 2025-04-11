@@ -451,7 +451,7 @@
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 20px;
-        justify-content: space-between;
+        justify-content: center;
     }
     
     .reading-card {
@@ -462,11 +462,11 @@
         background-color: var(--bg-color);
         border-left: 4px solid transparent;
         transition: transform 0.2s;
-        min-height: 120px; /* Ensure min height */
+        min-height: 120px;
         overflow: visible;
-        /* Fix left border being cut off */
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
+        margin: 0 auto;
+        width: 100%;
+        box-sizing: border-box;
     }
     
     .reading-card:hover {
