@@ -56,7 +56,7 @@
             <div class="section-header">
                 <h3>{{ brand.name }}</h3>
                 <div class="section-actions">
-                    <button class="btn btn-sm btn-primary add-product-btn" data-brand-id="{{ brand.id }}">
+                    <button class="btn btn-sm btn-primary" onclick="showAddProductRow('{{ brand.id }}')" title="Add Product">
                         <i class="fas fa-plus"></i> Add Product
                     </button>
                 </div>
@@ -131,10 +131,10 @@
                                 <input type="number" class="new-product-k form-control" min="0" max="100" step="0.1" placeholder="0.0">
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-success save-new-product-btn" title="Save Product">
+                                <button class="btn btn-sm btn-success" onclick="saveNewProduct(this)" title="Save Product">
                                     <i class="fas fa-save"></i>
                                 </button>
-                                <button class="btn btn-sm btn-secondary cancel-add-product-btn" title="Cancel">
+                                <button class="btn btn-sm btn-secondary" onclick="cancelAddProduct(this)" title="Cancel">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </td>
@@ -457,6 +457,25 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // Function to show the add product row
+    function showAddProductRow(brandId) {
+        console.log('Show add product row for brand ID:', brandId);
+        
+        // Find the add product row for this brand
+        const addRow = document.querySelector(`tr.add-product-row[data-brand-id="${brandId}"]`);
+        
+        if (addRow) {
+            console.log('Found add row, displaying it');
+            // Show the row
+            addRow.style.display = 'table-row';
+            // Focus the name input
+            const nameInput = addRow.querySelector('.new-product-name');
+            if (nameInput) nameInput.focus();
+        } else {
+            console.error('Could not find add product row for brand ID:', brandId);
+        }
+    }
+    
     // Global function to show the delete modal
     function confirmDeleteProduct(productId) {
         console.log('Delete requested for product ID:', productId, 'Type:', typeof productId);
@@ -534,6 +553,95 @@
         
         return "Check console for debug output";
     };
+    
+    // Function to cancel adding a new product
+    function cancelAddProduct(buttonElement) {
+        console.log('Cancel add product');
+        
+        // Get the parent row
+        const row = buttonElement.closest('tr.add-product-row');
+        if (row) {
+            console.log('Found row to cancel');
+            // Hide the row
+            row.style.display = 'none';
+            // Reset inputs
+            row.querySelectorAll('input').forEach(input => {
+                input.value = '';
+            });
+            // Reset select
+            const select = row.querySelector('select');
+            if (select) select.selectedIndex = 0;
+        } else {
+            console.error('Could not find parent row');
+        }
+    }
+    
+    // Function to save a new product
+    function saveNewProduct(buttonElement) {
+        console.log('Save new product');
+        
+        // Get the parent row
+        const row = buttonElement.closest('tr.add-product-row');
+        if (!row) {
+            console.error('Could not find parent row');
+            return;
+        }
+        
+        // Get brand ID
+        const brandId = row.getAttribute('data-brand-id');
+        console.log('Creating product for brand ID:', brandId);
+        
+        // Get form values
+        const nameInput = row.querySelector('.new-product-name');
+        const typeSelect = row.querySelector('.new-product-type');
+        const nInput = row.querySelector('.new-product-n');
+        const pInput = row.querySelector('.new-product-p');
+        const kInput = row.querySelector('.new-product-k');
+        
+        // Validate name
+        if (!nameInput || !nameInput.value.trim()) {
+            alert('Product name is required');
+            nameInput.focus();
+            return;
+        }
+        
+        // Prepare data
+        const productData = {
+            brand_id: parseInt(brandId, 10),
+            name: nameInput.value.trim(),
+            nutrient_type: typeSelect.value,
+            nitrogen_pct: nInput.value ? parseFloat(nInput.value) : 0,
+            phosphorus_pct: pInput.value ? parseFloat(pInput.value) : 0,
+            potassium_pct: kInput.value ? parseFloat(kInput.value) : 0
+        };
+        
+        console.log('Sending product data:', productData);
+        
+        // Send API request
+        fetch('/api/nutrient-products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        })
+        .then(function(response) {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(function(result) {
+            console.log('API result:', result);
+            if (result.success) {
+                // Success - reload the page
+                window.location.reload();
+            } else {
+                // Error
+                alert('Error: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(function(error) {
+            console.error('Error creating product:', error);
+            alert('Error: ' + error.message);
+        });
+    }
 </script>
 {% endblock %}
 
@@ -592,137 +700,6 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred while saving the brand');
-            });
-        });
-        
-        // ----- Add Product Button Click -----
-        // Select all buttons with the add-product-btn class
-        const addProductButtons = document.querySelectorAll('.add-product-btn');
-        console.log('Found', addProductButtons.length, 'add product buttons');
-        
-        // Add click event to each button
-        addProductButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const brandId = this.getAttribute('data-brand-id');
-                console.log('Add product clicked for brand ID:', brandId);
-                
-                // Find the add product row for this brand
-                const addRow = document.querySelector(`tr.add-product-row[data-brand-id="${brandId}"]`);
-                
-                if (addRow) {
-                    console.log('Found add row:', addRow);
-                    // Show the row
-                    addRow.style.display = 'table-row';
-                    // Focus the name input
-                    const nameInput = addRow.querySelector('.new-product-name');
-                    if (nameInput) nameInput.focus();
-                } else {
-                    console.error('Could not find add product row for brand', brandId);
-                }
-            });
-        });
-        
-        // ----- Cancel Add Product -----
-        // Select all cancel buttons
-        const cancelButtons = document.querySelectorAll('.cancel-add-product-btn');
-        console.log('Found', cancelButtons.length, 'cancel buttons');
-        
-        // Add click event to each cancel button
-        cancelButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Cancel button clicked');
-                
-                // Get the parent row
-                const row = this.closest('tr.add-product-row');
-                if (row) {
-                    console.log('Found row to cancel');
-                    // Hide the row
-                    row.style.display = 'none';
-                    // Reset inputs
-                    row.querySelectorAll('input').forEach(input => {
-                        input.value = '';
-                    });
-                    row.querySelector('select').selectedIndex = 0;
-                } else {
-                    console.error('Could not find parent row');
-                }
-            });
-        });
-        
-        // ----- Save New Product -----
-        // Select all save buttons
-        const saveButtons = document.querySelectorAll('.save-new-product-btn');
-        console.log('Found', saveButtons.length, 'save buttons');
-        
-        // Add click event to each save button
-        saveButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Save button clicked');
-                
-                // Get the parent row
-                const row = this.closest('tr.add-product-row');
-                if (!row) {
-                    console.error('Could not find parent row');
-                    return;
-                }
-                
-                // Get brand ID
-                const brandId = row.getAttribute('data-brand-id');
-                console.log('Creating product for brand ID:', brandId);
-                
-                // Get form values
-                const nameInput = row.querySelector('.new-product-name');
-                const typeSelect = row.querySelector('.new-product-type');
-                const nInput = row.querySelector('.new-product-n');
-                const pInput = row.querySelector('.new-product-p');
-                const kInput = row.querySelector('.new-product-k');
-                
-                // Validate name
-                if (!nameInput || !nameInput.value.trim()) {
-                    alert('Product name is required');
-                    nameInput.focus();
-                    return;
-                }
-                
-                // Prepare data
-                const productData = {
-                    brand_id: parseInt(brandId, 10),
-                    name: nameInput.value.trim(),
-                    nutrient_type: typeSelect.value,
-                    nitrogen_pct: nInput.value ? parseFloat(nInput.value) : 0,
-                    phosphorus_pct: pInput.value ? parseFloat(pInput.value) : 0,
-                    potassium_pct: kInput.value ? parseFloat(kInput.value) : 0
-                };
-                
-                console.log('Sending product data:', productData);
-                
-                // Send API request
-                fetch('/api/nutrient-products', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(productData)
-                })
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    return response.json();
-                })
-                .then(result => {
-                    console.log('API result:', result);
-                    if (result.success) {
-                        // Success - reload the page
-                        window.location.reload();
-                    } else {
-                        // Error
-                        alert('Error: ' + (result.error || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error creating product:', error);
-                    alert('Error: ' + error.message);
-                });
             });
         });
         
