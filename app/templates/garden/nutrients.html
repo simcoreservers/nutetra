@@ -103,12 +103,9 @@
                                 <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}">
                             </td>
                             <td class="actions-cell">
-                                <form class="delete-product-form" style="display:inline">
-                                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete Product">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button class="btn btn-sm btn-danger delete-product-btn" data-product-id="{{ product.id }}" title="Delete Product">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                                 <span class="save-status"></span>
                             </td>
                         </tr>
@@ -666,29 +663,34 @@
         });
         
         // Delete Product
-        $('.delete-product-form').on('submit', function(e) {
+        $(document).on('click', '.delete-product-btn', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             
-            const productId = this.querySelector('input[name="product_id"]').value;
+            const productId = $(this).data('product-id');
+            console.log('Delete button clicked for product ID:', productId);
             
-            // Store the product ID directly on the modal element
-            $('#deleteModal').data('product-id', productId);
+            // Store the product ID as a direct attribute on the modal
+            document.getElementById('deleteModal').setAttribute('data-product-id', productId);
             
             // Show confirmation modal using Bootstrap
             $('#deleteModal').modal('show');
+            return false;
         });
         
         // Confirm Delete
-        $('#confirmDelete').on('click', function() {
-            // Get the product ID directly from the modal
-            const productId = $('#deleteModal').data('product-id');
+        $('#confirmDelete').on('click', function(e) {
+            e.preventDefault();
+            
+            // Get the product ID from the attribute
+            const productId = document.getElementById('deleteModal').getAttribute('data-product-id');
             
             if (!productId) {
                 console.error('No product ID found for deletion');
                 return;
             }
             
-            console.log('Deleting product ID:', productId);
+            console.log('Confirming delete for product ID:', productId);
             
             // Delete via API
             fetch(`/api/nutrient-products/${productId}`, {
@@ -702,7 +704,7 @@
                 console.log('Delete result:', result);
                 if (result.success) {
                     // Find and remove the row
-                    const row = document.querySelector(`.nutrient-table tr[data-product-id="${productId}"]`);
+                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
                     if (row) {
                         row.remove();
                         console.log('Row removed for product ID:', productId);
@@ -713,7 +715,7 @@
                     // Hide the modal
                     $('#deleteModal').modal('hide');
                 } else {
-                    alert('Error: ' + result.error);
+                    alert('Error: ' + (result.error || 'Unknown error occurred'));
                 }
             })
             .catch(error => {
