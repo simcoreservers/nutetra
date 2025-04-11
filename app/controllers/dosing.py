@@ -25,7 +25,7 @@ def index():
     auto_dosing = Settings.get('auto_dosing_enabled', True)
     
     return render_template(
-        'dosing/index.html',
+        'hardware/index.html',
         pumps=pumps,
         recent_events=recent_events,
         auto_dosing=auto_dosing
@@ -90,7 +90,7 @@ def add_pump():
     ]
     
     return render_template(
-        'dosing/add_pump.html',
+        'hardware/add_pump.html',
         pump_types=pump_types
     )
 
@@ -143,7 +143,7 @@ def edit_pump(pump_id):
     ]
     
     return render_template(
-        'dosing/edit_pump.html',
+        'hardware/edit_pump.html',
         pump=pump,
         pump_types=pump_types
     )
@@ -178,7 +178,7 @@ def calibrate_pump(pump_id):
     
     # For GET requests, show the calibration form
     return render_template(
-        'dosing/calibrate_pump.html',
+        'hardware/calibrate_pump.html',
         pump=pump
     )
 
@@ -233,7 +233,7 @@ def events():
     pumps = Pump.query.all()
     
     return render_template(
-        'dosing/events.html',
+        'hardware/events.html',
         events=events,
         pumps=pumps,
         selected_pump_id=pump_id,
@@ -366,7 +366,7 @@ def settings():
     }
     
     return render_template(
-        'dosing/settings.html',
+        'hardware/settings.html',
         settings=settings
     )
 
@@ -381,7 +381,7 @@ def profiles():
     
     # Pass all profiles to template
     return render_template(
-        'dosing/profiles.html',
+        'garden/profiles.html',
         plant_profiles=plant_profiles,
         active_profile=active_profile,
         is_admin=True  # You might want to change this based on user authentication
@@ -421,7 +421,7 @@ def cannabis_schedule():
     sorted_weeks = sorted([str(i) for i in range(1, total_weeks + 1)], key=int)
     
     return render_template(
-        'dosing/cannabis_schedule.html',
+        'garden/cannabis_schedule.html',
         profile=cannabis_profile,
         current_week=current_week,
         total_weeks=total_weeks,
@@ -580,7 +580,7 @@ def add_profile():
     }
     
     return render_template(
-        'dosing/profile_form.html',
+        'garden/profile_form.html',
         profile=empty_profile,
         action='add',
         pumps=pumps
@@ -819,7 +819,7 @@ def edit_profile(profile_id):
             'growth_phase': growth_phase
         })
     
-    return render_template('dosing/profile_form.html', **context)
+    return render_template('garden/profile_form.html', **context)
 
 def get_growth_phase_for_week(profile, week_num):
     """Get the growth phase label for a given week"""
@@ -1024,7 +1024,7 @@ def grow_cycle():
         flash(f'Updated nutrient components to match current week: {update_result}', 'info')
     
     return render_template(
-        'dosing/grow_cycle.html',
+        'garden/grow_cycle.html',
         profile=cannabis_profile,
         current_week=current_week,
         total_weeks=total_weeks,
@@ -1057,7 +1057,7 @@ def nutrients():
     organized_brands.sort(key=lambda x: (x['name'] == 'Custom', x['name']))
     
     return render_template(
-        'dosing/nutrients.html',
+        'garden/nutrients.html',
         brands=organized_brands,
         nutrient_types=[
             {'id': 'grow', 'name': 'Grow'},
@@ -1114,7 +1114,7 @@ def profile_schedule(profile_id):
         growth_phases[week] = get_growth_phase_for_week(profile, week)
     
     return render_template(
-        'dosing/profile_schedule.html',
+        'garden/profile_schedule.html',
         profile=profile,
         profile_id=profile_id,
         current_week=current_week,

@@ -56,26 +56,26 @@
                         </ul>
                     </li>
                     
-                    <li class="nav-section {% if '/nutrient' in request.path or '/hardware/nutrients' in request.path or '/hardware/profiles' in request.path or '/hardware/grow_cycle' in request.path %}active{% endif %}">
+                    <li class="nav-section {% if '/nutrient' in request.path or '/garden/nutrients' in request.path or '/garden/profiles' in request.path or '/garden/grow_cycle' in request.path %}active{% endif %}">
                         <a href="#" class="section-toggle">
                             <i class="fas fa-flask"></i>
                             <span>Nutrient Management</span>
                             <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li class="{% if '/hardware/nutrients' in request.path %}active{% endif %}">
+                            <li class="{% if '/garden/nutrients' in request.path %}active{% endif %}">
                                 <a href="{{ url_for('dosing.nutrients') }}">
                                     <i class="fas fa-vial"></i>
                                     <span>Nutrient Library</span>
                                 </a>
                             </li>
-                            <li class="{% if '/hardware/profiles' in request.path %}active{% endif %}">
+                            <li class="{% if '/garden/profiles' in request.path %}active{% endif %}">
                                 <a href="{{ url_for('dosing.profiles') }}">
                                     <i class="fas fa-leaf"></i>
                                     <span>Plant Profiles</span>
                                 </a>
                             </li>
-                            <li class="{% if '/hardware/grow_cycle' in request.path %}active{% endif %}">
+                            <li class="{% if '/garden/grow_cycle' in request.path %}active{% endif %}">
                                 <a href="{{ url_for('dosing.grow_cycle') }}">
                                     <i class="fas fa-seedling"></i>
                                     <span>Growth Schedules</span>
