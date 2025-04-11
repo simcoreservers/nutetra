@@ -171,7 +171,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete" onclick="deleteProduct()">Delete</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete" onclick="directDelete()">Delete</button>
             </div>
         </div>
     </div>
@@ -553,6 +553,47 @@
             console.error('Test delete error:', e);
         });
     };
+</script>
+
+<!-- Add this at the end of the extra_js block just before the closing </script> tag -->
+<script>
+    // Simple direct delete function that doesn't rely on any other code
+    function directDelete() {
+        const productId = document.getElementById('product-id-to-delete').value;
+        console.log('Direct delete for product ID:', productId);
+        
+        if (!productId) {
+            alert('No product ID found');
+            return;
+        }
+        
+        // Do exactly what testDeleteAPI does since we know that works
+        fetch(`/api/nutrient-products/${productId}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            console.log('Direct delete status:', response.status);
+            return response.text();
+        })
+        .then(text => {
+            console.log('Direct delete response:', text);
+            
+            // Force UI update regardless of response
+            const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+            if (row) {
+                row.remove();
+                console.log('Row removed');
+            }
+            
+            // Close modal and reload page
+            $('#deleteModal').modal('hide');
+            setTimeout(() => window.location.reload(), 500);
+        })
+        .catch(e => {
+            console.error('Direct delete error:', e);
+            alert('Error: ' + e.message);
+        });
+    }
 </script>
 {% endblock %}
 
