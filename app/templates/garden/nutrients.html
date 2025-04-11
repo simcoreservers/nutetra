@@ -59,6 +59,9 @@
                     <button class="btn btn-sm btn-primary" onclick="showAddProductRow('{{ brand.id }}')" title="Add Product">
                         <i class="fas fa-plus"></i> Add Product
                     </button>
+                    <button class="btn btn-sm btn-danger" onclick="confirmDeleteBrand('{{ brand.id }}')" title="Delete Brand">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             </div>
             
@@ -805,6 +808,91 @@
         })
         .catch(error => {
             console.error('Debug update error:', error);
+        });
+        
+        return "Check console for debug output";
+    };
+
+    // Function to confirm brand deletion
+    function confirmDeleteBrand(brandId) {
+        console.log('Delete requested for brand ID:', brandId);
+        
+        // Check if the brand has products
+        const brandSection = document.querySelector(`section.brand-section[data-brand-id="${brandId}"]`);
+        const products = brandSection.querySelectorAll('tr[data-product-id]');
+        
+        let message = "Are you sure you want to delete this brand?";
+        if (products.length > 0) {
+            message = `This brand has ${products.length} product(s). Deleting it will also delete all associated products. Are you sure you want to continue?`;
+        }
+        
+        if (confirm(message)) {
+            console.log("Confirmed deletion for brand ID:", brandId);
+            deleteBrand(parseInt(brandId, 10) || brandId);
+        }
+    }
+    
+    // Function to delete a brand
+    function deleteBrand(brandId) {
+        console.log('Executing delete for brand ID:', brandId);
+        
+        // Log the exact URL we're calling
+        const url = '/api/nutrient-brands/' + brandId;
+        console.log('Delete URL:', url);
+        
+        // Send DELETE request to API
+        fetch(url, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(function(response) {
+            console.log('Delete brand response status:', response.status);
+            return response.text();
+        })
+        .then(function(text) {
+            console.log('Delete brand response:', text);
+            
+            // Find and remove the brand section
+            const brandSection = document.querySelector(`section.brand-section[data-brand-id="${brandId}"]`);
+            if (brandSection) {
+                brandSection.remove();
+                console.log('Brand section removed successfully');
+            } else {
+                console.warn('Brand section not found for brand ID:', brandId);
+            }
+            
+            // Reload the page to reflect changes properly
+            window.location.reload();
+        })
+        .catch(function(error) {
+            console.error('Delete brand error:', error);
+            alert('Error: ' + error.message);
+        });
+    }
+    
+    // Add this for debugging - accessible from browser console
+    window.debugDeleteBrand = function(brandId) {
+        console.log('Debug delete for brand ID:', brandId);
+        fetch('/api/nutrient-brands/' + brandId, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => {
+            console.log('Debug delete brand status:', response.status);
+            console.log('Debug delete brand status text:', response.statusText);
+            return response.text();
+        })
+        .then(text => {
+            console.log('Debug delete brand response text:', text);
+            try {
+                const json = JSON.parse(text);
+                console.log('Debug delete brand response JSON:', json);
+            } catch (e) {
+                console.log('Not JSON response');
+            }
+        })
+        .catch(error => {
+            console.error('Debug delete brand error:', error);
         });
         
         return "Check console for debug output";
