@@ -1,14 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Cannabis Grow Cycle | NuTetra Controller{% endblock %}
-{% block page_title %}Cannabis Grow Cycle Management{% endblock %}
+{% block title %}Plant Grow Cycle | NuTetra Controller{% endblock %}
+{% block page_title %}Plant Grow Cycle Management{% endblock %}
 
 {% block content %}
 <div class="page-content">
     <div class="dashboard-section">
+        {% if no_schedule %}
+        <div class="no-schedule-message">
+            <div class="empty-state">
+                <i class="fas fa-leaf fa-3x"></i>
+                <h3>No Active Grow Cycle</h3>
+                <p>There is currently no active plant profile with a weekly grow schedule.</p>
+                <p>Please activate a profile that uses weekly scheduling or edit an existing profile to enable weekly scheduling.</p>
+                <div class="action-buttons">
+                    <a href="{{ url_for('garden.profiles') }}" class="button success">
+                        <i class="fas fa-list"></i> View Plant Profiles
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
         <div class="grow-cycle-header">
             <div class="cycle-status">
-                <h3>Current Growth Stage: <span class="growth-phase {{ growth_phase|lower }}">{{ growth_phase }}</span></h3>
+                <h3>{{ profile.name }} - Current Growth Stage: <span class="growth-phase {{ growth_phase|lower }}">{{ growth_phase }}</span></h3>
                 <div class="week-indicator">
                     <div class="week-label">Week {{ current_week }} of {{ total_weeks }}</div>
                     <div class="progress-bar">
@@ -20,14 +35,14 @@
             <div class="cycle-actions">
                 <form method="post" class="inline-form">
                     <input type="hidden" name="action" value="next_week">
-                    <button type="submit" class="button primary-button">
+                    <button type="submit" class="button success">
                         <i class="fas fa-forward"></i> Next Week
                     </button>
                 </form>
                 
                 <form method="post" class="inline-form">
                     <input type="hidden" name="action" value="reset_cycle">
-                    <button type="submit" class="button danger-button" onclick="return confirm('Are you sure you want to reset the grow cycle to Week 1?')">
+                    <button type="submit" class="button danger" onclick="return confirm('Are you sure you want to reset the grow cycle to Week 1?')">
                         <i class="fas fa-redo"></i> Reset Cycle
                     </button>
                 </form>
@@ -108,7 +123,7 @@
                 </form>
                 
                 <div class="schedule-table-container">
-                    <h4>Full 12-Week Schedule</h4>
+                    <h4>Full {{ total_weeks }}-Week Schedule</h4>
                     <div class="schedule-table">
                         <table>
                             <thead>
@@ -126,20 +141,11 @@
                                 {% for week_num in range(1, total_weeks + 1) %}
                                     {% set week = weekly_schedules.get(week_num|string, {}) %}
                                     {% set week_ratios = week.get('nutrient_ratios', {}) %}
+                                    {% from 'garden/profile_form.html' import get_phase_for_week %}
                                     <tr {% if week_num == current_week %}class="current-week"{% endif %}>
                                         <td>{{ week_num }}</td>
                                         <td>
-                                            {% if week_num <= 2 %}
-                                                Seedling
-                                            {% elif week_num <= 5 %}
-                                                Vegetative
-                                            {% elif week_num == 6 %}
-                                                Pre-Flower
-                                            {% elif week_num <= 11 %}
-                                                Flowering
-                                            {% else %}
-                                                Flush
-                                            {% endif %}
+                                            {{ get_phase_for_week(week_num) }}
                                         </td>
                                         <td>{{ week.get('ec_setpoint', profile.ec_setpoint) }} μS/cm</td>
                                         <td>{{ week_ratios.get('grow', profile.nutrient_ratios.grow) }}</td>
@@ -160,10 +166,15 @@
                 <i class="fas fa-arrow-left"></i> Back to Garden Dashboard
             </a>
             
-            <a href="{{ url_for('garden.profiles') }}" class="button primary-button">
+            <a href="{{ url_for('garden.profiles') }}" class="button success">
                 <i class="fas fa-cog"></i> Configure Plant Profiles
             </a>
+            
+            <a href="{{ url_for('garden.edit_profile', profile_id=profile_id) }}" class="button">
+                <i class="fas fa-edit"></i> Edit This Profile
+            </a>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

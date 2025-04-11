@@ -550,14 +550,29 @@ def nutrients():
 
 @garden_bp.route('/grow-cycle', methods=['GET', 'POST'])
 def grow_cycle():
-    """Manage cannabis grow cycle"""
-    # Get the cannabis profile
+    """Manage plant grow cycle for any plant profile with weekly schedules"""
+    # Get the active plant profile
     plant_profiles = Settings.get('plant_profiles', {})
-    cannabis_profile = plant_profiles.get('cannabis', {})
+    active_profile_id = Settings.get('active_plant_profile', 'general')
+    active_profile = plant_profiles.get(active_profile_id, {})
     
-    if not cannabis_profile:
-        flash('Cannabis profile not found', 'error')
-        return redirect(url_for('garden.profiles'))
+    # Check if the active profile has weekly schedules
+    if not active_profile or 'weekly_schedules' not in active_profile:
+        # Try to find any profile with weekly schedules as a fallback
+        for profile_id, profile in plant_profiles.items():
+            if 'weekly_schedules' in profile:
+                if not active_profile:
+                    active_profile = profile
+                    active_profile_id = profile_id
+                    break
+                    
+    # If no profile with weekly schedules is found, show a message
+    if not active_profile or 'weekly_schedules' not in active_profile:
+        flash('No active profile with a grow cycle schedule was found. Please activate a profile that uses weekly scheduling.', 'warning')
+        return render_template(
+            'garden/grow_cycle.html',
+            no_schedule=True
+        )
     
     if request.method == 'POST':
         # Handle week advancement
@@ -565,16 +580,16 @@ def grow_cycle():
         
         if action == 'set_week':
             new_week = request.form.get('week', type=int)
-            if new_week and 1 <= new_week <= cannabis_profile.get('total_weeks', 12):
-                old_week = cannabis_profile.get('current_week', 1)
+            if new_week and 1 <= new_week <= active_profile.get('total_weeks', 12):
+                old_week = active_profile.get('current_week', 1)
                 # Update the week
-                cannabis_profile['current_week'] = new_week
-                plant_profiles['cannabis'] = cannabis_profile
+                active_profile['current_week'] = new_week
+                plant_profiles[active_profile_id] = active_profile
                 Settings.set('plant_profiles', plant_profiles)
                 
-                # Update system settings if cannabis is the active profile
-                if Settings.get('active_plant_profile') == 'cannabis':
-                    weekly_schedule = cannabis_profile.get('weekly_schedules', {}).get(str(new_week), {})
+                # Update system settings if this is the active profile
+                if Settings.get('active_plant_profile') == active_profile_id:
+                    weekly_schedule = active_profile.get('weekly_schedules', {}).get(str(new_week), {})
                     if 'ec_setpoint' in weekly_schedule:
                         Settings.set('ec_setpoint', weekly_schedule.get('ec_setpoint'))
                 
@@ -584,22 +599,22 @@ def grow_cycle():
                 flash(f'Grow cycle week updated from Week {old_week} to Week {new_week}. Dosing settings have been updated. {update_result}', 'success')
                 return redirect(url_for('garden.grow_cycle'))
             else:
-                flash(f'Invalid week value: {new_week}. Week must be between 1 and {cannabis_profile.get("total_weeks", 12)}', 'error')
+                flash(f'Invalid week value: {new_week}. Week must be between 1 and {active_profile.get("total_weeks", 12)}', 'error')
                 return redirect(url_for('garden.grow_cycle'))
         
         elif action == 'next_week':
-            current_week = cannabis_profile.get('current_week', 1)
-            total_weeks = cannabis_profile.get('total_weeks', 12)
+            current_week = active_profile.get('current_week', 1)
+            total_weeks = active_profile.get('total_weeks', 12)
             
             if current_week < total_weeks:
                 # Update to the next week
-                cannabis_profile['current_week'] = current_week + 1
-                plant_profiles['cannabis'] = cannabis_profile
+                active_profile['current_week'] = current_week + 1
+                plant_profiles[active_profile_id] = active_profile
                 Settings.set('plant_profiles', plant_profiles)
                 
-                # Update system settings if cannabis is the active profile
-                if Settings.get('active_plant_profile') == 'cannabis':
-                    weekly_schedule = cannabis_profile.get('weekly_schedules', {}).get(str(current_week + 1), {})
+                # Update system settings if this is the active profile
+                if Settings.get('active_plant_profile') == active_profile_id:
+                    weekly_schedule = active_profile.get('weekly_schedules', {}).get(str(current_week + 1), {})
                     if 'ec_setpoint' in weekly_schedule:
                         Settings.set('ec_setpoint', weekly_schedule.get('ec_setpoint'))
                 
@@ -613,14 +628,14 @@ def grow_cycle():
             return redirect(url_for('garden.grow_cycle'))
         
         elif action == 'reset_cycle':
-            old_week = cannabis_profile.get('current_week', 1)
-            cannabis_profile['current_week'] = 1
-            plant_profiles['cannabis'] = cannabis_profile
+            old_week = active_profile.get('current_week', 1)
+            active_profile['current_week'] = 1
+            plant_profiles[active_profile_id] = active_profile
             Settings.set('plant_profiles', plant_profiles)
             
-            # Update system settings if cannabis is the active profile
-            if Settings.get('active_plant_profile') == 'cannabis':
-                weekly_schedule = cannabis_profile.get('weekly_schedules', {}).get('1', {})
+            # Update system settings if this is the active profile
+            if Settings.get('active_plant_profile') == active_profile_id:
+                weekly_schedule = active_profile.get('weekly_schedules', {}).get('1', {})
                 if 'ec_setpoint' in weekly_schedule:
                     Settings.set('ec_setpoint', weekly_schedule.get('ec_setpoint'))
             
@@ -635,19 +650,19 @@ def grow_cycle():
             return redirect(url_for('garden.grow_cycle'))
     
     # Get current week and weekly schedules
-    current_week = cannabis_profile.get('current_week', 1)
-    total_weeks = cannabis_profile.get('total_weeks', 12)
-    weekly_schedules = cannabis_profile.get('weekly_schedules', {})
+    current_week = active_profile.get('current_week', 1)
+    total_weeks = active_profile.get('total_weeks', 12)
+    weekly_schedules = active_profile.get('weekly_schedules', {})
     
     # Get current week schedule
     current_week_str = str(current_week)
     current_schedule = weekly_schedules.get(current_week_str, {})
     
     # Get growth phase label
-    growth_phase = get_growth_phase_for_week(cannabis_profile, current_week)
+    growth_phase = get_growth_phase_for_week(active_profile, current_week)
     
     # Check nutrient components to ensure they match the current week
-    nutrient_components = cannabis_profile.get('nutrient_components', [])
+    nutrient_components = active_profile.get('nutrient_components', [])
     all_components_match = all(comp.get('weekly_schedule_applied') == current_week_str for comp in nutrient_components)
     
     if not all_components_match and nutrient_components:
@@ -657,12 +672,14 @@ def grow_cycle():
     
     return render_template(
         'garden/grow_cycle.html',
-        profile=cannabis_profile,
+        profile=active_profile,
+        profile_id=active_profile_id,
         current_week=current_week,
         total_weeks=total_weeks,
         weekly_schedules=weekly_schedules,
         current_schedule=current_schedule,
-        growth_phase=growth_phase
+        growth_phase=growth_phase,
+        no_schedule=False
     )
 
 # Helper function for profile schedules
