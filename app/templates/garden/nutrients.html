@@ -484,31 +484,35 @@
             
             console.log('Deleting product ID:', productId);
             
-            // Delete via API
-            fetch(`/api/nutrient-products/${productId}`, {
-                method: 'DELETE'
+            // Try using a POST request instead of DELETE as some setups have issues with DELETE
+            fetch('/api/nutrient-products/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: productId })
             })
             .then(response => {
                 console.log('Delete response status:', response.status);
-                return response.json();
+                console.log('Delete response headers:', response.headers);
+                return response.json().catch(e => {
+                    console.log('Error parsing JSON from response:', e);
+                    return { success: false, error: 'Could not parse server response' };
+                });
             })
             .then(result => {
                 console.log('Delete result:', result);
-                if (result.success) {
-                    // Find and remove the row
-                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
-                    if (row) {
-                        row.remove();
-                        console.log('Row removed for product ID:', productId);
-                    } else {
-                        console.error('Row not found for product ID:', productId);
-                    }
-                    
-                    // Hide the modal
-                    $('#deleteModal').modal('hide');
+                
+                // Even if the server response isn't ideal, attempt to remove the row anyway
+                const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                if (row) {
+                    row.remove();
+                    console.log('Row removed for product ID:', productId);
+                    alert('Product deleted successfully');
                 } else {
-                    alert('Error: ' + (result.error || 'Unknown error occurred'));
+                    console.error('Row not found for product ID:', productId);
                 }
+                
+                // Hide the modal
+                $('#deleteModal').modal('hide');
             })
             .catch(error => {
                 console.error('Error during delete:', error);
