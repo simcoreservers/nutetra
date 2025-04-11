@@ -76,11 +76,11 @@ a:hover {
 }
 
 button, .button {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: var(--bg-color-light);
   border: none;
-  border-radius: var(--border-radius);
+  color: var(--text-color);
   padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
   cursor: pointer;
   font-family: var(--font-family);
   font-weight: 500;
@@ -89,15 +89,82 @@ button, .button {
   align-items: center;
   justify-content: center;
   min-height: 40px; /* Min height for better touch targets */
+  gap: 5px;
 }
 
 button:hover, .button:hover {
-  background-color: #6fbaff;
+  background-color: var(--primary-color);
+  color: white;
   transform: translateY(-1px);
 }
 
 button:active, .button:active {
   transform: translateY(1px);
+}
+
+button.danger, .button.danger {
+  background-color: var(--danger-color-light);
+  color: var(--danger-color);
+}
+
+button.danger:hover, .button.danger:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+button.success, .button.success {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
+}
+
+button.success:hover, .button.success:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Keep action button styles consistent with general button styles */
+.action-button {
+  background-color: var(--bg-color-light);
+  border: none;
+  color: var(--text-color);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.action-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.action-button:active {
+  transform: translateY(1px);
+}
+
+.action-button.danger {
+  background-color: var(--danger-color-light);
+  color: var(--danger-color);
+}
+
+.action-button.danger:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.action-button.success {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
+}
+
+.action-button.success:hover {
+  background-color: var(--primary-color);
+  color: white;
 }
 
 input, select, textarea {
@@ -838,50 +905,6 @@ input:focus, select:focus, textarea:focus {
   font-size: 1rem;
   margin-bottom: var(--spacing-sm);
   font-weight: 500;
-}
-
-.action-button {
-  background-color: var(--bg-color-light);
-  border: none;
-  color: var(--text-color);
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: background-color 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.action-button:hover {
-  background-color: var(--primary-color);
-  color: white;
-  transform: translateY(-1px);
-}
-
-.action-button:active {
-  transform: translateY(1px);
-}
-
-.action-button.danger {
-  background-color: var(--danger-color-light);
-  color: var(--danger-color);
-}
-
-.action-button.danger:hover {
-  background-color: var(--danger-color);
-  color: white;
-}
-
-.action-button.success {
-  background-color: var(--primary-color-light);
-  color: var(--primary-color);
-}
-
-.action-button.success:hover {
-  background-color: var(--primary-color);
-  color: white;
 }
 
 .action-button i {
