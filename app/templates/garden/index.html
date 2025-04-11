@@ -125,17 +125,17 @@
                 {% endif %}
                 
                 <div class="action-buttons">
-                    <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="btn btn-primary">
+                    <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="action-button success">
                         <i class="fas fa-edit"></i> Edit Profile
                     </a>
-                    <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="btn btn-secondary" {% if not active_profile.weekly_schedules %}disabled{% endif %}>
+                    <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="action-button" {% if not active_profile.weekly_schedules %}disabled{% endif %}>
                         <i class="fas fa-calendar-alt"></i> Schedule
                     </a>
                 </div>
             {% else %}
                 <p>No active plant profile selected.</p>
                 <div class="action-buttons">
-                    <a href="{{ url_for('garden.profiles') }}" class="btn btn-primary">
+                    <a href="{{ url_for('garden.profiles') }}" class="action-button success">
                         <i class="fas fa-leaf"></i> Select Profile
                     </a>
                 </div>
@@ -159,7 +159,7 @@
             {% endif %}
             
             <div class="action-buttons">
-                <a href="{{ url_for('garden.nutrients') }}" class="btn btn-primary">
+                <a href="{{ url_for('garden.nutrients') }}" class="action-button success">
                     <i class="fas fa-flask"></i> Manage Nutrients
                 </a>
             </div>
@@ -170,10 +170,10 @@
             <p class="lead">Customize growing conditions for your plants</p>
             
             <div class="action-buttons">
-                <a href="{{ url_for('garden.profiles') }}" class="btn btn-primary">
+                <a href="{{ url_for('garden.profiles') }}" class="action-button success">
                     <i class="fas fa-list"></i> View Profiles
                 </a>
-                <a href="{{ url_for('garden.add_profile') }}" class="btn btn-success">
+                <a href="{{ url_for('garden.add_profile') }}" class="action-button success">
                     <i class="fas fa-plus"></i> Add Profile
                 </a>
             </div>

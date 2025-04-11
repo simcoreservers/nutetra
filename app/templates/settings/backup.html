@@ -26,7 +26,7 @@
                     
                     <div class="form-actions">
                         <a href="data:text/json;charset=utf-8,{{ backup_data|urlencode }}" 
-                           download="{{ backup_filename }}" class="button primary-button">
+                           download="{{ backup_filename }}" class="action-button success">
                             <i class="fas fa-download"></i> Download Backup
                         </a>
                     </div>
@@ -93,7 +93,7 @@
                             </div>
                             
                             <div class="form-actions">
-                                <button type="button" id="confirm-reset-btn" class="button danger-button">
+                                <button type="button" id="confirm-reset-btn" class="action-button danger">
                                     <i class="fas fa-trash-alt"></i> Reset System
                                 </button>
                             </div>
@@ -104,7 +104,7 @@
         </div>
         
         <div class="section-actions">
-            <a href="{{ url_for('settings.index') }}" class="button">Back to Settings</a>
+            <a href="{{ url_for('settings.index') }}" class="action-button">Back to Settings</a>
         </div>
     </div>
 </div>
@@ -121,8 +121,8 @@
             <p>Are you sure you want to proceed?</p>
         </div>
         <div class="modal-footer">
-            <button id="cancel-reset" class="button">Cancel</button>
-            <button id="proceed-reset" class="button danger-button">Reset System</button>
+            <button id="cancel-reset" class="action-button">Cancel</button>
+            <button id="proceed-reset" class="action-button danger">Reset System</button>
         </div>
     </div>
 </div>
