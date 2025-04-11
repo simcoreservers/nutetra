@@ -15,12 +15,12 @@
                     <i class="fas fa-plus"></i> Add New Brand
                 </button>
             </div>
-        </div>
-        
+    </div>
+    
         <div class="alert info-alert">
-            <i class="fas fa-info-circle"></i> Changes are automatically saved when you click out of a field or select a new option.
-        </div>
-        
+        <i class="fas fa-info-circle"></i> Changes are automatically saved when you click out of a field or select a new option.
+    </div>
+    
         <!-- Add Brand Form (initially hidden) -->
         <div id="add-brand-container" class="form-card" style="display: none;">
             <div class="form-card-header">
@@ -28,24 +28,24 @@
             </div>
             <div class="form-card-body">
                 <form id="add-brand-form" onsubmit="saveBrand(event)">
-                    <div class="form-group">
-                        <label for="new-brand-name">Brand Name</label>
-                        <input type="text" id="new-brand-name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="new-brand-description">Description</label>
-                        <input type="text" id="new-brand-description" class="form-control">
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> Save Brand
-                        </button>
-                        <button type="button" onclick="cancelAddBrand()" class="btn btn-secondary">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
+            <div class="form-group">
+                <label for="new-brand-name">Brand Name</label>
+                <input type="text" id="new-brand-name" class="form-control" required>
             </div>
+            <div class="form-group">
+                <label for="new-brand-description">Description</label>
+                <input type="text" id="new-brand-description" class="form-control">
+            </div>
+                    <div class="form-actions">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Save Brand
+                </button>
+                        <button type="button" onclick="cancelAddBrand()" class="btn btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
         </div>
     </section>
     
@@ -161,7 +161,7 @@
                 <i class="fas fa-vial"></i>
                 <h4>No nutrient brands found</h4>
                 <p>Get started by adding your first nutrient brand.</p>
-            </div>
+        </div>
         </section>
         {% endfor %}
     </div>
@@ -474,50 +474,50 @@
         const productId = row.getAttribute('data-product-id');
         console.log('Updating product ID:', productId, 'Field:', field, 'Value:', value);
         
-        const statusEl = row.querySelector('.save-status');
-        
-        // Show saving indicator
-        statusEl.innerHTML = '<div class="spinner"></div>';
-        
-        // Prepare update data
-        const updateData = {};
-        updateData[field] = value;
+            const statusEl = row.querySelector('.save-status');
+            
+            // Show saving indicator
+            statusEl.innerHTML = '<div class="spinner"></div>';
+            
+            // Prepare update data
+            const updateData = {};
+            updateData[field] = value;
         
         console.log('Update data:', updateData);
-        
-        // Update via API
-        fetch(`/api/nutrient-products/${productId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updateData)
-        })
+            
+            // Update via API
+            fetch(`/api/nutrient-products/${productId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            })
         .then(response => {
             console.log('Update response status:', response.status);
             return response.json();
         })
-        .then(result => {
+            .then(result => {
             console.log('Update result:', result);
-            if (result.success) {
-                // Show success
-                statusEl.innerHTML = '<i class="fas fa-check text-success"></i>';
-                setTimeout(() => { statusEl.innerHTML = ''; }, 2000);
-                
-                // Update data-original
-                const input = row.querySelector(`.product-${field}`);
+                if (result.success) {
+                    // Show success
+                    statusEl.innerHTML = '<i class="fas fa-check text-success"></i>';
+                    setTimeout(() => { statusEl.innerHTML = ''; }, 2000);
+                    
+                    // Update data-original
+                    const input = row.querySelector(`.product-${field}`);
                 if (input) input.setAttribute('data-original', value);
-            } else {
-                // Show error
-                statusEl.innerHTML = '<i class="fas fa-times text-danger"></i>';
+                } else {
+                    // Show error
+                    statusEl.innerHTML = '<i class="fas fa-times text-danger"></i>';
                 alert('Error: ' + (result.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
+                }
+            })
+            .catch(error => {
             console.error('Update error:', error);
-            statusEl.innerHTML = '<i class="fas fa-times text-danger"></i>';
-            alert('An error occurred while updating the product');
-        });
-    }
-
+                statusEl.innerHTML = '<i class="fas fa-times text-danger"></i>';
+                alert('An error occurred while updating the product');
+            });
+        }
+        
     // Function to show the add brand form
     function showAddBrandForm() {
         console.log('Show add brand form');
@@ -889,9 +889,9 @@
                 console.log('Debug delete brand response JSON:', json);
             } catch (e) {
                 console.log('Not JSON response');
-            }
-        })
-        .catch(error => {
+                }
+            })
+            .catch(error => {
             console.error('Debug delete brand error:', error);
         });
         
@@ -904,4 +904,4 @@
 <script>
     // Empty block - all functionality moved to direct handlers
 </script>
-{% endblock %}
+{% endblock %} 
