@@ -103,9 +103,12 @@
                                 <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}">
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-danger delete-product-btn" title="Delete Product">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <form class="delete-product-form" style="display:inline">
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete Product">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                                 <span class="save-status"></span>
                             </td>
                         </tr>
@@ -664,31 +667,31 @@
         });
         
         // Delete Product
-        $('.delete-product-btn').on('click', function() {
-            const row = $(this).closest('tr')[0];
-            productToDelete = row;
+        $('.delete-product-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            const productId = this.querySelector('input[name="product_id"]').value;
             
             // Show confirmation modal using Bootstrap
             $('#deleteModal').modal('show');
+            
+            productToDelete = productId;
         });
         
         // Confirm Delete
         $('#confirmDelete').on('click', function() {
             if (!productToDelete) return;
             
-            // Use the correct camelCase format for jQuery data attribute or get it directly from the attribute
-            const productId = $(productToDelete).attr('data-product-id');
-            console.log('Deleting product ID:', productId); // Debug log
-            
             // Delete via API
-            fetch(`/api/nutrient-products/${productId}`, {
+            fetch(`/api/nutrient-products/${productToDelete}`, {
                 method: 'DELETE'
             })
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
                     // Remove row from table
-                    $(productToDelete).remove();
+                    const row = document.querySelector(`.nutrient-table tr[data-product-id="${productToDelete}"]`);
+                    if (row) row.remove();
                     $('#deleteModal').modal('hide');
                 } else {
                     alert('Error: ' + result.error);
