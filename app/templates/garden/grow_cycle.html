@@ -25,7 +25,10 @@
             <div class="cycle-status">
                 <h3>{{ profile.name }} - Current Growth Stage: <span class="growth-phase {{ growth_phase|lower }}">{{ growth_phase }}</span></h3>
                 <div class="week-indicator">
-                    <div class="week-label">Week {{ current_week }} of {{ total_weeks }}</div>
+                    <div class="week-label">
+                        Week {{ current_week }} of {{ total_weeks }}
+                        <span class="percentage-indicator">{{ (current_week / total_weeks * 100)|round|int }}%</span>
+                    </div>
                     <div class="progress-bar">
                         <div class="progress" style="width: {{ (current_week / total_weeks * 100)|round }}%"></div>
                     </div>
@@ -233,6 +236,14 @@
     .week-label {
         margin-bottom: 5px;
         font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .percentage-indicator {
+        color: var(--primary-color);
+        font-weight: bold;
     }
     
     .progress-bar {
@@ -240,7 +251,8 @@
         background-color: var(--bg-color-dark);
         border-radius: 10px;
         overflow: hidden;
-        width: 300px;
+        width: 50%;
+        min-width: 300px;
     }
     
     .progress {
