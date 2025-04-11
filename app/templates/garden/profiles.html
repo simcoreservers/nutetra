@@ -116,7 +116,7 @@
                             <i class="fas fa-pencil-alt"></i> Edit
                         </a>
                         {% if profile.weekly_schedules %}
-                        <a href="{{ url_for('dosing.profile_schedule', profile_id=profile_id) }}" class="action-button">
+                        <a href="{{ url_for('garden.profile_schedule', profile_id=profile_id) }}" class="action-button">
                             <i class="fas fa-calendar-alt"></i> Schedule
                         </a>
                         {% endif %}

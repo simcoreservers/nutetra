@@ -68,7 +68,7 @@
         
         <div class="actions-grid">
             <!-- Quick Action Buttons -->
-            <a href="{{ url_for('dosing.profiles') }}" class="action-card">
+            <a href="{{ url_for('garden.profiles') }}" class="action-card">
                 <div class="action-icon">
                     <i class="fas fa-leaf"></i>
                 </div>
@@ -140,7 +140,7 @@
     <section class="dashboard-section active-profile-section">
         <div class="section-header">
             <h3><i class="fas fa-leaf"></i> Active Plant Profile</h3>
-            <a href="{{ url_for('dosing.profiles') }}" class="button small">Change Profile</a>
+            <a href="{{ url_for('garden.profiles') }}" class="button small">Change Profile</a>
         </div>
         
         {% if active_profile %}
@@ -175,7 +175,7 @@
                     <i class="fas fa-pencil-alt"></i> Edit Profile
                 </a>
                 {% if active_profile.weekly_schedules %}
-                <a href="{{ url_for('dosing.profile_schedule', profile_id=active_profile_id) }}" class="action-button">
+                <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="action-button">
                     <i class="fas fa-calendar-alt"></i> Schedule
                 </a>
                 {% endif %}
@@ -183,7 +183,7 @@
         </div>
         {% else %}
         <div class="empty-state">
-            <p>No active profile selected. <a href="{{ url_for('dosing.profiles') }}">Select a profile</a> to get started.</p>
+            <p>No active profile selected. <a href="{{ url_for('garden.profiles') }}">Select a profile</a> to get started.</p>
         </div>
         {% endif %}
     </section>

@@ -64,21 +64,27 @@
                         </a>
                         <ul class="submenu">
                             <li class="{% if '/garden/nutrients' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.nutrients') }}">
+                                <a href="{{ url_for('garden.nutrients') }}">
                                     <i class="fas fa-vial"></i>
                                     <span>Nutrient Library</span>
                                 </a>
                             </li>
                             <li class="{% if '/garden/profiles' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.profiles') }}">
+                                <a href="{{ url_for('garden.profiles') }}">
                                     <i class="fas fa-leaf"></i>
                                     <span>Plant Profiles</span>
                                 </a>
                             </li>
-                            <li class="{% if '/garden/grow_cycle' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.grow_cycle') }}">
+                            <li class="{% if '/garden' == request.path %}active{% endif %}">
+                                <a href="{{ url_for('garden.index') }}">
                                     <i class="fas fa-seedling"></i>
-                                    <span>Growth Schedules</span>
+                                    <span>Garden Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="{% if '/garden/grow-cycle' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('garden.grow_cycle') }}">
+                                    <i class="fas fa-leaf"></i>
+                                    <span>Grow Cycle</span>
                                 </a>
                             </li>
                         </ul>
