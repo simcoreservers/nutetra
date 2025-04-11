@@ -27,14 +27,14 @@
                     <div class="cycle-actions">
                         <form method="post" class="inline-form">
                             <input type="hidden" name="action" value="next_week">
-                            <button type="submit" class="button primary-button">
+                            <button type="submit" class="action-button success">
                                 <i class="fas fa-forward"></i> Next Week
                             </button>
                         </form>
                         
                         <form method="post" class="inline-form">
                             <input type="hidden" name="action" value="reset_cycle">
-                            <button type="submit" class="button danger-button" onclick="return confirm('Are you sure you want to reset the grow cycle to Week 1?')">
+                            <button type="submit" class="action-button danger" onclick="return confirm('Are you sure you want to reset the grow cycle to Week 1?')">
                                 <i class="fas fa-redo"></i> Reset Cycle
                             </button>
                         </form>
@@ -102,7 +102,7 @@
                             <div class="week-selector">
                                 {% for week_num in range(1, total_weeks + 1) %}
                                     <button type="submit" name="week" value="{{ week_num }}" 
-                                            class="week-button {% if week_num == current_week %}active{% endif %}">
+                                            class="action-button {% if week_num == current_week %}active{% endif %}">
                                         {{ week_num }}
                                     </button>
                                 {% endfor %}
@@ -300,7 +300,7 @@
                                         </div>
                                         <div class="form-group button-group">
                                             <label class="invisible">Action</label>
-                                            <button type="button" class="remove-component button danger-button">
+                                            <button type="button" class="remove-component action-button danger">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -325,7 +325,7 @@
                                     </div>
                                     <div class="form-group button-group">
                                         <label class="invisible">Action</label>
-                                        <button type="button" class="remove-component button danger-button">
+                                        <button type="button" class="remove-component action-button danger">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -335,7 +335,7 @@
                     </div>
                     
                     <div class="add-component-container">
-                        <button type="button" id="add-component" class="button">
+                        <button type="button" id="add-component" class="action-button success">
                             <i class="fas fa-plus"></i> Add Nutrient Component
                         </button>
                     </div>
@@ -585,7 +585,7 @@
                     </div>
                     <div class="form-group button-group">
                         <label class="invisible">Action</label>
-                        <button type="button" class="remove-component button danger-button">
+                        <button type="button" class="remove-component action-button danger">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
