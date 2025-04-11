@@ -1,21 +1,26 @@
 {% extends 'base.html' %}
 
-{% block title %}Garden Dashboard{% endblock %}
+{% block title %}Garden Dashboard | NuTetra Controller{% endblock %}
+{% block page_title %}Garden Dashboard{% endblock %}
 
-{% block styles %}
+{% block breadcrumbs %}
+<li class="breadcrumb-item active">Garden</li>
+{% endblock %}
+
+{% block extra_css %}
 <style>
     .garden-dashboard {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
     }
     
     .dashboard-card {
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        padding: 1.5rem;
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        padding: var(--spacing-md);
         position: relative;
         overflow: hidden;
     }
@@ -25,6 +30,8 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
     }
     
     .dashboard-card i {
@@ -32,49 +39,51 @@
     }
     
     .dashboard-card p.lead {
-        margin-bottom: 1rem;
-        color: #666;
+        margin-bottom: var(--spacing-md);
+        color: var(--text-color-muted);
     }
     
     .action-buttons {
-        margin-top: 1rem;
+        margin-top: var(--spacing-md);
         display: flex;
-        gap: 0.5rem;
+        gap: var(--spacing-sm);
     }
     
     .profile-info {
-        margin: 1rem 0;
+        margin: var(--spacing-md) 0;
     }
     
     .profile-info .label {
-        font-weight: bold;
+        font-weight: 500;
         display: inline-block;
         width: 120px;
+        color: var(--text-color-muted);
     }
     
     .profile-info .value {
         display: inline-block;
+        font-weight: 600;
     }
     
     .active-component {
-        margin-bottom: 0.5rem;
-        padding: 0.5rem;
-        border-radius: 4px;
-        background-color: #f8f9fa;
+        margin-bottom: var(--spacing-sm);
+        padding: var(--spacing-sm);
+        border-radius: var(--border-radius);
+        background-color: var(--primary-color-light);
         border-left: 3px solid var(--primary-color);
     }
     
     .component-name {
-        font-weight: bold;
+        font-weight: 600;
     }
     
     .component-ratio {
         float: right;
-        color: #666;
+        color: var(--text-color-muted);
     }
     
     .grow-cycle-indicator {
-        margin-top: 1rem;
+        margin-top: var(--spacing-md);
         text-align: center;
     }
     
@@ -84,26 +93,30 @@
         background-color: var(--primary-color);
         color: white;
         border-radius: 999px;
-        font-weight: bold;
+        font-weight: 600;
     }
     
     .phase-badge {
         display: inline-block;
         margin-left: 0.5rem;
         padding: 0.5rem 1rem;
-        background-color: #f0f0f0;
-        color: #333;
+        background-color: var(--bg-color-light);
+        color: var(--text-color);
         border-radius: 999px;
-        font-weight: bold;
+        font-weight: 600;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="page-header">
-        <h2>Garden Dashboard</h2>
-        <p class="lead">Manage your garden settings, nutrients, and plant profiles</p>
+<div class="dashboard-section">
+    <div class="section-header">
+        <h3>Garden Dashboard</h3>
+        <div class="header-actions">
+            <a href="{{ url_for('garden.add_profile') }}" class="button success">
+                <i class="fas fa-plus"></i> Add Profile
+            </a>
+        </div>
     </div>
     
     <div class="garden-dashboard">
@@ -125,17 +138,17 @@
                 {% endif %}
                 
                 <div class="action-buttons">
-                    <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="action-button success">
+                    <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="button success">
                         <i class="fas fa-edit"></i> Edit Profile
                     </a>
-                    <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="action-button" {% if not active_profile.weekly_schedules %}disabled{% endif %}>
+                    <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="button" {% if not active_profile.weekly_schedules %}disabled{% endif %}>
                         <i class="fas fa-calendar-alt"></i> Schedule
                     </a>
                 </div>
             {% else %}
                 <p>No active plant profile selected.</p>
                 <div class="action-buttons">
-                    <a href="{{ url_for('garden.profiles') }}" class="action-button success">
+                    <a href="{{ url_for('garden.profiles') }}" class="button success">
                         <i class="fas fa-leaf"></i> Select Profile
                     </a>
                 </div>
@@ -159,7 +172,7 @@
             {% endif %}
             
             <div class="action-buttons">
-                <a href="{{ url_for('garden.nutrients') }}" class="action-button success">
+                <a href="{{ url_for('garden.nutrients') }}" class="button success">
                     <i class="fas fa-flask"></i> Manage Nutrients
                 </a>
             </div>
@@ -170,10 +183,10 @@
             <p class="lead">Customize growing conditions for your plants</p>
             
             <div class="action-buttons">
-                <a href="{{ url_for('garden.profiles') }}" class="action-button success">
+                <a href="{{ url_for('garden.profiles') }}" class="button">
                     <i class="fas fa-list"></i> View Profiles
                 </a>
-                <a href="{{ url_for('garden.add_profile') }}" class="action-button success">
+                <a href="{{ url_for('garden.add_profile') }}" class="button success">
                     <i class="fas fa-plus"></i> Add Profile
                 </a>
             </div>
