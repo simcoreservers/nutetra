@@ -933,9 +933,10 @@
             grid-column: span 1;
             padding: 15px;
             margin-bottom: 15px;
+            height: auto; /* Allow natural height */
         }
         
-        /* Stacked readings for mobile - scrolling is ok */
+        /* Natural height readings for mobile */
         .readings-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -944,8 +945,8 @@
         
         .reading-card {
             padding: 15px;
-            margin-bottom: 0;
-            min-height: unset;
+            height: auto; /* Allow natural height */
+            min-height: 0; /* Remove min height constraint */
         }
         
         .reading-icon {
@@ -965,7 +966,8 @@
         }
         
         .status-card {
-            min-height: unset;
+            min-height: 0; /* Remove min height constraint */
+            height: auto; /* Allow natural height */
             padding: 15px;
         }
         
@@ -975,15 +977,36 @@
         }
         
         .action-card {
-            min-height: unset;
+            min-height: 0; /* Remove min height constraint */
+            height: auto; /* Allow natural height */
         }
         
         .charts-container {
-            height: 300px;
+            height: 300px; /* Fixed height for charts */
+        }
+        
+        /* Allow scrolling for all content */
+        .dashboard-container {
+            height: auto;
+            overflow-y: visible;
+        }
+        
+        /* Fix all sections to allow natural height */
+        .active-profile-section {
+            height: auto;
+        }
+        
+        .profile-detail-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .profile-info-card {
+            height: auto;
         }
     }
     
-    /* Small mobile adjustments - focused on making sure content is accessible */
+    /* Small mobile adjustments */
     @media (max-width: 480px) {
         .dashboard-container {
             padding: 10px;
@@ -993,6 +1016,7 @@
         .dashboard-section {
             padding: 15px;
             margin-bottom: 15px;
+            height: auto;
         }
         
         .actions-grid {
