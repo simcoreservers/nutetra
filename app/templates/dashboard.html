@@ -95,7 +95,7 @@
                 </div>
             </a>
             
-            <a href="{{ url_for('dosing.nutrients') }}" class="action-card">
+            <a href="{{ url_for('garden.nutrients') }}" class="action-card">
                 <div class="action-icon">
                     <i class="fas fa-vial"></i>
                 </div>
@@ -171,7 +171,7 @@
             </div>
             
             <div class="profile-actions">
-                <a href="{{ url_for('dosing.edit_profile', profile_id=active_profile_id) }}" class="action-button">
+                <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="action-button">
                     <i class="fas fa-pencil-alt"></i> Edit Profile
                 </a>
                 {% if active_profile.weekly_schedules %}

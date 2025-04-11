@@ -96,7 +96,7 @@
                             <p class="helper-text">Create, edit, or delete custom plant profiles</p>
                             
                             {% if settings.active_plant_profile == 'cannabis' %}
-                            <a href="{{ url_for('dosing.grow_cycle') }}" class="profile-link cannabis-link">
+                            <a href="{{ url_for('garden.grow_cycle') }}" class="profile-link cannabis-link">
                                 <i class="fas fa-calendar-alt"></i> Manage Cannabis Grow Cycle
                             </a>
                             <p class="helper-text">Track and update your grow week to adjust nutrient schedules</p>
