@@ -3,6 +3,21 @@
 {% block title %}{{ 'Add' if action == 'add' else 'Edit' }} Plant Profile | NuTetra Controller{% endblock %}
 {% block page_title %}{{ 'Add' if action == 'add' else 'Edit' }} Plant Profile{% endblock %}
 
+{% macro get_phase_for_week(week_num) %}
+    {% if weekly_schedules %}
+        {% set week_phase = growth_phases.get(week_num, "Unknown") if growth_phases is defined else "Unknown" %}
+        {{ week_phase }}
+    {% else %}
+        {% if week_num <= 3 %}
+            Seedling
+        {% elif week_num <= 6 %}
+            Vegetative
+        {% else %}
+            Flowering
+        {% endif %}
+    {% endif %}
+{% endmacro %}
+
 {% block content %}
 <div class="page-content">
     <div class="dashboard-section">

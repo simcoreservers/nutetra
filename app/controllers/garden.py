@@ -191,11 +191,23 @@ def add_profile():
         }
     }
     
+    # Set defaults for weekly schedule variables
+    current_week = 1
+    total_weeks = 12
+    weekly_schedules = {}
+    current_schedule = None
+    growth_phase = "Seedling"  # Default for new profiles
+    
     return render_template(
         'garden/profile_form.html',
         profile=empty_profile,
         action='add',
-        pumps=pumps
+        pumps=pumps,
+        current_week=current_week,
+        total_weeks=total_weeks,
+        weekly_schedules=weekly_schedules,
+        current_schedule=current_schedule,
+        growth_phase=growth_phase
     )
 
 @garden_bp.route('/profiles/edit/<profile_id>', methods=['GET', 'POST'])
@@ -321,12 +333,30 @@ def edit_profile(profile_id):
     # Make a deep copy of the profile to avoid modifying the original
     profile_copy = copy.deepcopy(profile)
     
+    # Get weekly schedule info if this profile uses weekly schedules
+    current_week = profile_copy.get('current_week', 1)
+    total_weeks = profile_copy.get('total_weeks', 12)
+    weekly_schedules = profile_copy.get('weekly_schedules', {})
+    
+    # Get current week schedule and growth phase if available
+    current_schedule = None
+    growth_phase = None
+    if weekly_schedules:
+        current_week_str = str(current_week)
+        current_schedule = weekly_schedules.get(current_week_str, {})
+        growth_phase = get_growth_phase_for_week(profile_copy, current_week)
+    
     return render_template(
         'garden/profile_form.html',
         profile=profile_copy,
         profile_id=profile_id,
         action='edit',
-        pumps=pumps
+        pumps=pumps,
+        current_week=current_week,
+        total_weeks=total_weeks,
+        weekly_schedules=weekly_schedules,
+        current_schedule=current_schedule,
+        growth_phase=growth_phase
     )
 
 @garden_bp.route('/profiles/delete/<profile_id>', methods=['POST'])
