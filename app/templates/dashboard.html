@@ -448,13 +448,18 @@
     
     /* Readings section */
     .readings-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
+        display: flex;
+        flex-wrap: wrap;
         justify-content: center;
+        gap: 20px;
+        margin: 0 auto;
     }
     
     .reading-card {
+        flex: 0 0 auto;
+        width: calc(25% - 20px);
+        min-width: 150px;
+        max-width: 220px;
         display: flex;
         align-items: center;
         padding: 18px;
@@ -463,9 +468,6 @@
         border-left: 4px solid transparent;
         transition: transform 0.2s;
         min-height: 120px;
-        overflow: visible;
-        margin: 0 auto;
-        width: 100%;
         box-sizing: border-box;
     }
     
@@ -838,22 +840,18 @@
     
     /* Responsive adjustments */
     @media (max-width: 1200px) {
-        .readings-grid {
-            grid-template-columns: repeat(3, 1fr);
+        .reading-card {
+            width: calc(33.333% - 20px);
         }
     }
     
     @media (max-width: 992px) {
-        .readings-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+        .reading-card {
+            width: calc(50% - 15px);
         }
         
-        .reading-icon {
-            width: 50px;
-            height: 50px;
-            font-size: 1.3rem;
-            margin-right: 12px;
+        .readings-grid {
+            gap: 15px;
         }
     }
 
