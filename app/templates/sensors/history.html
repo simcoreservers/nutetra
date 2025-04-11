@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Sensor History{% endblock %}
+
+{% block page_title %}Sensor History{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item">Sensor Monitoring</li>
+<li class="breadcrumb-item active">Sensor History</li>
+{% endblock %}
+
+{% block content %}
+<div class="sensor-history-container">
+    <div class="section-header">
+        <h3>Sensor History</h3>
+        <p class="section-description">View historical sensor data and trends over time</p>
+    </div>
+
+    <div class="sensor-charts-grid">
+        <!-- pH History Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h4><i class="fas fa-tint"></i> pH History</h4>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="ph-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- EC History Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h4><i class="fas fa-bolt"></i> EC History</h4>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="ec-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Temperature History Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h4><i class="fas fa-thermometer-half"></i> Temperature History</h4>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="temp-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sensor-history-container {
+        padding: 1rem;
+    }
+    
+    .sensor-charts-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .chart-card {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        background-color: var(--card-header-bg);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+    
+    @media (min-width: 768px) {
+        .sensor-charts-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        .sensor-charts-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse data from Jinja
+        var phData = {{ ph_data|safe }};
+        var ecData = {{ ec_data|safe }};
+        var tempData = {{ temp_data|safe }};
+        
+        // pH Chart
+        var phCtx = document.getElementById('ph-chart').getContext('2d');
+        var phLabels = [];
+        var phValues = [];
+        var phMin = {{ ph_min }};
+        var phMax = {{ ph_max }};
+        
+        for (var i = 0; i < phData.length; i++) {
+            phLabels.push(new Date(phData[i].time));
+            phValues.push(phData[i].value);
+        }
+        
+        var phChart = new Chart(phCtx, {
+            type: 'line',
+            data: {
+                labels: phLabels,
+                datasets: [{
+                    label: 'pH Level',
+                    data: phValues,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        // EC Chart
+        var ecCtx = document.getElementById('ec-chart').getContext('2d');
+        var ecLabels = [];
+        var ecValues = [];
+        var ecMin = {{ ec_min }};
+        var ecMax = {{ ec_max }};
+        
+        for (var i = 0; i < ecData.length; i++) {
+            ecLabels.push(new Date(ecData[i].time));
+            ecValues.push(ecData[i].value);
+        }
+        
+        var ecChart = new Chart(ecCtx, {
+            type: 'line',
+            data: {
+                labels: ecLabels,
+                datasets: [{
+                    label: 'EC Level (μS/cm)',
+                    data: ecValues,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        // Temperature Chart
+        var tempCtx = document.getElementById('temp-chart').getContext('2d');
+        var tempLabels = [];
+        var tempValues = [];
+        
+        for (var i = 0; i < tempData.length; i++) {
+            tempLabels.push(new Date(tempData[i].time));
+            tempValues.push(tempData[i].value);
+        }
+        
+        var tempChart = new Chart(tempCtx, {
+            type: 'line',
+            data: {
+                labels: tempLabels,
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    data: tempValues,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+</script>
+{% endblock %} 
