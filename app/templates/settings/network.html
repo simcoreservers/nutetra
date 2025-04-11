@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block title %}Network Settings | NuTetra Controller{% endblock %}
+{% block page_title %}Network Settings{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">Settings</a></li>
+<li class="breadcrumb-item active">Network</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>Network Configuration</h3>
+        </div>
+        
+        {% if success_message %}
+        <div class="alert alert-success">
+            {{ success_message }}
+        </div>
+        {% endif %}
+        
+        {% if error_message %}
+        <div class="alert alert-danger">
+            {{ error_message }}
+        </div>
+        {% endif %}
+        
+        <form id="network-settings-form" method="post" action="{{ url_for('settings.network') }}">
+            <!-- Hostname Settings -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-server"></i> System Hostname</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="hostname">Hostname</label>
+                        <input type="text" id="hostname" name="hostname" class="form-control" 
+                               value="{{ network.hostname }}" placeholder="raspberrypi">
+                        <p class="helper-text">Your device will be accessible at http://hostname.local</p>
+                    </div>
+                    
+                    <div class="form-actions-inline">
+                        <button type="submit" name="update_hostname" value="1" class="button">Update Hostname</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- WiFi Settings -->
+            <div class="settings-card mt-4">
+                <div class="card-header">
+                    <h4><i class="fas fa-wifi"></i> WiFi Configuration</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="wifi_ssid">WiFi Network Name (SSID)</label>
+                        <input type="text" id="wifi_ssid" name="wifi_ssid" class="form-control" 
+                               value="{{ network.wifi_ssid }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wifi_password">WiFi Password</label>
+                        <input type="password" id="wifi_password" name="wifi_password" class="form-control">
+                        <p class="helper-text">Leave blank to keep current password</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="switch-container">
+                            <span class="label">Connect Automatically</span>
+                            <label class="switch">
+                                <input type="checkbox" name="wifi_auto_connect" {% if network.wifi_auto_connect %}checked{% endif %}>
+                                <span class="slider round"></span>
+                            </label>
+                        </label>
+                        <p class="helper-text">Connect to this network on startup</p>
+                    </div>
+                    
+                    <div class="form-actions-inline">
+                        <button type="submit" name="update_wifi" value="1" class="button">Update WiFi</button>
+                        <button type="button" id="scan-networks-btn" class="button">Scan Networks</button>
+                    </div>
+                    
+                    <div id="wifi-networks-results" class="mt-4" style="display: none;">
+                        <h5>Available Networks</h5>
+                        <div class="networks-list">
+                            <p>Scanning...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- IP Configuration -->
+            <div class="settings-card mt-4">
+                <div class="card-header">
+                    <h4><i class="fas fa-network-wired"></i> IP Configuration</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="switch-container">
+                            <span class="label">Use DHCP (Automatic IP)</span>
+                            <label class="switch">
+                                <input type="checkbox" name="use_dhcp" id="use-dhcp" {% if network.use_dhcp %}checked{% endif %}>
+                                <span class="slider round"></span>
+                            </label>
+                        </label>
+                        <p class="helper-text">Get IP address automatically from router</p>
+                    </div>
+                    
+                    <div id="static-ip-fields" {% if network.use_dhcp %}style="display: none;"{% endif %}>
+                        <div class="form-group">
+                            <label for="static_ip">Static IP Address</label>
+                            <input type="text" id="static_ip" name="static_ip" class="form-control" 
+                                   value="{{ network.static_ip }}" placeholder="192.168.1.100">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subnet_mask">Subnet Mask</label>
+                            <input type="text" id="subnet_mask" name="subnet_mask" class="form-control" 
+                                   value="{{ network.subnet_mask }}" placeholder="255.255.255.0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="default_gateway">Default Gateway</label>
+                            <input type="text" id="default_gateway" name="default_gateway" class="form-control" 
+                                   value="{{ network.default_gateway }}" placeholder="192.168.1.1">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dns_server">DNS Server</label>
+                            <input type="text" id="dns_server" name="dns_server" class="form-control" 
+                                   value="{{ network.dns_server }}" placeholder="8.8.8.8">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions-inline">
+                        <button type="submit" name="update_ip" value="1" class="button">Update IP Configuration</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Network Diagnostics -->
+            <div class="settings-card mt-4">
+                <div class="card-header">
+                    <h4><i class="fas fa-heartbeat"></i> Network Diagnostics</h4>
+                </div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Current IP:</span>
+                            <span class="info-value">{{ network.current_ip }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">MAC Address:</span>
+                            <span class="info-value">{{ network.mac_address }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Connected To:</span>
+                            <span class="info-value">{{ network.connected_ssid or 'Not connected' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Signal Strength:</span>
+                            <span class="info-value">{{ network.signal_strength }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Internet:</span>
+                            <span class="info-value status-badge {{ 'connected' if network.internet_access else 'disconnected' }}">
+                                {{ 'Connected' if network.internet_access else 'Disconnected' }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions-inline">
+                        <button type="button" id="run-diagnostics-btn" class="button">Run Diagnostics</button>
+                        <button type="button" id="restart-network-btn" class="button secondary">Restart Networking</button>
+                    </div>
+                    
+                    <div id="diagnostics-results" class="mt-4" style="display: none;">
+                        <h5>Diagnostics Results</h5>
+                        <pre id="diagnostics-output" class="code-output"></pre>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-header {
+        background-color: var(--bg-color-light);
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .helper-text {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+        margin-top: 0.25rem;
+        margin-bottom: 0;
+    }
+    
+    .form-actions-inline {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+    
+    .switch-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .info-item {
+        padding: var(--spacing-sm);
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+    }
+    
+    .info-label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-color-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-weight: 500;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+    }
+    
+    .status-badge.connected {
+        background-color: rgba(67, 233, 123, 0.2);
+        color: var(--success-color);
+    }
+    
+    .status-badge.disconnected {
+        background-color: rgba(244, 115, 107, 0.2);
+        color: var(--danger-color);
+    }
+    
+    .networks-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: var(--spacing-sm);
+    }
+    
+    .network-item {
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .network-item:hover {
+        background-color: var(--bg-color-light);
+    }
+    
+    .network-name {
+        font-weight: 500;
+    }
+    
+    .network-signal {
+        font-size: 0.85rem;
+        color: var(--text-color-muted);
+    }
+    
+    .code-output {
+        background-color: var(--bg-color);
+        padding: var(--spacing-sm);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .secondary {
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const useDhcpToggle = document.getElementById('use-dhcp');
+        const staticIpFields = document.getElementById('static-ip-fields');
+        const scanNetworksBtn = document.getElementById('scan-networks-btn');
+        const runDiagnosticsBtn = document.getElementById('run-diagnostics-btn');
+        const restartNetworkBtn = document.getElementById('restart-network-btn');
+        const wifiNetworksResults = document.getElementById('wifi-networks-results');
+        const diagnosticsResults = document.getElementById('diagnostics-results');
+        
+        // Toggle static IP fields
+        useDhcpToggle.addEventListener('change', function() {
+            staticIpFields.style.display = this.checked ? 'none' : 'block';
+        });
+        
+        // Scan WiFi networks
+        scanNetworksBtn.addEventListener('click', function() {
+            wifiNetworksResults.style.display = 'block';
+            const networksList = wifiNetworksResults.querySelector('.networks-list');
+            networksList.innerHTML = '<p>Scanning for networks...</p>';
+            
+            fetch('/settings/scan_networks')
+                .then(response => response.json())
+                .then(data => {
+                    let html = '';
+                    if (data.networks && data.networks.length > 0) {
+                        data.networks.forEach(network => {
+                            html += `
+                                <div class="network-item" data-ssid="${network.ssid}">
+                                    <span class="network-name">${network.ssid}</span>
+                                    <span class="network-signal">${network.signal}%</span>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html = '<p>No networks found.</p>';
+                    }
+                    networksList.innerHTML = html;
+                    
+                    // Add click event to network items
+                    const networkItems = document.querySelectorAll('.network-item');
+                    networkItems.forEach(item => {
+                        item.addEventListener('click', function() {
+                            const ssid = this.getAttribute('data-ssid');
+                            document.getElementById('wifi_ssid').value = ssid;
+                        });
+                    });
+                })
+                .catch(error => {
+                    networksList.innerHTML = `<p>Error scanning networks: ${error}</p>`;
+                });
+        });
+        
+        // Run network diagnostics
+        runDiagnosticsBtn.addEventListener('click', function() {
+            diagnosticsResults.style.display = 'block';
+            const diagnosticsOutput = document.getElementById('diagnostics-output');
+            diagnosticsOutput.textContent = 'Running diagnostics...';
+            
+            fetch('/settings/run_diagnostics')
+                .then(response => response.json())
+                .then(data => {
+                    diagnosticsOutput.textContent = data.output || 'No output returned.';
+                })
+                .catch(error => {
+                    diagnosticsOutput.textContent = `Error running diagnostics: ${error}`;
+                });
+        });
+        
+        // Restart networking
+        restartNetworkBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to restart networking? This may disconnect you temporarily.')) {
+                fetch('/settings/restart_network', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message || 'Network restart initiated.');
+                    })
+                    .catch(error => {
+                        alert(`Error restarting network: ${error}`);
+                    });
+            }
+        });
+    });
+</script>
+{% endblock %} 

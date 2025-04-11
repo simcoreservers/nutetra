@@ -223,6 +223,11 @@ Note: The `--privileged` flag is required for GPIO access.
 Navigate to Settings > System to configure:
 
 - **Network**: Wi-Fi settings, hostname, and network diagnostics
+  - Configure Wi-Fi network connection (SSID and password)
+  - Set static IP address for reliable remote access
+  - Modify hostname (default: raspberrypi.local)
+  - Enable/disable remote access options
+  - Run network diagnostics and connectivity tests
 - **Time Zone**: Set your local time zone for accurate scheduling
 - **Backup/Restore**: Create or restore system backups
 - **System Updates**: Check for and apply software updates

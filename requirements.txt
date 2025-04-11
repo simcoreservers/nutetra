@@ -37,6 +37,7 @@ pytz==2023.3
 itsdangerous==2.1.2
 twilio==8.0.0  # For SMS notifications
 psutil==7.0.0   # For system diagnostics
+netifaces==0.11.0  # For network interface information
 
 # Development and testing
 pytest==7.3.1

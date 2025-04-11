@@ -6,6 +6,12 @@ from app.utils.notification_manager import send_notification
 from app import db
 import os
 import json
+import platform
+import socket
+import subprocess
+import re
+import netifaces
+import psutil
 
 # Create a blueprint
 settings_bp = Blueprint('settings', __name__)
@@ -380,4 +386,488 @@ def diagnostics():
         return render_template(
             'settings/diagnostics.html',
             error=error_message
-        ) 
+        )
+
+@settings_bp.route('/network', methods=['GET', 'POST'])
+def network():
+    """Network configuration settings"""
+    success_message = None
+    error_message = None
+    
+    if request.method == 'POST':
+        try:
+            # Update hostname
+            if 'update_hostname' in request.form:
+                hostname = request.form.get('hostname')
+                if hostname and re.match(r'^[a-zA-Z0-9-]+$', hostname):
+                    # Save the hostname to settings
+                    Settings.set('hostname', hostname)
+                    
+                    # Update the actual system hostname (requires sudo)
+                    try:
+                        subprocess.run(['sudo', 'hostnamectl', 'set-hostname', hostname], check=True)
+                        subprocess.run(['sudo', 'sed', '-i', f's/127.0.1.1.*/127.0.1.1\t{hostname}/g', '/etc/hosts'], check=True)
+                        success_message = f"Hostname updated to {hostname}. Reboot recommended."
+                    except subprocess.CalledProcessError as e:
+                        error_message = f"Failed to update system hostname: {str(e)}"
+                else:
+                    error_message = "Invalid hostname. Use only letters, numbers, and hyphens."
+            
+            # Update WiFi settings
+            elif 'update_wifi' in request.form:
+                wifi_ssid = request.form.get('wifi_ssid')
+                wifi_password = request.form.get('wifi_password')
+                wifi_auto_connect = 'wifi_auto_connect' in request.form
+                
+                if wifi_ssid:
+                    # Save WiFi settings
+                    Settings.set('wifi_ssid', wifi_ssid)
+                    Settings.set('wifi_auto_connect', wifi_auto_connect)
+                    
+                    # Only update password if provided
+                    if wifi_password:
+                        Settings.set('wifi_password', wifi_password)
+                    
+                    # Update wpa_supplicant.conf if on Raspberry Pi
+                    if _is_raspberry_pi():
+                        try:
+                            _update_wifi_config(wifi_ssid, wifi_password if wifi_password else Settings.get('wifi_password', ''))
+                            success_message = "WiFi settings updated. Network will reconnect."
+                        except Exception as e:
+                            error_message = f"Failed to update WiFi configuration: {str(e)}"
+                    else:
+                        success_message = "WiFi settings saved (but not applied - not running on Raspberry Pi)"
+                else:
+                    error_message = "WiFi SSID is required"
+            
+            # Update IP settings
+            elif 'update_ip' in request.form:
+                use_dhcp = 'use_dhcp' in request.form
+                
+                # Save DHCP setting
+                Settings.set('use_dhcp', use_dhcp)
+                
+                if not use_dhcp:
+                    # Save static IP settings
+                    static_ip = request.form.get('static_ip')
+                    subnet_mask = request.form.get('subnet_mask')
+                    default_gateway = request.form.get('default_gateway')
+                    dns_server = request.form.get('dns_server')
+                    
+                    if static_ip and subnet_mask and default_gateway:
+                        # Validate IP addresses
+                        if _validate_ip_address(static_ip) and _validate_ip_address(default_gateway) and _validate_subnet_mask(subnet_mask):
+                            Settings.set('static_ip', static_ip)
+                            Settings.set('subnet_mask', subnet_mask)
+                            Settings.set('default_gateway', default_gateway)
+                            Settings.set('dns_server', dns_server if _validate_ip_address(dns_server) else '8.8.8.8')
+                            
+                            # Update the dhcpcd.conf file if on Raspberry Pi
+                            if _is_raspberry_pi():
+                                try:
+                                    _update_ip_config(use_dhcp, static_ip, subnet_mask, default_gateway, dns_server)
+                                    success_message = "IP configuration updated. Network will reconnect."
+                                except Exception as e:
+                                    error_message = f"Failed to update IP configuration: {str(e)}"
+                            else:
+                                success_message = "IP settings saved (but not applied - not running on Raspberry Pi)"
+                        else:
+                            error_message = "Invalid IP address or subnet mask format"
+                    else:
+                        error_message = "Static IP, subnet mask, and default gateway are required"
+                else:
+                    # If switching to DHCP, update configuration
+                    if _is_raspberry_pi():
+                        try:
+                            _update_ip_config(use_dhcp)
+                            success_message = "DHCP enabled. Network will reconnect."
+                        except Exception as e:
+                            error_message = f"Failed to update IP configuration: {str(e)}"
+                    else:
+                        success_message = "DHCP setting saved (but not applied - not running on Raspberry Pi)"
+        except Exception as e:
+            error_message = f"Error: {str(e)}"
+
+    # Get current network settings
+    network = {
+        'hostname': Settings.get('hostname', platform.node()),
+        'wifi_ssid': Settings.get('wifi_ssid', ''),
+        'wifi_auto_connect': Settings.get('wifi_auto_connect', True),
+        'use_dhcp': Settings.get('use_dhcp', True),
+        'static_ip': Settings.get('static_ip', ''),
+        'subnet_mask': Settings.get('subnet_mask', '255.255.255.0'),
+        'default_gateway': Settings.get('default_gateway', ''),
+        'dns_server': Settings.get('dns_server', '8.8.8.8'),
+    }
+    
+    # Get current network status
+    try:
+        # Get current IP and MAC address
+        ifaces = _get_network_interfaces()
+        primary_iface = _get_primary_interface()
+        
+        if primary_iface and primary_iface in ifaces:
+            network['current_ip'] = ifaces[primary_iface].get('ip', 'Not connected')
+            network['mac_address'] = ifaces[primary_iface].get('mac', 'Unknown')
+        else:
+            network['current_ip'] = 'Not connected'
+            network['mac_address'] = 'Unknown'
+        
+        # Get current WiFi info
+        wifi_info = _get_wifi_info()
+        network['connected_ssid'] = wifi_info.get('ssid', None)
+        network['signal_strength'] = wifi_info.get('signal', 'Unknown')
+        
+        # Check internet connectivity
+        network['internet_access'] = _check_internet_connectivity()
+    except Exception as e:
+        network['current_ip'] = 'Error'
+        network['mac_address'] = 'Error'
+        network['connected_ssid'] = None
+        network['signal_strength'] = 'Error'
+        network['internet_access'] = False
+    
+    return render_template(
+        'settings/network.html',
+        network=network,
+        success_message=success_message,
+        error_message=error_message
+    )
+
+@settings_bp.route('/scan_networks', methods=['GET'])
+def scan_networks():
+    """Scan for available WiFi networks"""
+    try:
+        networks = _scan_wifi_networks()
+        return jsonify({'success': True, 'networks': networks})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@settings_bp.route('/run_diagnostics', methods=['GET'])
+def run_diagnostics():
+    """Run network diagnostics"""
+    try:
+        output = _run_network_diagnostics()
+        return jsonify({'success': True, 'output': output})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@settings_bp.route('/restart_network', methods=['POST'])
+def restart_network():
+    """Restart networking services"""
+    try:
+        if _is_raspberry_pi():
+            subprocess.run(['sudo', 'systemctl', 'restart', 'dhcpcd'], check=True)
+            subprocess.run(['sudo', 'systemctl', 'restart', 'wpa_supplicant'], check=True)
+            return jsonify({'success': True, 'message': 'Network services restarted'})
+        else:
+            return jsonify({'success': False, 'message': 'Not running on Raspberry Pi'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+# Helper functions for network configuration
+def _is_raspberry_pi():
+    """Check if running on a Raspberry Pi"""
+    try:
+        with open('/proc/device-tree/model', 'r') as f:
+            model = f.read()
+            return 'Raspberry Pi' in model
+    except:
+        return False
+
+def _validate_ip_address(ip):
+    """Validate IP address format"""
+    try:
+        socket.inet_aton(ip)
+        return True
+    except:
+        return False
+
+def _validate_subnet_mask(mask):
+    """Validate subnet mask format"""
+    try:
+        socket.inet_aton(mask)
+        return True
+    except:
+        return False
+
+def _get_network_interfaces():
+    """Get information about all network interfaces"""
+    interfaces = {}
+    
+    try:
+        for iface in netifaces.interfaces():
+            # Skip loopback
+            if iface == 'lo':
+                continue
+                
+            info = {'name': iface}
+            
+            # Get IP address
+            addresses = netifaces.ifaddresses(iface)
+            if netifaces.AF_INET in addresses:
+                info['ip'] = addresses[netifaces.AF_INET][0]['addr']
+            else:
+                info['ip'] = None
+                
+            # Get MAC address
+            if netifaces.AF_LINK in addresses:
+                info['mac'] = addresses[netifaces.AF_LINK][0]['addr']
+            else:
+                info['mac'] = None
+                
+            interfaces[iface] = info
+    except Exception:
+        pass
+        
+    return interfaces
+
+def _get_primary_interface():
+    """Get the primary network interface"""
+    try:
+        # Try to get the interface with the default route
+        gateways = netifaces.gateways()
+        if 'default' in gateways and netifaces.AF_INET in gateways['default']:
+            return gateways['default'][netifaces.AF_INET][1]
+    except:
+        pass
+    
+    # Fallback to wlan0 or eth0
+    interfaces = netifaces.interfaces()
+    if 'wlan0' in interfaces:
+        return 'wlan0'
+    elif 'eth0' in interfaces:
+        return 'eth0'
+        
+    # Return the first non-loopback interface
+    for iface in interfaces:
+        if iface != 'lo':
+            return iface
+            
+    return None
+
+def _get_wifi_info():
+    """Get information about the current WiFi connection"""
+    info = {'ssid': None, 'signal': None}
+    
+    try:
+        if _is_raspberry_pi():
+            # Get SSID
+            result = subprocess.run(['iwgetid', '-r'], capture_output=True, text=True)
+            if result.returncode == 0 and result.stdout.strip():
+                info['ssid'] = result.stdout.strip()
+                
+            # Get signal strength
+            result = subprocess.run(['iwconfig', 'wlan0'], capture_output=True, text=True)
+            if result.returncode == 0:
+                match = re.search(r'Signal level=(-\d+) dBm', result.stdout)
+                if match:
+                    # Convert dBm to percentage (roughly)
+                    dbm = int(match.group(1))
+                    quality = min(100, max(0, 2 * (dbm + 100)))
+                    info['signal'] = f"{quality}%"
+    except:
+        pass
+        
+    return info
+
+def _check_internet_connectivity():
+    """Check if there is internet connectivity"""
+    try:
+        # Try to connect to Google's DNS server
+        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        return True
+    except:
+        return False
+
+def _update_wifi_config(ssid, password):
+    """Update the WiFi configuration file"""
+    if not _is_raspberry_pi():
+        return
+        
+    # Create the wpa_supplicant.conf content
+    config = f"""ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=US
+
+network={{
+    ssid="{ssid}"
+    psk="{password}"
+    key_mgmt=WPA-PSK
+}}
+"""
+    
+    # Write the configuration to a temporary file
+    with open('/tmp/wpa_supplicant.conf', 'w') as f:
+        f.write(config)
+        
+    # Move the file to the correct location (requires sudo)
+    subprocess.run(['sudo', 'mv', '/tmp/wpa_supplicant.conf', '/etc/wpa_supplicant/wpa_supplicant.conf'], check=True)
+    subprocess.run(['sudo', 'chmod', '600', '/etc/wpa_supplicant/wpa_supplicant.conf'], check=True)
+    
+    # Restart networking
+    subprocess.run(['sudo', 'systemctl', 'restart', 'wpa_supplicant'], check=True)
+
+def _update_ip_config(use_dhcp, static_ip=None, subnet_mask=None, gateway=None, dns=None):
+    """Update the IP configuration file"""
+    if not _is_raspberry_pi():
+        return
+        
+    # Create dhcpcd.conf content
+    if use_dhcp:
+        config = """# NuTetra Controller Network Configuration
+# Generated automatically - do not edit manually
+
+# Use DHCP by default
+hostname
+clientid
+persistent
+option rapid_commit
+option domain_name_servers, domain_name, domain_search, host_name
+option classless_static_routes
+option interface_mtu
+require dhcp_server_identifier
+slaac private
+"""
+    else:
+        # Calculate prefix length from subnet mask
+        prefix_len = sum([bin(int(x)).count('1') for x in subnet_mask.split('.')])
+        
+        config = f"""# NuTetra Controller Network Configuration
+# Generated automatically - do not edit manually
+
+# Static IP configuration
+interface wlan0
+static ip_address={static_ip}/{prefix_len}
+static routers={gateway}
+static domain_name_servers={dns}
+
+interface eth0
+static ip_address={static_ip}/{prefix_len}
+static routers={gateway}
+static domain_name_servers={dns}
+"""
+    
+    # Write the configuration to a temporary file
+    with open('/tmp/dhcpcd.conf', 'w') as f:
+        f.write(config)
+        
+    # Move the file to the correct location (requires sudo)
+    subprocess.run(['sudo', 'mv', '/tmp/dhcpcd.conf', '/etc/dhcpcd.conf'], check=True)
+    
+    # Restart networking
+    subprocess.run(['sudo', 'systemctl', 'restart', 'dhcpcd'], check=True)
+
+def _scan_wifi_networks():
+    """Scan for available WiFi networks"""
+    networks = []
+    
+    try:
+        if _is_raspberry_pi():
+            # Scan for networks
+            result = subprocess.run(['sudo', 'iwlist', 'wlan0', 'scan'], capture_output=True, text=True)
+            if result.returncode == 0:
+                # Parse output to get SSID and signal strength
+                for cell in result.stdout.split('Cell '):
+                    if 'ESSID:' in cell:
+                        ssid_match = re.search(r'ESSID:"([^"]*)"', cell)
+                        if ssid_match and ssid_match.group(1):
+                            ssid = ssid_match.group(1)
+                            
+                            # Get signal strength
+                            signal_match = re.search(r'Signal level=(-\d+) dBm', cell)
+                            if signal_match:
+                                dbm = int(signal_match.group(1))
+                                quality = min(100, max(0, 2 * (dbm + 100)))
+                            else:
+                                quality = 0
+                                
+                            networks.append({
+                                'ssid': ssid,
+                                'signal': quality
+                            })
+        else:
+            # Mock data for testing
+            networks = [
+                {'ssid': 'Home Network', 'signal': 90},
+                {'ssid': 'Neighbor Network', 'signal': 65},
+                {'ssid': 'Guest Network', 'signal': 45}
+            ]
+            
+        # Sort by signal strength
+        networks.sort(key=lambda x: x['signal'], reverse=True)
+        
+        # Remove duplicates
+        unique_networks = []
+        seen_ssids = set()
+        for network in networks:
+            if network['ssid'] not in seen_ssids:
+                unique_networks.append(network)
+                seen_ssids.add(network['ssid'])
+                
+        return unique_networks
+    except Exception as e:
+        return [{'ssid': f'Error scanning: {str(e)}', 'signal': 0}]
+
+def _run_network_diagnostics():
+    """Run network diagnostics commands"""
+    output = "Network Diagnostics Report\n"
+    output += "========================\n\n"
+    
+    try:
+        # Add hostname info
+        output += f"Hostname: {platform.node()}\n"
+        
+        # Add interface info
+        output += "\nNetwork Interfaces:\n"
+        interfaces = _get_network_interfaces()
+        for name, info in interfaces.items():
+            output += f"  {name}:\n"
+            output += f"    IP Address: {info.get('ip', 'Not assigned')}\n"
+            output += f"    MAC Address: {info.get('mac', 'Unknown')}\n"
+        
+        # Add WiFi info
+        wifi_info = _get_wifi_info()
+        output += "\nWiFi Status:\n"
+        output += f"  Connected to: {wifi_info.get('ssid', 'Not connected')}\n"
+        output += f"  Signal Strength: {wifi_info.get('signal', 'Unknown')}\n"
+        
+        # Add ping test
+        output += "\nConnectivity Tests:\n"
+        
+        # Ping router
+        router = None
+        try:
+            gateways = netifaces.gateways()
+            if 'default' in gateways and netifaces.AF_INET in gateways['default']:
+                router = gateways['default'][netifaces.AF_INET][0]
+        except:
+            pass
+            
+        if router:
+            output += f"  Pinging router ({router}):\n"
+            result = subprocess.run(['ping', '-c', '3', router], capture_output=True, text=True)
+            if result.returncode == 0:
+                output += "    Success\n"
+            else:
+                output += f"    Failed: {result.stdout}\n"
+        
+        # Ping Google DNS
+        output += "  Pinging Google DNS (8.8.8.8):\n"
+        result = subprocess.run(['ping', '-c', '3', '8.8.8.8'], capture_output=True, text=True)
+        if result.returncode == 0:
+            output += "    Success\n"
+        else:
+            output += f"    Failed: {result.stdout}\n"
+        
+        # DNS lookup
+        output += "  DNS Lookup (google.com):\n"
+        result = subprocess.run(['nslookup', 'google.com'], capture_output=True, text=True)
+        if result.returncode == 0:
+            output += "    Success\n"
+        else:
+            output += f"    Failed: {result.stdout}\n"
+        
+        return output
+    except Exception as e:
+        return f"Error running diagnostics: {str(e)}" 

@@ -126,6 +126,12 @@
                                     <span>System</span>
                                 </a>
                             </li>
+                            <li class="{% if '/settings/network' in request.path %}active{% endif %}">
+                                <a href="{{ url_for('settings.network') }}">
+                                    <i class="fas fa-wifi"></i>
+                                    <span>Network</span>
+                                </a>
+                            </li>
                             <li class="{% if '/settings/notifications' in request.path %}active{% endif %}">
                                 <a href="{{ url_for('settings.notifications') }}">
                                     <i class="fas fa-bell"></i>
