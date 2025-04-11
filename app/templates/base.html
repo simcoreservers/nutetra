@@ -41,13 +41,7 @@
                             <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li class="nav-item {% if '/sensors' in request.path and not '/sensors/history' in request.path and not '/sensors/calibration' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('sensors.index') }}">
-                                    <i class="fas fa-tachometer-alt"></i>
-                                    <span>Dashboard</span>
-                                </a>
-                            </li>
-                            <li class="nav-item {% if '/sensors/history' in request.path %}active{% endif %}">
+                            <li class="nav-item {% if '/sensors/history' in request.path and not '/sensors/calibration' in request.path %}active{% endif %}">>
                                 <a href="{{ url_for('sensors.history') }}">
                                     <i class="fas fa-history"></i>
                                     <span>Sensor History</span>
@@ -70,19 +64,19 @@
                         </a>
                         <ul class="submenu">
                             <li class="{% if '/hardware/nutrients' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('hardware.nutrients') }}">
+                                <a href="{{ url_for('dosing.nutrients') }}">
                                     <i class="fas fa-vial"></i>
                                     <span>Nutrient Library</span>
                                 </a>
                             </li>
                             <li class="{% if '/hardware/profiles' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('hardware.profiles') }}">
+                                <a href="{{ url_for('dosing.profiles') }}">
                                     <i class="fas fa-leaf"></i>
                                     <span>Plant Profiles</span>
                                 </a>
                             </li>
                             <li class="{% if '/hardware/grow_cycle' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('hardware.grow_cycle') }}">
+                                <a href="{{ url_for('dosing.grow_cycle') }}">
                                     <i class="fas fa-seedling"></i>
                                     <span>Growth Schedules</span>
                                 </a>
@@ -98,7 +92,7 @@
                         </a>
                         <ul class="submenu">
                             <li class="{% if '/hardware/pumps' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('hardware.pumps') }}">
+                                <a href="{{ url_for('dosing.pumps') }}">
                                     <i class="fas fa-pump-soap"></i>
                                     <span>Pumps</span>
                                 </a>
@@ -114,7 +108,7 @@
                         </a>
                         <ul class="submenu">
                             <li class="{% if '/hardware/settings' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('hardware.settings') }}">
+                                <a href="{{ url_for('dosing.settings') }}">
                                     <i class="fas fa-tint"></i>
                                     <span>Dosing Settings</span>
                                 </a>
