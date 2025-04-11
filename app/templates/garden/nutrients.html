@@ -11,7 +11,7 @@
         <div class="section-header">
             <h3><i class="fas fa-vial"></i> Nutrient Library</h3>
             <div class="section-actions">
-                <button onclick="showAddBrandForm()" class="btn btn-primary">
+                <button onclick="showAddBrandForm()" class="btn btn-success">
                     <i class="fas fa-plus"></i> Add New Brand
                 </button>
             </div>
@@ -56,7 +56,7 @@
             <div class="section-header">
                 <h3>{{ brand.name }}</h3>
                 <div class="section-actions">
-                    <button class="btn btn-sm btn-primary" onclick="showAddProductRow('{{ brand.id }}')" title="Add Product">
+                    <button class="btn btn-sm btn-success" onclick="showAddProductRow('{{ brand.id }}')" title="Add Product">
                         <i class="fas fa-plus"></i> Add Product
                     </button>
                     <button class="btn btn-sm btn-danger" onclick="confirmDeleteBrand('{{ brand.id }}')" title="Delete Brand">
