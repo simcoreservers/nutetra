@@ -717,30 +717,46 @@ def get_growth_phase_for_week(profile, week):
     
     # Parse the growth phases text
     # Expected format: "Seedling: 1-3, Vegetative: 4-6, Flowering: 7-12"
+    # Or "1-3: Seedling\n4-6: Vegetative\n7-12: Flowering"
     phases = {}
     try:
-        for phase_entry in growth_phases_text.split(','):
-            if ':' in phase_entry:
-                phase_name, weeks_range = phase_entry.split(':', 1)
-                phase_name = phase_name.strip()
+        # First, normalize the string - replace newlines with commas
+        normalized_text = growth_phases_text.replace('\r\n', ',').replace('\n', ',')
+        
+        for phase_entry in normalized_text.split(','):
+            phase_entry = phase_entry.strip()
+            if not phase_entry or ':' not in phase_entry:
+                continue
                 
-                for week_range in weeks_range.split(','):
-                    week_range = week_range.strip()
-                    if '-' in week_range:
-                        try:
-                            start, end = map(int, week_range.split('-'))
-                            for w in range(start, end + 1):
-                                phases[w] = phase_name
-                        except ValueError:
-                            # Skip invalid ranges
-                            continue
-                    else:
-                        try:
-                            w = int(week_range)
+            # Split by colon
+            parts = [p.strip() for p in phase_entry.split(':', 1)]
+            
+            # Determine which part is the phase name and which is the week range
+            if parts[0].replace('-', '').replace(' ', '').isdigit() or parts[0].isdigit():
+                # Format is "1-3: Seedling" or "1: Seedling"
+                weeks_range, phase_name = parts
+            else:
+                # Format is "Seedling: 1-3" or "Seedling: 1"
+                phase_name, weeks_range = parts
+            
+            # Process week ranges
+            for week_range in weeks_range.split(','):
+                week_range = week_range.strip()
+                if '-' in week_range:
+                    try:
+                        start, end = map(int, week_range.split('-'))
+                        for w in range(start, end + 1):
                             phases[w] = phase_name
-                        except ValueError:
-                            # Skip invalid week numbers
-                            continue
+                    except ValueError:
+                        # Skip invalid ranges
+                        continue
+                else:
+                    try:
+                        w = int(week_range)
+                        phases[w] = phase_name
+                    except ValueError:
+                        # Skip invalid week numbers
+                        continue
     except Exception as e:
         # If any parsing error occurs, fall back to defaults
         if week <= 3:
