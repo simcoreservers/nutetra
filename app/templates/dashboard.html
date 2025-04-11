@@ -800,6 +800,20 @@
         padding: 6px 12px;
         font-size: 0.85rem;
     }
+
+    /* Chart settings */
+    .charts-container {
+        height: 350px;
+    }
+    
+    .chart-panel {
+        display: none;
+        height: 100%;
+    }
+    
+    .chart-panel.active {
+        display: block;
+    }
     
     /* Responsive adjustments */
     @media (max-width: 1200px) {
@@ -826,33 +840,271 @@
             grid-column: span 1;
         }
     }
-    
-    @media (max-width: 768px) {
+
+    /* Tablet adjustments */
+    @media (max-width: 992px) {
         .dashboard-container {
-            grid-template-columns: 1fr;
             gap: 15px;
             padding: 15px;
         }
         
-        .readings-section,
-        .status-section,
-        .actions-section,
-        .active-profile-section,
-        .charts-section,
-        .activity-section,
+        .dashboard-section {
+            padding: 15px;
+        }
+        
+        .section-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        
+        .section-header h3 {
+            font-size: 1.1rem;
+        }
+
+        .readings-grid {
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+        
+        .reading-card {
+            padding: 12px;
+        }
+        
+        .reading-icon {
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+        
+        .reading-value {
+            font-size: 1.5rem;
+        }
+        
+        .charts-container {
+            height: 300px;
+        }
+        
+        .charts-section, 
+        .activity-section, 
         .export-section {
+            grid-column: span 3;
+        }
+        
+        .charts-section {
+            grid-row: auto;
+        }
+        
+        .activity-section {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .activity-list {
+            max-height: none;
+            overflow-y: visible;
+        }
+    }
+    
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 12px;
+        }
+        
+        .dashboard-section {
             grid-column: span 1;
+            padding: 12px;
         }
         
         .readings-grid,
         .status-grid,
+        .actions-grid,
+        .profile-detail-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .reading-card {
+            padding: 10px;
+        }
+        
+        .reading-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        
+        .reading-value {
+            font-size: 1.3rem;
+        }
+        
+        .status-card, 
+        .action-card {
+            margin-bottom: 0;
+        }
+        
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 6px;
+        }
+        
+        .status-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        
+        .status-card {
+            flex: 1 1 100%;
+            margin-bottom: 10px;
+        }
+        
+        .actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .profile-info-card {
+            padding: 10px;
+            margin-bottom: 0;
+        }
+        
+        .profile-info-card h4 {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .charts-container {
+            height: 250px;
+        }
+        
+        .profile-detail-grid {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Simplify layout for better mobile view */
+        .section-header {
+            flex-wrap: wrap;
+        }
+        
+        .section-header h3 {
+            margin-bottom: 5px;
+            width: 100%;
+        }
+        
+        .section-actions {
+            margin-top: 5px;
+        }
+        
+        /* Make scrollable sections fixed height on mobile */
+        .activity-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    }
+    
+    /* Small mobile adjustments */
+    @media (max-width: 480px) {
+        .dashboard-container {
+            padding: 8px;
+            gap: 8px;
+        }
+        
+        .dashboard-section {
+            padding: 10px;
+        }
+        
+        .section-header h3 {
+            font-size: 1rem;
+        }
+        
         .actions-grid {
             grid-template-columns: 1fr;
         }
         
-        .profile-detail-grid {
-            grid-template-columns: 1fr;
+        .reading-value {
+            font-size: 1.2rem;
         }
+        
+        .charts-container {
+            height: 200px;
+        }
+    }
+
+    /* Switch styling */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+        margin: 5px 0;
+    }
+    
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .3s;
+        border-radius: 24px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: var(--primary-color);
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    
+    /* Refresh button animation */
+    .refresh-btn {
+        background: transparent;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 5px;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+    }
+    
+    .refresh-btn:hover {
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+    }
+    
+    .refresh-btn.rotating {
+        animation: rotate 0.5s linear;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 </style>
 {% endblock %}
