@@ -198,6 +198,21 @@ def add_profile():
     current_schedule = None
     growth_phase = "Seedling"  # Default for new profiles
     
+    # Create default growth phases
+    growth_phases = {}
+    for week in range(1, total_weeks + 1):
+        if week <= 3:
+            growth_phases[week] = "Seedling"
+        elif week <= 6:
+            growth_phases[week] = "Vegetative"
+        else:
+            growth_phases[week] = "Flowering"
+    
+    # Get general settings to pass to template
+    settings = {
+        'dark_mode': Settings.get('dark_mode', True)
+    }
+    
     return render_template(
         'garden/profile_form.html',
         profile=empty_profile,
@@ -207,7 +222,9 @@ def add_profile():
         total_weeks=total_weeks,
         weekly_schedules=weekly_schedules,
         current_schedule=current_schedule,
-        growth_phase=growth_phase
+        growth_phase=growth_phase,
+        growth_phases=growth_phases,
+        settings=settings
     )
 
 @garden_bp.route('/profiles/edit/<profile_id>', methods=['GET', 'POST'])
@@ -345,6 +362,18 @@ def edit_profile(profile_id):
         current_week_str = str(current_week)
         current_schedule = weekly_schedules.get(current_week_str, {})
         growth_phase = get_growth_phase_for_week(profile_copy, current_week)
+        
+        # Get growth phase labels for each week
+        growth_phases = {}
+        for week in range(1, total_weeks + 1):
+            growth_phases[week] = get_growth_phase_for_week(profile_copy, week)
+    else:
+        growth_phases = {}
+    
+    # Get general settings to pass to template
+    settings = {
+        'dark_mode': Settings.get('dark_mode', True)
+    }
     
     return render_template(
         'garden/profile_form.html',
@@ -356,7 +385,9 @@ def edit_profile(profile_id):
         total_weeks=total_weeks,
         weekly_schedules=weekly_schedules,
         current_schedule=current_schedule,
-        growth_phase=growth_phase
+        growth_phase=growth_phase,
+        growth_phases=growth_phases,
+        settings=settings
     )
 
 @garden_bp.route('/profiles/delete/<profile_id>', methods=['POST'])
@@ -508,6 +539,11 @@ def profile_schedule(profile_id):
     for week in range(1, total_weeks + 1):
         growth_phases[week] = get_growth_phase_for_week(profile, week)
     
+    # Get general settings to pass to template
+    settings = {
+        'dark_mode': Settings.get('dark_mode', True)
+    }
+    
     return render_template(
         'garden/profile_schedule.html',
         profile=profile,
@@ -516,7 +552,8 @@ def profile_schedule(profile_id):
         total_weeks=total_weeks,
         weekly_schedules=weekly_schedules,
         sorted_weeks=sorted_weeks,
-        growth_phases=growth_phases
+        growth_phases=growth_phases,
+        settings=settings
     )
 
 @garden_bp.route('/nutrients', methods=['GET'])
