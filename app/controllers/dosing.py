@@ -271,22 +271,22 @@ def settings():
         Settings.set('night_mode_enabled', night_mode)
         
         # pH settings
-            Settings.set('ph_setpoint', ph_setpoint)
-            Settings.set('ph_buffer', ph_buffer)
-            Settings.set('ph_dose_amount', ph_dose)
-            Settings.set('ph_check_interval', ph_interval)
-            Settings.set('ph_dose_wait_time', ph_wait)
+        Settings.set('ph_setpoint', ph_setpoint)
+        Settings.set('ph_buffer', ph_buffer)
+        Settings.set('ph_dose_amount', ph_dose)
+        Settings.set('ph_check_interval', ph_interval)
+        Settings.set('ph_dose_wait_time', ph_wait)
         
         # EC settings
-            Settings.set('ec_setpoint', ec_setpoint)
-            Settings.set('ec_buffer', ec_buffer)
-            Settings.set('ec_dose_amount', ec_dose)
-            Settings.set('ec_check_interval', ec_interval)
-            Settings.set('ec_dose_wait_time', ec_wait)
+        Settings.set('ec_setpoint', ec_setpoint)
+        Settings.set('ec_buffer', ec_buffer)
+        Settings.set('ec_dose_amount', ec_dose)
+        Settings.set('ec_check_interval', ec_interval)
+        Settings.set('ec_dose_wait_time', ec_wait)
         
         # Night mode settings
-            Settings.set('night_mode_start', night_start)
-            Settings.set('night_mode_end', night_end)
+        Settings.set('night_mode_start', night_start)
+        Settings.set('night_mode_end', night_end)
         
         # Reschedule checks with new intervals
         schedule_dosing_checks()
