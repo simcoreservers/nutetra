@@ -526,68 +526,117 @@ def calibrate_temp_endpoint():
 
 @api_bp.route('/export/readings', methods=['GET'])
 def export_readings():
-    """Export sensor readings as CSV or JSON"""
+    """Export sensor readings or dosing events as CSV or JSON"""
     try:
         # Get parameters
         format_type = request.args.get('format', 'json').lower()
         sensor_type = request.args.get('sensor', 'all').lower()
+        data_type = request.args.get('type', 'readings').lower()
         limit = request.args.get('limit', 1000, type=int)
         
-        # Get data
-        if sensor_type == 'all':
-            ph_readings = SensorReading.get_history('ph', limit)
-            ec_readings = SensorReading.get_history('ec', limit)
-            temp_readings = SensorReading.get_history('temp', limit)
+        # Handle different data types
+        if data_type == 'events':
+            # Export dosing events
+            events = DosingEvent.get_recent(limit)
+            data = [event.to_dict() for event in events]
             
-            data = {
-                'ph': [reading.to_dict() for reading in ph_readings],
-                'ec': [reading.to_dict() for reading in ec_readings],
-                'temp': [reading.to_dict() for reading in temp_readings]
-            }
-        else:
-            readings = SensorReading.get_history(sensor_type, limit)
-            data = [reading.to_dict() for reading in readings]
-        
-        # Return data in the requested format
-        if format_type == 'csv':
-            from flask import Response
-            import csv
-            import io
-            
-            output = io.StringIO()
-            writer = csv.writer(output)
-            
-            # Write header
-            writer.writerow(['sensor_type', 'value', 'timestamp'])
-            
-            # Write data
-            if sensor_type == 'all':
-                for sensor_name, readings in data.items():
-                    for reading in readings:
+            # Return data in the requested format
+            if format_type == 'csv':
+                from flask import Response
+                import csv
+                import io
+                
+                output = io.StringIO()
+                writer = csv.writer(output)
+                
+                # Write header
+                if events and len(events) > 0:
+                    headers = ['id', 'pump_id', 'pump_name', 'amount_ml', 'reason', 'timestamp', 
+                               'sensor_type', 'sensor_before', 'sensor_after']
+                    writer.writerow(headers)
+                    
+                    # Write data
+                    for event in events:
+                        event_dict = event.to_dict()
                         writer.writerow([
-                            sensor_name,
+                            event_dict.get('id', ''),
+                            event_dict.get('pump_id', ''),
+                            event_dict.get('pump_name', ''),
+                            event_dict.get('amount_ml', ''),
+                            event_dict.get('reason', ''),
+                            event_dict.get('timestamp', ''),
+                            event_dict.get('sensor_type', ''),
+                            event_dict.get('sensor_before', ''),
+                            event_dict.get('sensor_after', '')
+                        ])
+                
+                return Response(
+                    output.getvalue(),
+                    mimetype='text/csv',
+                    headers={'Content-Disposition': f'attachment;filename=dosing_events.csv'}
+                )
+            else:
+                # Return JSON
+                return jsonify({
+                    'success': True,
+                    'data': data
+                })
+        else:
+            # Export sensor readings
+            if sensor_type == 'all':
+                ph_readings = SensorReading.get_history('ph', limit)
+                ec_readings = SensorReading.get_history('ec', limit)
+                temp_readings = SensorReading.get_history('temp', limit)
+                
+                data = {
+                    'ph': [reading.to_dict() for reading in ph_readings],
+                    'ec': [reading.to_dict() for reading in ec_readings],
+                    'temp': [reading.to_dict() for reading in temp_readings]
+                }
+            else:
+                readings = SensorReading.get_history(sensor_type, limit)
+                data = [reading.to_dict() for reading in readings]
+            
+            # Return data in the requested format
+            if format_type == 'csv':
+                from flask import Response
+                import csv
+                import io
+                
+                output = io.StringIO()
+                writer = csv.writer(output)
+                
+                # Write header
+                writer.writerow(['sensor_type', 'value', 'timestamp'])
+                
+                # Write data
+                if sensor_type == 'all':
+                    for sensor_name, readings in data.items():
+                        for reading in readings:
+                            writer.writerow([
+                                sensor_name,
+                                reading['value'],
+                                reading['timestamp']
+                            ])
+                else:
+                    for reading in data:
+                        writer.writerow([
+                            reading['sensor_type'],
                             reading['value'],
                             reading['timestamp']
                         ])
+                
+                return Response(
+                    output.getvalue(),
+                    mimetype='text/csv',
+                    headers={'Content-Disposition': f'attachment;filename=sensor_readings.csv'}
+                )
             else:
-                for reading in data:
-                    writer.writerow([
-                        reading['sensor_type'],
-                        reading['value'],
-                        reading['timestamp']
-                    ])
-            
-            return Response(
-                output.getvalue(),
-                mimetype='text/csv',
-                headers={'Content-Disposition': f'attachment;filename=sensor_readings.csv'}
-            )
-        else:
-            # Return JSON
-            return jsonify({
-                'success': True,
-                'data': data
-            })
+                # Return JSON
+                return jsonify({
+                    'success': True,
+                    'data': data
+                })
     except Exception as e:
         return jsonify({
             'success': False,
