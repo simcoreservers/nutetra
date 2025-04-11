@@ -38,7 +38,7 @@ def pumps():
     pumps = Pump.query.all()
     
     return render_template(
-        'dosing/pumps.html',
+        'hardware/pumps.html',
         pumps=pumps
     )
 
