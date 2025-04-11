@@ -467,7 +467,6 @@
         // Delete Modal
         const deleteModal = document.getElementById('deleteModal');
         const confirmDeleteBtn = document.getElementById('confirmDelete');
-        let productToDelete = null;
         
         // Show Add Brand Form
         addBrandBtn.addEventListener('click', function() {
@@ -672,33 +671,53 @@
             
             const productId = this.querySelector('input[name="product_id"]').value;
             
+            // Store the product ID directly on the modal element
+            $('#deleteModal').data('product-id', productId);
+            
             // Show confirmation modal using Bootstrap
             $('#deleteModal').modal('show');
-            
-            productToDelete = productId;
         });
         
         // Confirm Delete
         $('#confirmDelete').on('click', function() {
-            if (!productToDelete) return;
+            // Get the product ID directly from the modal
+            const productId = $('#deleteModal').data('product-id');
+            
+            if (!productId) {
+                console.error('No product ID found for deletion');
+                return;
+            }
+            
+            console.log('Deleting product ID:', productId);
             
             // Delete via API
-            fetch(`/api/nutrient-products/${productToDelete}`, {
+            fetch(`/api/nutrient-products/${productId}`, {
                 method: 'DELETE'
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Delete response status:', response.status);
+                return response.json();
+            })
             .then(result => {
+                console.log('Delete result:', result);
                 if (result.success) {
-                    // Remove row from table
-                    const row = document.querySelector(`.nutrient-table tr[data-product-id="${productToDelete}"]`);
-                    if (row) row.remove();
+                    // Find and remove the row
+                    const row = document.querySelector(`.nutrient-table tr[data-product-id="${productId}"]`);
+                    if (row) {
+                        row.remove();
+                        console.log('Row removed for product ID:', productId);
+                    } else {
+                        console.error('Row not found for product ID:', productId);
+                    }
+                    
+                    // Hide the modal
                     $('#deleteModal').modal('hide');
                 } else {
                     alert('Error: ' + result.error);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error during delete:', error);
                 alert('An error occurred while deleting the product');
             });
         });
