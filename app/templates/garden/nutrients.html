@@ -84,23 +84,32 @@
                         {% for product in brand.products %}
                         <tr data-product-id="{{ product.id }}">
                             <td>
-                                <input type="text" class="product-name" value="{{ product.name }}" data-original="{{ product.name }}">
+                                <input type="text" class="product-name" value="{{ product.name }}" data-original="{{ product.name }}" 
+                                       onchange="updateProductField(this.closest('tr'), 'name', this.value)" 
+                                       onblur="if(this.value !== this.getAttribute('data-original')) updateProductField(this.closest('tr'), 'name', this.value)">
                             </td>
                             <td>
-                                <select class="product-type" data-original="{{ product.nutrient_type or 'other' }}">
+                                <select class="product-type" data-original="{{ product.nutrient_type or 'other' }}"
+                                        onchange="updateProductField(this.closest('tr'), 'nutrient_type', this.value)">
                                     {% for type in nutrient_types %}
                                     <option value="{{ type.id }}" {% if product.nutrient_type == type.id %}selected{% endif %}>{{ type.name }}</option>
                                     {% endfor %}
                                 </select>
                             </td>
                             <td>
-                                <input type="number" class="product-n" min="0" max="100" step="0.1" value="{{ product.nitrogen_pct }}" data-original="{{ product.nitrogen_pct }}">
+                                <input type="number" class="product-n" min="0" max="100" step="0.1" value="{{ product.nitrogen_pct }}" data-original="{{ product.nitrogen_pct }}"
+                                       onchange="updateProductField(this.closest('tr'), 'nitrogen_pct', parseFloat(this.value) || 0)"
+                                       onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'nitrogen_pct', parseFloat(this.value) || 0)">
                             </td>
                             <td>
-                                <input type="number" class="product-p" min="0" max="100" step="0.1" value="{{ product.phosphorus_pct }}" data-original="{{ product.phosphorus_pct }}">
+                                <input type="number" class="product-p" min="0" max="100" step="0.1" value="{{ product.phosphorus_pct }}" data-original="{{ product.phosphorus_pct }}"
+                                       onchange="updateProductField(this.closest('tr'), 'phosphorus_pct', parseFloat(this.value) || 0)"
+                                       onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'phosphorus_pct', parseFloat(this.value) || 0)">
                             </td>
                             <td>
-                                <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}">
+                                <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}"
+                                       onchange="updateProductField(this.closest('tr'), 'potassium_pct', parseFloat(this.value) || 0)"
+                                       onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'potassium_pct', parseFloat(this.value) || 0)">
                             </td>
                             <td class="actions-cell">
                                 <button class="btn btn-sm btn-danger" onclick="confirmDeleteProduct('{{ product.id }}')" title="Delete Product">
@@ -457,6 +466,55 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // Function to update a product field via API
+    function updateProductField(row, field, value) {
+        const productId = row.getAttribute('data-product-id');
+        console.log('Updating product ID:', productId, 'Field:', field, 'Value:', value);
+        
+        const statusEl = row.querySelector('.save-status');
+        
+        // Show saving indicator
+        statusEl.innerHTML = '<div class="spinner"></div>';
+        
+        // Prepare update data
+        const updateData = {};
+        updateData[field] = value;
+        
+        console.log('Update data:', updateData);
+        
+        // Update via API
+        fetch(`/api/nutrient-products/${productId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => {
+            console.log('Update response status:', response.status);
+            return response.json();
+        })
+        .then(result => {
+            console.log('Update result:', result);
+            if (result.success) {
+                // Show success
+                statusEl.innerHTML = '<i class="fas fa-check text-success"></i>';
+                setTimeout(() => { statusEl.innerHTML = ''; }, 2000);
+                
+                // Update data-original
+                const input = row.querySelector(`.product-${field}`);
+                if (input) input.setAttribute('data-original', value);
+            } else {
+                // Show error
+                statusEl.innerHTML = '<i class="fas fa-times text-danger"></i>';
+                alert('Error: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Update error:', error);
+            statusEl.innerHTML = '<i class="fas fa-times text-danger"></i>';
+            alert('An error occurred while updating the product');
+        });
+    }
+
     // Function to show the add brand form
     function showAddBrandForm() {
         console.log('Show add brand form');
@@ -724,144 +782,38 @@
             alert('Error: ' + error.message);
         });
     }
+
+    // Add this for debugging - accessible from browser console
+    window.debugUpdateProduct = function(productId, field, value) {
+        console.log('Debug update for product ID:', productId, 'Field:', field, 'Value:', value);
+        
+        const updateData = {};
+        updateData[field] = value;
+        
+        fetch('/api/nutrient-products/' + productId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => {
+            console.log('Debug update status:', response.status);
+            console.log('Debug update status text:', response.statusText);
+            return response.json();
+        })
+        .then(result => {
+            console.log('Debug update response:', result);
+        })
+        .catch(error => {
+            console.error('Debug update error:', error);
+        });
+        
+        return "Check console for debug output";
+    };
 </script>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Update Product Field
-        function updateProductField(row, field, value) {
-            const productId = row.getAttribute('data-product-id');
-            console.log('Updating product ID:', productId, 'Field:', field, 'Value:', value);
-            
-            const statusEl = row.querySelector('.save-status');
-            
-            // Show saving indicator
-            statusEl.innerHTML = '<div class="spinner"></div>';
-            
-            // Prepare update data
-            const updateData = {};
-            updateData[field] = value;
-            
-            console.log('Update data:', updateData);
-            
-            // Update via API
-            fetch(`/api/nutrient-products/${productId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updateData)
-            })
-            .then(response => {
-                console.log('Update response status:', response.status);
-                return response.json();
-            })
-            .then(result => {
-                console.log('Update result:', result);
-                if (result.success) {
-                    // Show success
-                    statusEl.innerHTML = '<i class="fas fa-check text-success"></i>';
-                    setTimeout(() => { statusEl.innerHTML = ''; }, 2000);
-                    
-                    // Update data-original
-                    const input = row.querySelector(`.product-${field}`);
-                    if (input) input.setAttribute('data-original', value);
-                } else {
-                    // Show error
-                    statusEl.innerHTML = '<i class="fas fa-times text-danger"></i>';
-                    alert('Error: ' + (result.error || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Update error:', error);
-                statusEl.innerHTML = '<i class="fas fa-times text-danger"></i>';
-                alert('An error occurred while updating the product');
-            });
-        }
-        
-        // Handle field changes
-        document.querySelectorAll('.product-name').forEach(input => {
-            input.addEventListener('change', function() {
-                console.log('Name changed:', this.value);
-                const row = this.closest('tr');
-                updateProductField(row, 'name', this.value);
-            });
-            
-            // Also trigger on blur for better UX
-            input.addEventListener('blur', function() {
-                const row = this.closest('tr');
-                const original = this.getAttribute('data-original');
-                if (this.value !== original) {
-                    console.log('Name blur update:', this.value);
-                    updateProductField(row, 'name', this.value);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.product-type').forEach(select => {
-            select.addEventListener('change', function() {
-                console.log('Type changed:', this.value);
-                const row = this.closest('tr');
-                updateProductField(row, 'nutrient_type', this.value);
-            });
-        });
-        
-        document.querySelectorAll('.product-n').forEach(input => {
-            input.addEventListener('change', function() {
-                console.log('N% changed:', this.value);
-                const row = this.closest('tr');
-                updateProductField(row, 'nitrogen_pct', parseFloat(this.value) || 0);
-            });
-            
-            // Also trigger on blur
-            input.addEventListener('blur', function() {
-                const row = this.closest('tr');
-                const original = parseFloat(this.getAttribute('data-original')) || 0;
-                const current = parseFloat(this.value) || 0;
-                if (current !== original) {
-                    console.log('N% blur update:', current);
-                    updateProductField(row, 'nitrogen_pct', current);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.product-p').forEach(input => {
-            input.addEventListener('change', function() {
-                console.log('P% changed:', this.value);
-                const row = this.closest('tr');
-                updateProductField(row, 'phosphorus_pct', parseFloat(this.value) || 0);
-            });
-            
-            // Also trigger on blur
-            input.addEventListener('blur', function() {
-                const row = this.closest('tr');
-                const original = parseFloat(this.getAttribute('data-original')) || 0;
-                const current = parseFloat(this.value) || 0;
-                if (current !== original) {
-                    console.log('P% blur update:', current);
-                    updateProductField(row, 'phosphorus_pct', current);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.product-k').forEach(input => {
-            input.addEventListener('change', function() {
-                console.log('K% changed:', this.value);
-                const row = this.closest('tr');
-                updateProductField(row, 'potassium_pct', parseFloat(this.value) || 0);
-            });
-            
-            // Also trigger on blur
-            input.addEventListener('blur', function() {
-                const row = this.closest('tr');
-                const original = parseFloat(this.getAttribute('data-original')) || 0;
-                const current = parseFloat(this.value) || 0;
-                if (current !== original) {
-                    console.log('K% blur update:', current);
-                    updateProductField(row, 'potassium_pct', current);
-                }
-            });
-        });
-    });
+    // Empty block - all functionality moved to direct handlers
 </script>
 {% endblock %}
