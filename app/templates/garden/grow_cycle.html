@@ -268,9 +268,8 @@
         content: "";
         position: absolute;
         top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        width: 80px; /* Fixed width for glow */
+        height: 100%;
         background: linear-gradient(
             90deg,
             rgba(255, 255, 255, 0) 0%,
@@ -308,8 +307,8 @@
     }
     
     @keyframes progress-move {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
+        0% { transform: translateX(-100px); }
+        100% { transform: translateX(calc(100% + 100px)); }
     }
     
     .cycle-actions {
