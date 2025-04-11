@@ -42,7 +42,7 @@
 /* Submenu styling - NEW APPROACH: always visible but styled differently */
 .nav-section .submenu {
     display: block;
-    background-color: var(--bg-color-darker);
+    background-color: var(--bg-color-dark);
     padding-left: 0; /* Ensure left alignment */
 }
 
@@ -159,7 +159,7 @@
 }
 
 .sidebar-nav .nav-section.active .submenu {
-    background-color: var(--bg-color-darker);
+    background-color: var(--bg-color-dark);
     border-left: 3px solid var(--primary-color);
     padding-left: 0 !important; /* Important to override other styles */
 }
