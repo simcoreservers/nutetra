@@ -184,6 +184,8 @@
         grid-template-columns: 1fr;
         gap: 20px;
         padding: 20px;
+        padding-top: 30px; /* Extra padding at top */
+        margin-top: 15px; /* Add margin at top */
     }
     
     .dashboard-section {
@@ -191,8 +193,16 @@
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         padding: 20px;
-        overflow: hidden;
-        margin-bottom: 0;
+        overflow: visible; /* Changed from hidden to visible */
+        margin-bottom: 20px; /* Increased bottom margin */
+        position: relative; /* Add position relative */
+        z-index: 10; /* Ensure proper stacking */
+    }
+    
+    /* Header section specific styles to ensure visibility */
+    section.dashboard-section:first-child {
+        margin-top: 0;
+        padding-top: 25px;
     }
     
     .section-header {
