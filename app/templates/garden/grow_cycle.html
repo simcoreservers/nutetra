@@ -260,9 +260,11 @@
         position: relative;
         animation: progress-fill 1s ease-out forwards;
         width: 0; /* Start at 0 width */
+        min-width: 20px; /* Ensure visibility even for week 1 */
+        box-shadow: 0 0 10px var(--primary-color);
     }
     
-    .progress::after {
+    .progress::before {
         content: "";
         position: absolute;
         top: 0;
@@ -272,10 +274,26 @@
         background: linear-gradient(
             90deg,
             rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.2) 50%,
+            rgba(255, 255, 255, 0.2) 20%,
+            rgba(255, 255, 255, 0.3) 50%,
+            rgba(255, 255, 255, 0.2) 80%,
             rgba(255, 255, 255, 0) 100%
         );
-        animation: progress-shine 2s infinite;
+        animation: progress-move 2.5s infinite ease-in-out;
+        opacity: 0.6;
+    }
+    
+    .progress::after {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border-radius: 12px;
+        background-color: transparent;
+        box-shadow: 0 0 15px var(--primary-color);
+        animation: progress-glow 2s infinite;
     }
     
     @keyframes progress-fill {
@@ -283,9 +301,15 @@
         to { width: var(--target-width); }
     }
     
-    @keyframes progress-shine {
-        from { transform: translateX(-100%); }
-        to { transform: translateX(100%); }
+    @keyframes progress-glow {
+        0% { opacity: 0.3; }
+        50% { opacity: 0.8; }
+        100% { opacity: 0.3; }
+    }
+    
+    @keyframes progress-move {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
     }
     
     .cycle-actions {
