@@ -62,6 +62,17 @@ def index():
     # Get auto-dosing status
     auto_dosing = Settings.get('auto_dosing_enabled', True)
     
+    # Get active plant profile information
+    active_profile_id = Settings.get('active_plant_profile', 'general')
+    plant_profiles = Settings.get('plant_profiles', {})
+    active_profile = plant_profiles.get(active_profile_id, {})
+    
+    # Get growth phase for active profile
+    growth_phase = None
+    if active_profile and active_profile.get('weekly_schedules') and active_profile.get('current_week'):
+        from app.controllers.garden import get_growth_phase_for_week
+        growth_phase = get_growth_phase_for_week(active_profile, active_profile.get('current_week'))
+    
     return render_template(
         'dashboard.html', 
         ph_reading=ph_reading,
@@ -75,7 +86,10 @@ def index():
         ph_chart_data=ph_chart_data,
         ec_chart_data=ec_chart_data,
         temp_chart_data=temp_chart_data,
-        auto_dosing=auto_dosing
+        auto_dosing=auto_dosing,
+        active_profile=active_profile,
+        active_profile_id=active_profile_id,
+        growth_phase=growth_phase
     )
 
 @main_bp.route('/about')
