@@ -9,7 +9,7 @@
     <!-- Sensor Readings Section -->
     <section class="dashboard-section readings-section">
         <div class="section-header">
-            <h3>Current Readings</h3>
+            <h3><i class="fas fa-heartbeat"></i> Current Readings</h3>
             <button class="refresh-btn" id="refresh-readings-btn">
                 <i class="fas fa-sync-alt"></i>
             </button>
@@ -18,7 +18,7 @@
         <div class="readings-grid">
             <!-- pH Reading -->
             <div class="reading-card {% if ph_reading and (ph_reading < ph_min or ph_reading > ph_max) %}alert{% endif %}">
-                <div class="reading-icon">
+                <div class="reading-icon {% if ph_reading and (ph_reading < ph_min or ph_reading > ph_max) %}alert{% else %}good{% endif %}">
                     <i class="fas fa-flask"></i>
                 </div>
                 <div class="reading-details">
@@ -32,13 +32,13 @@
             
             <!-- EC Reading -->
             <div class="reading-card {% if ec_reading and (ec_reading < ec_min or ec_reading > ec_max) %}alert{% endif %}">
-                <div class="reading-icon">
-                    <i class="fas fa-water"></i>
+                <div class="reading-icon {% if ec_reading and (ec_reading < ec_min or ec_reading > ec_max) %}alert{% else %}good{% endif %}">
+                    <i class="fas fa-bolt"></i>
                 </div>
                 <div class="reading-details">
                     <h4>EC Level</h4>
                     <div class="reading-value" id="ec-value">
-                        {{ ec_reading|round(2) if ec_reading else '--' }}
+                        {{ ec_reading|round(2) if ec_reading else '--' }} μS/cm
                     </div>
                     <div class="reading-range">Target: {{ ec_min }} - {{ ec_max }}</div>
                 </div>
@@ -46,7 +46,7 @@
             
             <!-- Temperature Reading -->
             <div class="reading-card {% if temp_reading and (temp_reading < temp_min or temp_reading > temp_max) %}alert{% endif %}">
-                <div class="reading-icon">
+                <div class="reading-icon {% if temp_reading and (temp_reading < temp_min or temp_reading > temp_max) %}alert{% else %}good{% endif %}">
                     <i class="fas fa-thermometer-half"></i>
                 </div>
                 <div class="reading-details">
@@ -60,10 +60,138 @@
         </div>
     </section>
     
+    <!-- Quick Actions Section -->
+    <section class="dashboard-section actions-section">
+        <div class="section-header">
+            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+        </div>
+        
+        <div class="actions-grid">
+            <!-- Quick Action Buttons -->
+            <a href="{{ url_for('dosing.profiles') }}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Plant Profiles</h4>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('dosing.pumps') }}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-pump-soap"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Manage Pumps</h4>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('sensors.calibration') }}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Calibrate Sensors</h4>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('dosing.nutrients') }}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-vial"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Nutrients</h4>
+                </div>
+            </a>
+            
+            <!-- Auto-Dosing Toggle -->
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Auto-Dosing</h4>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-dosing-toggle" {% if auto_dosing %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                    <div class="action-status">
+                        <span id="auto-dosing-status">{{ 'Enabled' if auto_dosing else 'Disabled' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manual Dose -->
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-hand-pointer"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Manual Dose</h4>
+                    <button class="action-button" id="manual-dose-btn">
+                        Open Controls
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Active Profile Section (New) -->
+    <section class="dashboard-section active-profile-section">
+        <div class="section-header">
+            <h3><i class="fas fa-leaf"></i> Active Plant Profile</h3>
+            <a href="{{ url_for('dosing.profiles') }}" class="button small">Change Profile</a>
+        </div>
+        
+        {% if active_profile %}
+        <div class="profile-summary">
+            <div class="profile-header">
+                <h4>{{ active_profile.name }}</h4>
+                {% if active_profile.weekly_schedules %}
+                <div class="growth-stage">
+                    <span class="stage-label">Week {{ active_profile.current_week|default(1) }}</span>
+                    <span class="phase-label">{{ growth_phase }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="profile-targets">
+                <div class="target-item">
+                    <span class="target-label">pH:</span>
+                    <span class="target-value">{{ active_profile.ph_setpoint }} ± {{ active_profile.ph_buffer }}</span>
+                </div>
+                <div class="target-item">
+                    <span class="target-label">EC:</span>
+                    <span class="target-value">{{ active_profile.ec_setpoint }} ± {{ active_profile.ec_buffer }} μS/cm</span>
+                </div>
+                <div class="target-item">
+                    <span class="target-label">Temperature:</span>
+                    <span class="target-value">{{ active_profile.temp_min }}-{{ active_profile.temp_max }}°C</span>
+                </div>
+            </div>
+            
+            <div class="profile-actions">
+                <a href="{{ url_for('dosing.edit_profile', profile_id=active_profile_id) }}" class="action-button">
+                    <i class="fas fa-pencil-alt"></i> Edit Profile
+                </a>
+                {% if active_profile.weekly_schedules %}
+                <a href="{{ url_for('dosing.profile_schedule', profile_id=active_profile_id) }}" class="action-button">
+                    <i class="fas fa-calendar-alt"></i> Schedule
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No active profile selected. <a href="{{ url_for('dosing.profiles') }}">Select a profile</a> to get started.</p>
+        </div>
+        {% endif %}
+    </section>
+    
     <!-- Charts Section -->
     <section class="dashboard-section charts-section">
         <div class="section-header">
-            <h3>Sensor History</h3>
+            <h3><i class="fas fa-chart-line"></i> Sensor History</h3>
             <div class="chart-controls">
                 <select id="chart-timeframe">
                     <option value="1h">1 Hour</option>
@@ -97,63 +225,10 @@
         </div>
     </section>
     
-    <!-- Quick Actions Section -->
-    <section class="dashboard-section actions-section">
-        <div class="section-header">
-            <h3>Quick Actions</h3>
-        </div>
-        
-        <div class="actions-grid">
-            <!-- Auto-Dosing Toggle -->
-            <div class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-tint"></i>
-                </div>
-                <div class="action-details">
-                    <h4>Auto-Dosing</h4>
-                    <label class="switch">
-                        <input type="checkbox" id="auto-dosing-toggle" {% if auto_dosing %}checked{% endif %}>
-                        <span class="slider round"></span>
-                    </label>
-                    <div class="action-status">
-                        <span id="auto-dosing-status">{{ 'Enabled' if auto_dosing else 'Disabled' }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Manual Dose -->
-            <div class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-hand-pointer"></i>
-                </div>
-                <div class="action-details">
-                    <h4>Manual Dose</h4>
-                    <button class="action-button" id="manual-dose-btn">
-                        Open Controls
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Export Data -->
-            <div class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-file-export"></i>
-                </div>
-                <div class="action-details">
-                    <h4>Export Data</h4>
-                    <div class="action-buttons">
-                        <a href="{{ url_for('api.export_readings', format='csv') }}" class="action-button">CSV</a>
-                        <a href="{{ url_for('api.export_readings', format='json') }}" class="action-button">JSON</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
     <!-- Recent Activity Section -->
     <section class="dashboard-section activity-section">
         <div class="section-header">
-            <h3>Recent Activity</h3>
+            <h3><i class="fas fa-history"></i> Recent Activity</h3>
             <a href="{{ url_for('dosing.events') }}" class="view-all-link">View All</a>
         </div>
         
@@ -162,7 +237,7 @@
                 {% for event in recent_events %}
                 <div class="activity-item">
                     <div class="activity-icon">
-                        <i class="fas fa-tint-slash"></i>
+                        <i class="fas {% if event.event_type == 'dosing' %}fa-tint{% elif event.event_type == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
                     </div>
                     <div class="activity-details">
                         <div class="activity-header">
@@ -181,6 +256,38 @@
             {% else %}
                 <p class="empty-state">No recent dosing activity</p>
             {% endif %}
+        </div>
+    </section>
+    
+    <!-- Export Data Section -->
+    <section class="dashboard-section export-section">
+        <div class="section-header">
+            <h3><i class="fas fa-file-export"></i> Export Data</h3>
+        </div>
+        
+        <div class="export-options">
+            <div class="export-option">
+                <h4>Sensor Readings</h4>
+                <div class="export-buttons">
+                    <a href="{{ url_for('api.export_readings', format='csv') }}" class="button">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </a>
+                    <a href="{{ url_for('api.export_readings', format='json') }}" class="button">
+                        <i class="fas fa-file-code"></i> JSON
+                    </a>
+                </div>
+            </div>
+            <div class="export-option">
+                <h4>Dosing Events</h4>
+                <div class="export-buttons">
+                    <a href="{{ url_for('api.export_events', format='csv') }}" class="button">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </a>
+                    <a href="{{ url_for('api.export_events', format='json') }}" class="button">
+                        <i class="fas fa-file-code"></i> JSON
+                    </a>
+                </div>
+            </div>
         </div>
     </section>
 </div>
@@ -202,6 +309,338 @@
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .dashboard-section {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        overflow: hidden;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+    
+    .section-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-header h3 i {
+        margin-right: 8px;
+        color: var(--primary-color);
+    }
+    
+    .readings-section, .charts-section {
+        grid-column: span 2;
+    }
+    
+    .readings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .reading-card {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: var(--bg-color);
+    }
+    
+    .reading-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 15px;
+        font-size: 1.5rem;
+    }
+    
+    .reading-icon.good {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    
+    .reading-icon.alert {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+    
+    .reading-details h4 {
+        margin: 0 0 5px 0;
+        font-size: 0.9rem;
+    }
+    
+    .reading-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .reading-range {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .action-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: var(--bg-color);
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--text-color);
+    }
+    
+    .action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .action-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: rgba(var(--primary-color-rgb), 0.2);
+        color: var(--primary-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 1.5rem;
+    }
+    
+    .action-details h4 {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+        margin: 10px 0;
+    }
+    
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+    }
+    
+    input:checked + .slider {
+        background-color: var(--primary-color);
+    }
+    
+    input:focus + .slider {
+        box-shadow: 0 0 1px var(--primary-color);
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(30px);
+    }
+    
+    .slider.round {
+        border-radius: 34px;
+    }
+    
+    .slider.round:before {
+        border-radius: 50%;
+    }
+    
+    .action-status {
+        margin-top: 5px;
+        font-size: 0.8rem;
+    }
+    
+    /* Active Profile Styles */
+    .active-profile-section {
+        grid-column: span 2;
+    }
+    
+    .profile-summary {
+        padding: 15px;
+        border-radius: 8px;
+        background-color: var(--bg-color);
+    }
+    
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .profile-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .growth-stage {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .stage-label, .phase-label {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+    
+    .stage-label {
+        background-color: rgba(var(--primary-color-rgb), 0.2);
+        color: var(--primary-color);
+    }
+    
+    .phase-label {
+        background-color: rgba(var(--success-color-rgb), 0.2);
+        color: var(--success-color);
+    }
+    
+    .profile-targets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .target-item {
+        padding: 8px 12px;
+        border-radius: 6px;
+        background-color: var(--card-bg);
+    }
+    
+    .target-label {
+        font-weight: bold;
+        margin-right: 5px;
+    }
+    
+    .profile-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .action-button {
+        padding: 8px 12px;
+        border-radius: 6px;
+        background-color: var(--primary-color);
+        color: white;
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .action-button:hover {
+        background-color: var(--primary-color-dark);
+    }
+    
+    .empty-state {
+        padding: 20px;
+        text-align: center;
+        color: var(--text-muted);
+    }
+    
+    .empty-state a {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+    
+    /* Export Section Styles */
+    .export-section {
+        grid-column: span 1;
+    }
+    
+    .export-options {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .export-option {
+        padding: 15px;
+        background-color: var(--bg-color);
+        border-radius: 8px;
+    }
+    
+    .export-option h4 {
+        margin: 0 0 10px 0;
+        font-size: 0.9rem;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    
+    /* Responsive Grid Adjustments */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .readings-section, .charts-section, .active-profile-section, .export-section {
+            grid-column: span 1;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
     // Chart data from the server
@@ -214,8 +653,8 @@
     const phTargetMax = {{ ph_max }};
     const ecTargetMin = {{ ec_min }};
     const ecTargetMax = {{ ec_max }};
-    const tempTargetMin = {{ temp_min }};
-    const tempTargetMax = {{ temp_max }};
+    const tempTargetMin = {{ temp_min|default('18') }};
+    const tempTargetMax = {{ temp_max|default('28') }};
     
     // Charts initialization
     let phChart, ecChart, tempChart;
@@ -231,7 +670,7 @@
         loadPumps();
         
         // Setup refresh interval
-        const refreshInterval = {{ settings.get('refresh_interval', 10) }} * 1000;
+        const refreshInterval = {{ settings.get('refresh_interval', 10)|default(10) }} * 1000;
         if (refreshInterval > 0) {
             setInterval(refreshReadings, refreshInterval);
         }
@@ -505,35 +944,6 @@
         });
     }
     
-    function refreshReadings() {
-        return fetch('/api/sensors/read_now', {
-            method: 'POST'
-        }).then(response => response.json()).then(data => {
-            if (data.success) {
-                const readings = data.data;
-                
-                // Update UI with new readings
-                if (readings.ph !== null) {
-                    document.getElementById('ph-value').textContent = readings.ph.toFixed(2);
-                }
-                
-                if (readings.ec !== null) {
-                    document.getElementById('ec-value').textContent = readings.ec.toFixed(2);
-                }
-                
-                if (readings.temp !== null) {
-                    document.getElementById('temp-value').textContent = readings.temp.toFixed(1) + '°C';
-                }
-                
-                // Update charts with new data
-                // This would typically require fetching the updated chart data
-                // But for simplicity, we'll just use the real-time updates via Socket.IO
-            }
-            
-            return data;
-        });
-    }
-    
     function loadPumps() {
         fetch('/api/pumps').then(response => response.json()).then(data => {
             if (data.success) {
@@ -616,6 +1026,35 @@
                     });
                 });
             }
+        });
+    }
+    
+    function refreshReadings() {
+        return fetch('/api/sensors/read_now', {
+            method: 'POST'
+        }).then(response => response.json()).then(data => {
+            if (data.success) {
+                const readings = data.data;
+                
+                // Update UI with new readings
+                if (readings.ph !== null) {
+                    document.getElementById('ph-value').textContent = readings.ph.toFixed(2);
+                }
+                
+                if (readings.ec !== null) {
+                    document.getElementById('ec-value').textContent = readings.ec.toFixed(2);
+                }
+                
+                if (readings.temp !== null) {
+                    document.getElementById('temp-value').textContent = readings.temp.toFixed(1) + '°C';
+                }
+                
+                // Update charts with new data
+                // This would typically require fetching the updated chart data
+                // But for simplicity, we'll just use the real-time updates via Socket.IO
+            }
+            
+            return data;
         });
     }
 </script>
