@@ -451,11 +451,9 @@
 </style>
 {% endblock %}
 
-{% block scripts %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}
 <script>
-    // Define the confirmDeleteProduct function globally so it's available to the onclick attributes
+    // Define this function in the global scope, outside of any event handler
     function confirmDeleteProduct(productId) {
         console.log('Delete requested for product ID:', productId);
         
@@ -465,7 +463,13 @@
         // Show the modal
         $('#deleteModal').modal('show');
     }
-    
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         // Add Brand Button
         const addBrandBtn = document.getElementById('add-brand-btn');
@@ -484,15 +488,13 @@
             
             console.log('Deleting product ID:', productId);
             
-            // Try using a POST request instead of DELETE as some setups have issues with DELETE
-            fetch('/api/nutrient-products/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: productId })
+            // Use the original DELETE endpoint since we now have confirmed that's what your API expects
+            fetch(`/api/nutrient-products/${productId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
             })
             .then(response => {
                 console.log('Delete response status:', response.status);
-                console.log('Delete response headers:', response.headers);
                 return response.json().catch(e => {
                     console.log('Error parsing JSON from response:', e);
                     return { success: false, error: 'Could not parse server response' };
@@ -501,12 +503,11 @@
             .then(result => {
                 console.log('Delete result:', result);
                 
-                // Even if the server response isn't ideal, attempt to remove the row anyway
+                // Remove the row from the table
                 const row = document.querySelector(`tr[data-product-id="${productId}"]`);
                 if (row) {
                     row.remove();
                     console.log('Row removed for product ID:', productId);
-                    alert('Product deleted successfully');
                 } else {
                     console.error('Row not found for product ID:', productId);
                 }
