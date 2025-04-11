@@ -465,19 +465,28 @@
         padding: 18px;
         border-radius: 8px;
         background-color: var(--bg-color);
-        border: 1px solid var(--border-color);
-        border-left: 4px solid var(--border-color);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s;
         min-height: 120px;
         box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
     }
     
     .reading-card:hover {
         transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
     
-    .reading-card.alert {
-        border-left-color: #dc3545;
+    .reading-card.alert::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background-color: #dc3545;
     }
     
     .reading-icon {
