@@ -167,6 +167,7 @@
             </div>
             <div class="modal-body">
                 Are you sure you want to delete this product? This action cannot be undone.
+                <input type="hidden" id="product-id-to-delete" value="">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -454,6 +455,17 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Define the confirmDeleteProduct function globally so it's available to the onclick attributes
+    function confirmDeleteProduct(productId) {
+        console.log('Delete requested for product ID:', productId);
+        
+        // Store the product ID in the hidden input
+        document.getElementById('product-id-to-delete').value = productId;
+        
+        // Show the modal
+        $('#deleteModal').modal('show');
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Add Brand Button
         const addBrandBtn = document.getElementById('add-brand-btn');
@@ -461,10 +473,49 @@
         const addBrandForm = document.getElementById('add-brand-form');
         const cancelAddBrandBtn = document.getElementById('cancel-add-brand');
         
-        // Delete Modal
-        const deleteModal = document.getElementById('deleteModal');
-        const confirmDeleteBtn = document.getElementById('confirmDelete');
-        
+        // Delete confirmation logic
+        document.getElementById('confirmDelete').addEventListener('click', function() {
+            const productId = document.getElementById('product-id-to-delete').value;
+            
+            if (!productId) {
+                console.error('No product ID found for deletion');
+                return;
+            }
+            
+            console.log('Deleting product ID:', productId);
+            
+            // Delete via API
+            fetch(`/api/nutrient-products/${productId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                console.log('Delete response status:', response.status);
+                return response.json();
+            })
+            .then(result => {
+                console.log('Delete result:', result);
+                if (result.success) {
+                    // Find and remove the row
+                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                    if (row) {
+                        row.remove();
+                        console.log('Row removed for product ID:', productId);
+                    } else {
+                        console.error('Row not found for product ID:', productId);
+                    }
+                    
+                    // Hide the modal
+                    $('#deleteModal').modal('hide');
+                } else {
+                    alert('Error: ' + (result.error || 'Unknown error occurred'));
+                }
+            })
+            .catch(error => {
+                console.error('Error during delete:', error);
+                alert('An error occurred while deleting the product');
+            });
+        });
+
         // Show Add Brand Form
         addBrandBtn.addEventListener('click', function() {
             addBrandContainer.style.display = 'block';
@@ -661,64 +712,6 @@
                 updateProductField(row, 'potassium_pct', parseFloat(this.value) || null);
             });
         });
-        
-        // Simple direct delete functions
-        function confirmDeleteProduct(productId) {
-            console.log('Delete requested for product ID:', productId);
-            
-            // Store ID in a hidden input in the modal for safer retrieval
-            document.getElementById('product-id-to-delete').value = productId;
-            
-            // Show modal
-            $('#deleteModal').modal('show');
-        }
-        
-        // Add a hidden input to the modal to store the product ID
-        document.querySelector('#deleteModal .modal-body').innerHTML += 
-            '<input type="hidden" id="product-id-to-delete" value="">';
-        
-        // Set up confirm delete button with direct function
-        document.getElementById('confirmDelete').onclick = function() {
-            const productId = document.getElementById('product-id-to-delete').value;
-            
-            if (!productId) {
-                console.error('No product ID found for deletion');
-                return;
-            }
-            
-            console.log('Deleting product ID:', productId);
-            
-            // Delete via API
-            fetch(`/api/nutrient-products/${productId}`, {
-                method: 'DELETE'
-            })
-            .then(response => {
-                console.log('Delete response status:', response.status);
-                return response.json();
-            })
-            .then(result => {
-                console.log('Delete result:', result);
-                if (result.success) {
-                    // Find and remove the row
-                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
-                    if (row) {
-                        row.remove();
-                        console.log('Row removed for product ID:', productId);
-                    } else {
-                        console.error('Row not found for product ID:', productId);
-                    }
-                    
-                    // Hide the modal
-                    $('#deleteModal').modal('hide');
-                } else {
-                    alert('Error: ' + (result.error || 'Unknown error occurred'));
-                }
-            })
-            .catch(error => {
-                console.error('Error during delete:', error);
-                alert('An error occurred while deleting the product');
-            });
-        };
     });
 </script>
 {% endblock %} 
