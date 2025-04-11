@@ -233,14 +233,16 @@
                 <div class="card-body">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="ec-setpoint">EC Setpoint (μS/cm)</label>
-                            <input type="number" id="ec-setpoint" name="ec_setpoint" class="form-control" 
-                                   min="500" max="3000" step="10" value="{{ profile.ec_setpoint if profile else 1350 }}">
+                            <label for="ec-setpoint">EC Setpoint (mS/cm)</label>
+                            <input type="number" id="ec-setpoint" name="ec_setpoint" class="form-control"
+                            min="0.5" max="3.0" step="0.01" value="{{ (profile.ec_setpoint / 1000)|round(2) if profile else 1.35 }}">
+                            <p class="helper-text">Target EC level for this plant profile</p>
                         </div>
                         <div class="form-group">
-                            <label for="ec-buffer">EC Buffer (μS/cm)</label>
-                            <input type="number" id="ec-buffer" name="ec_buffer" class="form-control" 
-                                   min="50" max="500" step="10" value="{{ profile.ec_buffer if profile else 150 }}">
+                            <label for="ec-buffer">EC Buffer (mS/cm)</label>
+                            <input type="number" id="ec-buffer" name="ec_buffer" class="form-control"
+                            min="0.05" max="0.5" step="0.01" value="{{ (profile.ec_buffer / 1000)|round(2) if profile else 0.15 }}">
+                            <p class="helper-text">Acceptable variation from EC setpoint (± range)</p>
                         </div>
                     </div>
                 </div>

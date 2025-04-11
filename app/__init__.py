@@ -51,7 +51,7 @@ def register_template_helpers(app):
         """Format EC value with appropriate units."""
         if value is None:
             return "N/A"
-        return f"{value:.0f} μS/cm"
+        return f"{(value / 1000):.2f} mS/cm"
         
     @app.template_filter('temp')
     def format_temp(value):

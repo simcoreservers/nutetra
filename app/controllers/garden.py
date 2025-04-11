@@ -105,27 +105,23 @@ def add_profile():
         
         # Create base profile
         new_profile = {
+            'id': profile_id,
             'name': name,
             'description': description,
-            'ph_setpoint': ph_setpoint or 6.0,
-            'ph_buffer': ph_buffer or 0.2,
-            'ec_setpoint': ec_setpoint or 1350,
-            'ec_buffer': ec_buffer or 150,
-            'temp_min': temp_min or 18.0,
-            'temp_max': temp_max or 28.0,
-            'custom': True,
-            'nutrient_ratios': {
-                'grow': 1.0,
-                'bloom': 1.0,
-                'micro': 1.0,
-                'calmag': 0.5
-            },
+            'ph_setpoint': ph_setpoint,
+            'ph_buffer': ph_buffer,
+            'ec_setpoint': round(float(request.form.get('ec_setpoint', 1.35)) * 1000),  # Convert from mS to μS
+            'ec_buffer': round(float(request.form.get('ec_buffer', 0.15)) * 1000),  # Convert from mS to μS
+            'temp_min': temp_min,
+            'temp_max': temp_max,
+            'weekly_schedules': {},
+            'total_weeks': 0,
+            'current_week': 1,
             'nutrient_components': []
         }
         
         # Set up weekly schedule if requested
         if use_weekly_schedule and total_weeks:
-            new_profile['weekly_schedules'] = {}
             new_profile['total_weeks'] = total_weeks
             new_profile['current_week'] = 1
             
@@ -201,57 +197,52 @@ def add_profile():
 @garden_bp.route('/profiles/edit/<profile_id>', methods=['GET', 'POST'])
 def edit_profile(profile_id):
     """Edit an existing plant profile"""
-    # Get all plant profiles
+    # Get existing plant profiles
     plant_profiles = Settings.get('plant_profiles', {})
     
-    # Check if profile exists
-    if profile_id not in plant_profiles:
-        flash('Profile not found.', 'error')
+    # Get this profile
+    profile = plant_profiles.get(profile_id)
+    if not profile:
+        flash(f'Profile not found', 'error')
         return redirect(url_for('garden.profiles'))
     
-    # Get the profile
-    profile = plant_profiles[profile_id]
-    
-    # Get all available pumps for components
-    pumps = Pump.query.filter(
-        Pump.type.in_(['nutrient', 'ph_up', 'ph_down']),
-        Pump.enabled == True
-    ).all()
+    # Get all pumps for nutrient components
+    pumps = Pump.query.all()
     
     if request.method == 'POST':
-        # Get form data
+        # Get profile details from form
         name = request.form.get('name')
         description = request.form.get('description')
         ph_setpoint = request.form.get('ph_setpoint', type=float)
         ph_buffer = request.form.get('ph_buffer', type=float)
-        ec_setpoint = request.form.get('ec_setpoint', type=int)
-        ec_buffer = request.form.get('ec_buffer', type=int)
+        ec_setpoint = round(float(request.form.get('ec_setpoint', 1.35)) * 1000)  # Convert from mS to μS
+        ec_buffer = round(float(request.form.get('ec_buffer', 0.15)) * 1000)  # Convert from mS to μS
         temp_min = request.form.get('temp_min', type=float)
         temp_max = request.form.get('temp_max', type=float)
+        
+        # Validate input
+        if not name:
+            flash('Name is required', 'error')
+            return redirect(url_for('garden.edit_profile', profile_id=profile_id))
+            
+        if temp_min >= temp_max:
+            flash('Maximum temperature must be higher than minimum temperature', 'error')
+            return redirect(url_for('garden.edit_profile', profile_id=profile_id))
+        
+        # Update profile information
+        profile['name'] = name
+        profile['description'] = description
+        profile['ph_setpoint'] = ph_setpoint
+        profile['ph_buffer'] = ph_buffer
+        profile['ec_setpoint'] = ec_setpoint
+        profile['ec_buffer'] = ec_buffer
+        profile['temp_min'] = temp_min
+        profile['temp_max'] = temp_max
         
         # Check if weekly schedule should be used
         use_weekly_schedule = 'use_weekly_schedule' in request.form
         total_weeks = request.form.get('total_weeks', type=int) if use_weekly_schedule else None
         growth_phases_text = request.form.get('growth_phases') if use_weekly_schedule else None
-        
-        # Process nutrient components
-        component_pumps = request.form.getlist('component_pumps[]')
-        component_ratios = request.form.getlist('component_ratios[]')
-        
-        # Validate form data
-        if not name:
-            flash('Profile name is required.', 'error')
-            return redirect(url_for('garden.edit_profile', profile_id=profile_id))
-        
-        # Update the profile
-        profile['name'] = name
-        profile['description'] = description
-        profile['ph_setpoint'] = ph_setpoint or 6.0
-        profile['ph_buffer'] = ph_buffer or 0.2
-        profile['ec_setpoint'] = ec_setpoint or 1350
-        profile['ec_buffer'] = ec_buffer or 150
-        profile['temp_min'] = temp_min or 18.0
-        profile['temp_max'] = temp_max or 28.0
         
         # Handle weekly schedules
         if use_weekly_schedule and total_weeks:
