@@ -382,6 +382,17 @@
                 });
             }
         });
+
+        // Fix for submenu navigation issues
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent submenu items from toggling parent menus
+            const submenuItems = document.querySelectorAll('.sidebar .submenu a');
+            submenuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Stop event from bubbling up to parent menu items
+                });
+            });
+        });
     </script>
 </body>
 </html> 
