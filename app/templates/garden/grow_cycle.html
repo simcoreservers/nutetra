@@ -258,7 +258,8 @@
         height: 100%;
         background-color: var(--primary-color);
         position: relative;
-        animation: progress-fill 1s ease-out;
+        animation: progress-fill 1s ease-out forwards;
+        width: 0; /* Start at 0 width */
     }
     
     .progress::after {
@@ -279,7 +280,7 @@
     
     @keyframes progress-fill {
         from { width: 0; }
-        to { width: 100%; }
+        to { width: var(--target-width); }
     }
     
     @keyframes progress-shine {
@@ -459,4 +460,31 @@
         }
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the progress bar
+        const progressBar = document.querySelector('.progress');
+        if (progressBar) {
+            // Get the target width from the inline style
+            const targetWidth = progressBar.style.width;
+            
+            // Set the custom property for animation
+            progressBar.style.setProperty('--target-width', targetWidth);
+            
+            // Reset the width to 0 to start the animation
+            progressBar.style.width = '0';
+            
+            // Force a reflow
+            void progressBar.offsetWidth;
+            
+            // Apply the animation
+            setTimeout(function() {
+                progressBar.style.width = targetWidth;
+            }, 50);
+        }
+    });
+</script>
 {% endblock %} 
