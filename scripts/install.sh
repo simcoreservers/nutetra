@@ -68,7 +68,7 @@ cat > ${PROJECT_DIR}/scripts/start.sh << EOF
 #!/bin/bash
 cd ${PROJECT_DIR}
 source venv/bin/activate
-python app.py
+python run.py
 EOF
 chmod +x ${PROJECT_DIR}/scripts/start.sh
 
@@ -103,15 +103,18 @@ chmod +x ${PROJECT_DIR}/scripts/kiosk.sh
 echo "Creating systemd service..."
 cat > /etc/systemd/system/nutetra.service << EOF
 [Unit]
-Description=NuTetra Controller
+Description=NuTetra Controller Service
 After=network.target
 
 [Service]
 User=pi
 WorkingDirectory=${PROJECT_DIR}
-ExecStart=${PROJECT_DIR}/venv/bin/python app.py
-Restart=always
-RestartSec=10
+ExecStart=${PROJECT_DIR}/venv/bin/python ${PROJECT_DIR}/run.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=nutetra
 
 [Install]
 WantedBy=multi-user.target
