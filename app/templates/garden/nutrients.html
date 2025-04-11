@@ -676,7 +676,9 @@
         $('#confirmDelete').on('click', function() {
             if (!productToDelete) return;
             
-            const productId = $(productToDelete).data('product-id');
+            // Use the correct camelCase format for jQuery data attribute or get it directly from the attribute
+            const productId = $(productToDelete).attr('data-product-id');
+            console.log('Deleting product ID:', productId); // Debug log
             
             // Delete via API
             fetch(`/api/nutrient-products/${productId}`, {
