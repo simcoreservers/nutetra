@@ -171,7 +171,32 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete" onclick="directDelete()">Delete</button>
+                <button type="button" class="btn btn-danger" onclick="
+                    const productId = document.getElementById('product-id-to-delete').value;
+                    console.log('Inline delete for product ID:', productId);
+                    
+                    fetch('/api/nutrient-products/' + productId, {
+                        method: 'DELETE'
+                    })
+                    .then(response => {
+                        console.log('Inline delete status:', response.status);
+                        return response.text();
+                    })
+                    .then(text => {
+                        console.log('Inline delete response:', text);
+                        const row = document.querySelector('tr[data-product-id=\"' + productId + '\"]');
+                        if (row) {
+                            row.remove();
+                            console.log('Row removed');
+                        }
+                        $('#deleteModal').modal('hide');
+                        setTimeout(() => location.reload(), 500);
+                    })
+                    .catch(e => {
+                        console.error('Inline delete error:', e);
+                        alert('Error: ' + e.message);
+                    });
+                ">Delete</button>
             </div>
         </div>
     </div>
