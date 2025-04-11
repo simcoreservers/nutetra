@@ -384,7 +384,7 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         padding: 20px;
         overflow: hidden;
-        margin-bottom: 20px; /* Add default bottom margin to all sections */
+        margin-bottom: 20px;
     }
     
     /* Section layout control */
@@ -459,6 +459,7 @@
         background-color: var(--bg-color);
         border-left: 4px solid transparent;
         transition: transform 0.2s;
+        min-height: 120px; /* Ensure min height */
     }
     
     .reading-card:hover {
@@ -478,6 +479,7 @@
         align-items: center;
         margin-right: 15px;
         font-size: 1.5rem;
+        flex-shrink: 0;
     }
     
     .reading-icon.good {
@@ -488,6 +490,10 @@
     .reading-icon.alert {
         background-color: rgba(220, 53, 69, 0.2);
         color: #dc3545;
+    }
+    
+    .reading-details {
+        flex: 1;
     }
     
     .reading-details h4 {
@@ -520,6 +526,7 @@
         padding: 15px;
         border-radius: 8px;
         background-color: var(--bg-color);
+        min-height: 100px; /* Ensure min height */
     }
     
     .status-icon {
@@ -533,6 +540,11 @@
         align-items: center;
         margin-right: 12px;
         font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .status-details {
+        flex: 1;
     }
     
     .status-details h4 {
@@ -594,6 +606,7 @@
         cursor: pointer;
         text-decoration: none;
         color: var(--text-color);
+        min-height: 100px; /* Ensure min height */
     }
     
     .action-card:hover {
@@ -912,195 +925,79 @@
     @media (max-width: 768px) {
         .dashboard-container {
             grid-template-columns: 1fr;
-            gap: 12px;
-            padding: 10px;
+            gap: 15px;
+            padding: 15px;
         }
         
         .dashboard-section {
             grid-column: span 1;
-            padding: 12px;
-            margin-bottom: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
         }
         
-        /* Horizontal scrolling readings for mobile */
+        /* Stacked readings for mobile - scrolling is ok */
         .readings-grid {
-            display: flex;
-            overflow-x: auto;
-            padding-bottom: 8px;
-            gap: 10px;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
         }
         
         .reading-card {
-            flex: 0 0 260px;
-            padding: 12px;
+            padding: 15px;
             margin-bottom: 0;
+            min-height: unset;
         }
         
         .reading-icon {
-            width: 38px;
-            height: 38px;
-            font-size: 1rem;
-            margin-right: 10px;
-            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            margin-right: 15px;
         }
         
         .reading-value {
-            font-size: 1.2rem;
-        }
-        
-        .reading-range {
-            font-size: 0.75rem;
-        }
-        
-        .status-grid,
-        .actions-grid,
-        .profile-detail-grid {
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-        
-        .status-card, 
-        .action-card {
-            margin-bottom: 0;
-        }
-        
-        .action-icon {
-            width: 36px;
-            height: 36px;
-            margin-bottom: 6px;
-            font-size: 1rem;
+            font-size: 1.5rem;
         }
         
         .status-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 8px;
+            grid-template-columns: 1fr;
+            gap: 15px;
         }
         
         .status-card {
-            flex: 1 1 100%;
-            margin-bottom: 0;
-        }
-        
-        .status-icon {
-            width: 36px;
-            height: 36px;
-            font-size: 1rem;
+            min-height: unset;
+            padding: 15px;
         }
         
         .actions-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
         
-        .profile-info-card {
-            padding: 10px;
-            margin-bottom: 8px;
-        }
-        
-        .profile-info-card h4 {
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+        .action-card {
+            min-height: unset;
         }
         
         .charts-container {
-            height: 200px;
-        }
-        
-        .chart-tabs button {
-            padding: 6px 10px;
-            font-size: 0.85rem;
-        }
-        
-        .profile-detail-grid {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Simplify layout for better mobile view */
-        .section-header {
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-        }
-        
-        .section-header h3 {
-            margin-bottom: 5px;
-            width: 100%;
-            font-size: 1rem;
-        }
-        
-        .section-actions {
-            margin-top: 5px;
-        }
-        
-        /* Make scrollable sections fixed height on mobile */
-        .activity-list {
-            max-height: 300px;
-            overflow-y: auto;
+            height: 300px;
         }
     }
     
-    /* Small mobile adjustments */
+    /* Small mobile adjustments - focused on making sure content is accessible */
     @media (max-width: 480px) {
         .dashboard-container {
-            padding: 8px;
-            gap: 8px;
+            padding: 10px;
+            gap: 15px;
         }
         
         .dashboard-section {
-            padding: 10px;
-            margin-bottom: 8px;
-        }
-        
-        .section-header {
-            padding-bottom: 6px;
-            margin-bottom: 8px;
-        }
-        
-        .section-header h3 {
-            font-size: 0.95rem;
+            padding: 15px;
+            margin-bottom: 15px;
         }
         
         .actions-grid {
             grid-template-columns: 1fr;
-            gap: 6px;
         }
-        
-        .action-card {
-            padding: 10px 8px;
-        }
-        
-        .reading-card {
-            flex: 0 0 230px;
-            padding: 10px;
-        }
-        
-        .reading-icon {
-            width: 32px;
-            height: 32px;
-        }
-        
-        .reading-value {
-            font-size: 1.1rem;
-        }
-    }
-
-    /* Fix for mobile scrollbars */
-    .readings-grid::-webkit-scrollbar {
-        height: 4px;
-    }
-    
-    .readings-grid::-webkit-scrollbar-thumb {
-        background-color: rgba(var(--primary-color-rgb), 0.3);
-        border-radius: 4px;
-    }
-    
-    .readings-grid::-webkit-scrollbar-track {
-        background-color: rgba(0, 0, 0, 0.05);
     }
 
     /* Switch styling */
