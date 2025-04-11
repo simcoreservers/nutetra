@@ -6,11 +6,11 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- Sensor Readings Section -->
+    <!-- Sensor Readings Section - Made more prominent -->
     <section class="dashboard-section readings-section">
         <div class="section-header">
             <h3><i class="fas fa-heartbeat"></i> Current Readings</h3>
-            <button class="refresh-btn" id="refresh-readings-btn">
+            <button class="refresh-btn" id="refresh-readings-btn" title="Refresh readings now">
                 <i class="fas fa-sync-alt"></i>
             </button>
         </div>
@@ -59,15 +59,88 @@
             </div>
         </div>
     </section>
+
+    <!-- System Status Section - New consolidated section -->
+    <section class="dashboard-section status-section">
+        <div class="section-header">
+            <h3><i class="fas fa-info-circle"></i> System Status</h3>
+        </div>
+        
+        <div class="status-grid">
+            <!-- Auto-Dosing Toggle -->
+            <div class="status-card">
+                <div class="status-icon">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="status-details">
+                    <h4>Auto-Dosing</h4>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-dosing-toggle" {% if auto_dosing %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                    <div class="status-value">
+                        <span id="auto-dosing-status" class="{% if auto_dosing %}active{% else %}inactive{% endif %}">
+                            {{ 'Enabled' if auto_dosing else 'Disabled' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Profile Summary -->
+            <div class="status-card profile-summary-card">
+                <div class="status-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="status-details">
+                    <h4>Active Profile</h4>
+                    <div class="status-value">
+                        {% if active_profile %}
+                            <span>{{ active_profile.name }}</span>
+                            {% if active_profile.weekly_schedules %}
+                            <span class="badge">Week {{ active_profile.current_week|default(1) }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="inactive">None selected</span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('garden.profiles') }}" class="small-action">Change</a>
+                </div>
+            </div>
+            
+            <!-- Sensor Status -->
+            <div class="status-card">
+                <div class="status-icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <div class="status-details">
+                    <h4>Sensors</h4>
+                    <div class="status-value">
+                        <span class="{% if ph_reading is not none %}active{% else %}inactive{% endif %}">pH</span>
+                        <span class="{% if ec_reading is not none %}active{% else %}inactive{% endif %}">EC</span>
+                        <span class="{% if temp_reading is not none %}active{% else %}inactive{% endif %}">Temp</span>
+                    </div>
+                    <a href="{{ url_for('sensors.calibration') }}" class="small-action">Calibrate</a>
+                </div>
+            </div>
+        </div>
+    </section>
     
-    <!-- Quick Actions Section -->
+    <!-- Quick Actions Section - Better organized -->
     <section class="dashboard-section actions-section">
         <div class="section-header">
             <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
         </div>
         
         <div class="actions-grid">
-            <!-- Quick Action Buttons -->
+            <a href="{{ url_for('dosing.settings') }}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Dosing Settings</h4>
+                </div>
+            </a>
+            
             <a href="{{ url_for('garden.profiles') }}" class="action-card">
                 <div class="action-icon">
                     <i class="fas fa-leaf"></i>
@@ -86,15 +159,6 @@
                 </div>
             </a>
             
-            <a href="{{ url_for('sensors.calibration') }}" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-sliders-h"></i>
-                </div>
-                <div class="action-details">
-                    <h4>Calibrate Sensors</h4>
-                </div>
-            </a>
-            
             <a href="{{ url_for('garden.nutrients') }}" class="action-card">
                 <div class="action-icon">
                     <i class="fas fa-vial"></i>
@@ -104,24 +168,6 @@
                 </div>
             </a>
             
-            <!-- Auto-Dosing Toggle -->
-            <div class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-tint"></i>
-                </div>
-                <div class="action-details">
-                    <h4>Auto-Dosing</h4>
-                    <label class="switch">
-                        <input type="checkbox" id="auto-dosing-toggle" {% if auto_dosing %}checked{% endif %}>
-                        <span class="slider round"></span>
-                    </label>
-                    <div class="action-status">
-                        <span id="auto-dosing-status">{{ 'Enabled' if auto_dosing else 'Disabled' }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Manual Dose -->
             <div class="action-card">
                 <div class="action-icon">
                     <i class="fas fa-hand-pointer"></i>
@@ -133,60 +179,74 @@
                     </button>
                 </div>
             </div>
+            
+            <a href="{{ url_for('sensors.calibration') }}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <div class="action-details">
+                    <h4>Calibrate Sensors</h4>
+                </div>
+            </a>
         </div>
     </section>
-
-    <!-- Active Profile Section (New) -->
+    
+    <!-- Active Profile Section - Full width, detailed info -->
+    {% if active_profile %}
     <section class="dashboard-section active-profile-section">
         <div class="section-header">
-            <h3><i class="fas fa-leaf"></i> Active Plant Profile</h3>
-            <a href="{{ url_for('garden.profiles') }}" class="button small">Change Profile</a>
+            <h3><i class="fas fa-leaf"></i> Active Plant Profile: {{ active_profile.name }}</h3>
+            <div class="section-actions">
+                <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="button small">Edit</a>
+                {% if active_profile.weekly_schedules %}
+                <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="button small">Schedule</a>
+                {% endif %}
+            </div>
         </div>
         
-        {% if active_profile %}
-        <div class="profile-summary">
-            <div class="profile-header">
-                <h4>{{ active_profile.name }}</h4>
-                {% if active_profile.weekly_schedules %}
-                <div class="growth-stage">
-                    <span class="stage-label">Week {{ active_profile.current_week|default(1) }}</span>
-                    <span class="phase-label">{{ growth_phase }}</span>
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="profile-targets">
-                <div class="target-item">
-                    <span class="target-label">pH:</span>
-                    <span class="target-value">{{ active_profile.ph_setpoint }} ± {{ active_profile.ph_buffer }}</span>
-                </div>
-                <div class="target-item">
-                    <span class="target-label">EC:</span>
-                    <span class="target-value">{{ active_profile.ec_setpoint }} ± {{ active_profile.ec_buffer }} μS/cm</span>
-                </div>
-                <div class="target-item">
-                    <span class="target-label">Temperature:</span>
-                    <span class="target-value">{{ active_profile.temp_min }}-{{ active_profile.temp_max }}°C</span>
+        <div class="profile-detail-grid">
+            <div class="profile-info-card">
+                <h4>Target Values</h4>
+                <div class="target-items">
+                    <div class="target-item">
+                        <span class="target-label">pH:</span>
+                        <span class="target-value">{{ active_profile.ph_setpoint }} ± {{ active_profile.ph_buffer }}</span>
+                    </div>
+                    <div class="target-item">
+                        <span class="target-label">EC:</span>
+                        <span class="target-value">{{ active_profile.ec_setpoint }} ± {{ active_profile.ec_buffer }} μS/cm</span>
+                    </div>
+                    <div class="target-item">
+                        <span class="target-label">Temperature:</span>
+                        <span class="target-value">{{ active_profile.temp_min }}-{{ active_profile.temp_max }}°C</span>
+                    </div>
                 </div>
             </div>
             
-            <div class="profile-actions">
-                <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="action-button">
-                    <i class="fas fa-pencil-alt"></i> Edit Profile
-                </a>
-                {% if active_profile.weekly_schedules %}
-                <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="action-button">
-                    <i class="fas fa-calendar-alt"></i> Schedule
-                </a>
-                {% endif %}
+            <div class="profile-info-card">
+                <h4>Description</h4>
+                <p class="profile-description">{{ active_profile.description }}</p>
             </div>
+            
+            {% if active_profile.weekly_schedules %}
+            <div class="profile-info-card growth-info">
+                <h4>Growth Cycle</h4>
+                <div class="growth-details">
+                    <div class="growth-stage">
+                        <span class="stage-label">Week {{ active_profile.current_week|default(1) }} of {{ active_profile.total_weeks }}</span>
+                        <span class="phase-label">{{ growth_phase }}</span>
+                    </div>
+                    <div class="growth-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ (active_profile.current_week / active_profile.total_weeks * 100)|round }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        {% else %}
-        <div class="empty-state">
-            <p>No active profile selected. <a href="{{ url_for('garden.profiles') }}">Select a profile</a> to get started.</p>
-        </div>
-        {% endif %}
     </section>
+    {% endif %}
     
     <!-- Charts Section -->
     <section class="dashboard-section charts-section">
@@ -225,7 +285,7 @@
         </div>
     </section>
     
-    <!-- Recent Activity Section -->
+    <!-- Recent Activity Section - Smaller, to the side -->
     <section class="dashboard-section activity-section">
         <div class="section-header">
             <h3><i class="fas fa-history"></i> Recent Activity</h3>
@@ -259,7 +319,7 @@
         </div>
     </section>
     
-    <!-- Export Data Section -->
+    <!-- Export Data Section - In a useful location -->
     <section class="dashboard-section export-section">
         <div class="section-header">
             <h3><i class="fas fa-file-export"></i> Export Data</h3>
@@ -313,7 +373,7 @@
 <style>
     .dashboard-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(4, 1fr);
         gap: 20px;
         padding: 20px;
     }
@@ -321,11 +381,42 @@
     .dashboard-section {
         background-color: var(--card-bg);
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         padding: 20px;
         overflow: hidden;
     }
     
+    /* Section layout control */
+    .readings-section {
+        grid-column: span 4;
+    }
+    
+    .status-section {
+        grid-column: span 2;
+    }
+    
+    .actions-section {
+        grid-column: span 2;
+    }
+    
+    .active-profile-section {
+        grid-column: span 4;
+    }
+    
+    .charts-section {
+        grid-column: span 3;
+        grid-row: span 2;
+    }
+    
+    .activity-section {
+        grid-column: span 1;
+    }
+    
+    .export-section {
+        grid-column: span 1;
+    }
+    
+    /* Common section elements */
     .section-header {
         display: flex;
         justify-content: space-between;
@@ -347,27 +438,39 @@
         color: var(--primary-color);
     }
     
-    .readings-section, .charts-section {
-        grid-column: span 2;
+    .section-actions {
+        display: flex;
+        gap: 10px;
     }
     
+    /* Readings section */
     .readings-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 15px;
     }
     
     .reading-card {
         display: flex;
         align-items: center;
-        padding: 15px;
+        padding: 18px;
         border-radius: 8px;
         background-color: var(--bg-color);
+        border-left: 4px solid transparent;
+        transition: transform 0.2s;
+    }
+    
+    .reading-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .reading-card.alert {
+        border-left-color: #dc3545;
     }
     
     .reading-icon {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
         display: flex;
         justify-content: center;
@@ -389,21 +492,92 @@
     .reading-details h4 {
         margin: 0 0 5px 0;
         font-size: 0.9rem;
+        opacity: 0.8;
     }
     
     .reading-value {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         font-weight: bold;
     }
     
     .reading-range {
         font-size: 0.8rem;
         color: var(--text-muted);
+        margin-top: 5px;
     }
     
+    /* Status section */
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+    }
+    
+    .status-card {
+        display: flex;
+        align-items: flex-start;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: var(--bg-color);
+    }
+    
+    .status-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: rgba(var(--primary-color-rgb), 0.2);
+        color: var(--primary-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 12px;
+        font-size: 1.2rem;
+    }
+    
+    .status-details h4 {
+        margin: 0 0 8px 0;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .status-value {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    
+    .status-value .active {
+        color: #28a745;
+    }
+    
+    .status-value .inactive {
+        color: #6c757d;
+    }
+    
+    .status-value .badge {
+        display: inline-block;
+        background-color: rgba(var(--primary-color-rgb), 0.2);
+        color: var(--primary-color);
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 0.8rem;
+        margin-left: 6px;
+    }
+    
+    .status-value span + span {
+        margin-left: 8px;
+    }
+    
+    .small-action {
+        font-size: 0.8rem;
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+    
+    /* Actions section */
     .actions-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 15px;
     }
     
@@ -411,7 +585,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 15px;
+        padding: 15px 10px;
         border-radius: 8px;
         background-color: var(--bg-color);
         text-align: center;
@@ -427,8 +601,8 @@
     }
     
     .action-icon {
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
         border-radius: 50%;
         background-color: rgba(var(--primary-color-rgb), 0.2);
         color: var(--primary-color);
@@ -436,101 +610,81 @@
         justify-content: center;
         align-items: center;
         margin-bottom: 10px;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
     
     .action-details h4 {
         margin: 0;
         font-size: 0.9rem;
+        line-height: 1.2;
     }
     
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 60px;
-        height: 30px;
-        margin: 10px 0;
-    }
-    
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-    
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        transition: .4s;
-    }
-    
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 22px;
-        width: 22px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: .4s;
-    }
-    
-    input:checked + .slider {
+    .action-button {
+        padding: 6px 12px;
+        border-radius: 4px;
         background-color: var(--primary-color);
+        color: white;
+        border: none;
+        font-size: 0.85rem;
+        cursor: pointer;
+        margin-top: 8px;
     }
     
-    input:focus + .slider {
-        box-shadow: 0 0 1px var(--primary-color);
+    /* Active profile section */
+    .profile-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
     }
     
-    input:checked + .slider:before {
-        transform: translateX(30px);
-    }
-    
-    .slider.round {
-        border-radius: 34px;
-    }
-    
-    .slider.round:before {
-        border-radius: 50%;
-    }
-    
-    .action-status {
-        margin-top: 5px;
-        font-size: 0.8rem;
-    }
-    
-    /* Active Profile Styles */
-    .active-profile-section {
-        grid-column: span 2;
-    }
-    
-    .profile-summary {
-        padding: 15px;
-        border-radius: 8px;
+    .profile-info-card {
         background-color: var(--bg-color);
+        border-radius: 8px;
+        padding: 15px;
     }
     
-    .profile-header {
+    .profile-info-card h4 {
+        margin: 0 0 12px 0;
+        font-size: 0.95rem;
+        opacity: 0.8;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 8px;
+    }
+    
+    .target-items {
+        display: grid;
+        gap: 10px;
+    }
+    
+    .target-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
     }
     
-    .profile-header h4 {
+    .target-label {
+        font-weight: 500;
+    }
+    
+    .target-value {
+        font-family: monospace;
+        font-size: 0.95rem;
+    }
+    
+    .profile-description {
         margin: 0;
-        font-size: 1.1rem;
+        line-height: 1.4;
+    }
+    
+    .growth-details {
+        margin-top: 10px;
     }
     
     .growth-stage {
         display: flex;
-        gap: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
     }
     
     .stage-label, .phase-label {
@@ -549,63 +703,77 @@
         color: var(--success-color);
     }
     
-    .profile-targets {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 15px;
+    .growth-progress {
+        margin-top: 12px;
     }
     
-    .target-item {
-        padding: 8px 12px;
-        border-radius: 6px;
-        background-color: var(--card-bg);
+    .progress-bar {
+        height: 8px;
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+        border-radius: 4px;
+        overflow: hidden;
     }
     
-    .target-label {
-        font-weight: bold;
-        margin-right: 5px;
-    }
-    
-    .profile-actions {
-        display: flex;
-        gap: 10px;
-    }
-    
-    .action-button {
-        padding: 8px 12px;
-        border-radius: 6px;
+    .progress-fill {
+        height: 100%;
         background-color: var(--primary-color);
-        color: white;
-        text-decoration: none;
-        font-size: 0.9rem;
-        display: inline-flex;
+        border-radius: 4px;
+    }
+    
+    /* Activity section */
+    .activity-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 10px;
+        border-bottom: 1px solid var(--border-color-light);
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+        color: var(--primary-color);
+        display: flex;
+        justify-content: center;
         align-items: center;
-        gap: 5px;
-        border: none;
-        cursor: pointer;
+        margin-right: 10px;
+        font-size: 0.9rem;
     }
     
-    .action-button:hover {
-        background-color: var(--primary-color-dark);
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3px;
     }
     
-    .empty-state {
-        padding: 20px;
-        text-align: center;
+    .activity-header h4 {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .activity-time {
+        font-size: 0.75rem;
         color: var(--text-muted);
     }
     
-    .empty-state a {
-        color: var(--primary-color);
-        text-decoration: none;
+    .activity-description {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.3;
     }
     
-    /* Export Section Styles */
-    .export-section {
-        grid-column: span 1;
-    }
-    
+    /* Export section */
     .export-options {
         display: flex;
         flex-direction: column;
@@ -613,7 +781,7 @@
     }
     
     .export-option {
-        padding: 15px;
+        padding: 12px;
         background-color: var(--bg-color);
         border-radius: 8px;
     }
@@ -625,17 +793,65 @@
     
     .export-buttons {
         display: flex;
-        gap: 10px;
+        gap: 8px;
     }
     
-    /* Responsive Grid Adjustments */
+    .export-buttons .button {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+        .dashboard-container {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .readings-section,
+        .active-profile-section {
+            grid-column: span 3;
+        }
+        
+        .status-section,
+        .actions-section {
+            grid-column: span 3;
+        }
+        
+        .charts-section {
+            grid-column: span 2;
+        }
+        
+        .activity-section,
+        .export-section {
+            grid-column: span 1;
+        }
+    }
+    
     @media (max-width: 768px) {
         .dashboard-container {
             grid-template-columns: 1fr;
+            gap: 15px;
+            padding: 15px;
         }
         
-        .readings-section, .charts-section, .active-profile-section, .export-section {
+        .readings-section,
+        .status-section,
+        .actions-section,
+        .active-profile-section,
+        .charts-section,
+        .activity-section,
+        .export-section {
             grid-column: span 1;
+        }
+        
+        .readings-grid,
+        .status-grid,
+        .actions-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .profile-detail-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
