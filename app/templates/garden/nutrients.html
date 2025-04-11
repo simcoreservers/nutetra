@@ -11,11 +11,11 @@
         <div class="section-header">
             <h3><i class="fas fa-vial"></i> Nutrient Library</h3>
             <div class="section-actions">
-                <button onclick="showAddBrandForm()" class="btn btn-success">
+                <button onclick="showAddBrandForm()" class="btn btn-success" style="background-color: #43e97b !important;">
                     <i class="fas fa-plus"></i> Add New Brand
                 </button>
             </div>
-    </div>
+        </div>
     
         <div class="alert info-alert">
         <i class="fas fa-info-circle"></i> Changes are automatically saved when you click out of a field or select a new option.
@@ -37,13 +37,13 @@
                 <input type="text" id="new-brand-description" class="form-control">
             </div>
                     <div class="form-actions">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-save"></i> Save Brand
-                </button>
-                        <button type="button" onclick="cancelAddBrand()" class="btn btn-secondary">
-                    Cancel
-                </button>
-            </div>
+                        <button type="submit" class="btn btn-success" style="background-color: #43e97b !important;">
+                            <i class="fas fa-save"></i> Save Brand
+                        </button>
+                        <button type="button" onclick="cancelAddBrand()" class="btn btn-secondary" style="background-color: #a0a0a0 !important;">
+                            Cancel
+                        </button>
+                    </div>
         </form>
     </div>
         </div>
@@ -56,10 +56,10 @@
             <div class="section-header">
                 <h3>{{ brand.name }}</h3>
                 <div class="section-actions">
-                    <button class="btn btn-sm btn-success" onclick="showAddProductRow('{{ brand.id }}')" title="Add Product">
+                    <button class="btn btn-sm btn-success" style="background-color: #43e97b !important;" onclick="showAddProductRow('{{ brand.id }}')" title="Add Product">
                         <i class="fas fa-plus"></i> Add Product
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="confirmDeleteBrand('{{ brand.id }}')" title="Delete Brand">
+                    <button class="btn btn-sm btn-danger" style="background-color: #f4736b !important;" onclick="confirmDeleteBrand('{{ brand.id }}')" title="Delete Brand">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -115,7 +115,7 @@
                                        onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'potassium_pct', parseFloat(this.value) || 0)">
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-danger" onclick="confirmDeleteProduct('{{ product.id }}')" title="Delete Product">
+                                <button class="btn btn-sm btn-danger" style="background-color: #f4736b !important;" onclick="confirmDeleteProduct('{{ product.id }}')" title="Delete Product">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 <span class="save-status"></span>
@@ -143,10 +143,10 @@
                                 <input type="number" class="new-product-k form-control" min="0" max="100" step="0.1" placeholder="0.0">
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-success" onclick="saveNewProduct(this)" title="Save Product">
+                                <button class="btn btn-sm btn-success" style="background-color: #43e97b !important;" onclick="saveNewProduct(this)" title="Save Product">
                                     <i class="fas fa-save"></i>
                                 </button>
-                                <button class="btn btn-sm btn-secondary" onclick="cancelAddProduct(this)" title="Cancel">
+                                <button class="btn btn-sm btn-secondary" style="background-color: #a0a0a0 !important;" onclick="cancelAddProduct(this)" title="Cancel">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </td>
