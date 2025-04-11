@@ -141,11 +141,18 @@
                                 {% for week_num in range(1, total_weeks + 1) %}
                                     {% set week = weekly_schedules.get(week_num|string, {}) %}
                                     {% set week_ratios = week.get('nutrient_ratios', {}) %}
-                                    {% from 'garden/profile_form.html' import get_phase_for_week %}
                                     <tr {% if week_num == current_week %}class="current-week"{% endif %}>
                                         <td>{{ week_num }}</td>
                                         <td>
-                                            {{ get_phase_for_week(week_num) }}
+                                            {% if growth_phases is defined and week_num in growth_phases %}
+                                                {{ growth_phases[week_num] }}
+                                            {% elif week_num <= 3 %}
+                                                Seedling
+                                            {% elif week_num <= 6 %}
+                                                Vegetative
+                                            {% else %}
+                                                Flowering
+                                            {% endif %}
                                         </td>
                                         <td>{{ week.get('ec_setpoint', profile.ec_setpoint) }} μS/cm</td>
                                         <td>{{ week_ratios.get('grow', profile.nutrient_ratios.grow) }}</td>

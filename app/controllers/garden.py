@@ -569,9 +569,16 @@ def grow_cycle():
     # If no profile with weekly schedules is found, show a message
     if not active_profile or 'weekly_schedules' not in active_profile:
         flash('No active profile with a grow cycle schedule was found. Please activate a profile that uses weekly scheduling.', 'warning')
+        
+        # Get general settings to pass to template
+        settings = {
+            'dark_mode': Settings.get('dark_mode', True)
+        }
+        
         return render_template(
             'garden/grow_cycle.html',
-            no_schedule=True
+            no_schedule=True,
+            settings=settings
         )
     
     if request.method == 'POST':
@@ -670,6 +677,16 @@ def grow_cycle():
         update_result = Settings.auto_configure_nutrient_components()
         flash(f'Updated nutrient components to match current week: {update_result}', 'info')
     
+    # Get growth phase labels for each week
+    growth_phases = {}
+    for week in range(1, total_weeks + 1):
+        growth_phases[week] = get_growth_phase_for_week(active_profile, week)
+    
+    # Get general settings to pass to template
+    settings = {
+        'dark_mode': Settings.get('dark_mode', True)
+    }
+    
     return render_template(
         'garden/grow_cycle.html',
         profile=active_profile,
@@ -679,7 +696,9 @@ def grow_cycle():
         weekly_schedules=weekly_schedules,
         current_schedule=current_schedule,
         growth_phase=growth_phase,
-        no_schedule=False
+        growth_phases=growth_phases,
+        no_schedule=False,
+        settings=settings
     )
 
 # Helper function for profile schedules
