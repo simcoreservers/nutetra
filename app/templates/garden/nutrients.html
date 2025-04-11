@@ -452,23 +452,25 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- First load jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Then define the function that uses jQuery -->
 <script>
-    // Define this function in the global scope, outside of any event handler
     function confirmDeleteProduct(productId) {
         console.log('Delete requested for product ID:', productId);
         
         // Store the product ID in the hidden input
         document.getElementById('product-id-to-delete').value = productId;
         
-        // Show the modal
+        // Show the modal using jQuery (which is now loaded)
         $('#deleteModal').modal('show');
     }
 </script>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Add Brand Button
