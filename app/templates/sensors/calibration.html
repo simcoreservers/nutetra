@@ -72,9 +72,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="ec-calibration-value">Actual Value (mS/cm):</label>
-                        <input type="number" id="ec-calibration-value" class="form-control" name="calibration_value"
-                            min="0.1" max="5.0" step="0.01" required>
+                        <label for="ec-calibration-value">Actual Value (μS/cm):</label>
+                        <input type="number" name="value" id="ec-calibration-value" step="1" min="0" max="5000" placeholder="e.g. 1413" required>
                     </div>
                     
                     <div class="form-actions">
@@ -138,7 +137,7 @@
             .then(data => {
                 if (data.success) {
                     document.getElementById('current-ph').textContent = data.readings.ph ? data.readings.ph.toFixed(2) : '--';
-                    document.getElementById('current-ec').textContent = data.readings.ec ? (data.readings.ec / 1000).toFixed(2) + ' mS/cm' : '--';
+                    document.getElementById('current-ec').textContent = data.readings.ec ? data.readings.ec.toFixed(0) + ' μS/cm' : '--';
                     document.getElementById('current-temp').textContent = data.readings.temp ? data.readings.temp.toFixed(1) + '°C' : '--';
                 } else {
                     console.error('Error reading sensors:', data.error);

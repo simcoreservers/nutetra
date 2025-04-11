@@ -116,10 +116,11 @@
                             <span class="status-badge {{ 'connected' if sensor_status.ec.connected else 'disconnected' }}">
                                 {{ 'Connected' if sensor_status.ec.connected else 'Disconnected' }}
                             </span>
-                            <div class="sensor-reading">
-                                <strong>EC:</strong>
-                                Last: {{ (sensor_status.ec.last_reading.value / 1000)|round(2) }} mS/cm ({{ sensor_status.ec.last_reading.timestamp|datetime }})
-                            </div>
+                            <span class="info-value">
+                                {% if sensor_status.ec.last_reading %}
+                                Last: {{ sensor_status.ec.last_reading.value|round(0) }} μS/cm ({{ sensor_status.ec.last_reading.timestamp|datetime }})
+                                {% endif %}
+                            </span>
                         </li>
                         
                         <li>

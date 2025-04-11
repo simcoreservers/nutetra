@@ -165,9 +165,9 @@
             {% set ratios = schedule.get('nutrient_ratios', profile.nutrient_ratios) %}
             
             <div class="ec-setting">
-                <label for="ec-setpoint-{{ week }}">EC Target (mS/cm)</label>
-                <input type="number" id="ec-setpoint-{{ week }}" class="form-control ec-input" value="{{ (ec_setpoint / 1000)|round(2) }}"
-                        min="0.5" max="3.0" step="0.01">
+                <label for="ec-setpoint-{{ week }}">EC Target (μS/cm)</label>
+                <input type="number" id="ec-setpoint-{{ week }}" class="form-control ec-input" value="{{ ec_setpoint }}" 
+                       min="0" max="3000" step="50" data-week="{{ week }}">
                 <small class="form-text">Electrical conductivity target for this week</small>
             </div>
             
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const calmagInput = document.getElementById(`calmag-ratio-${week}`);
             
             weeklySchedules[week] = {
-                ec_setpoint: Math.round(parseFloat(ecInput.value) * 1000),
+                ec_setpoint: parseFloat(ecInput.value),
                 nutrient_ratios: {
                     grow: parseFloat(growInput.value),
                     bloom: parseFloat(bloomInput.value),
