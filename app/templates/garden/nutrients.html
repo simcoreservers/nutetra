@@ -11,7 +11,7 @@
         <div class="section-header">
             <h3><i class="fas fa-vial"></i> Nutrient Library</h3>
             <div class="section-actions">
-                <button id="add-brand-btn" class="button primary">
+                <button id="add-brand-btn" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add New Brand
                 </button>
             </div>
@@ -37,10 +37,10 @@
                         <input type="text" id="new-brand-description" class="form-control">
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="button primary">
+                        <button type="submit" class="btn btn-success">
                             <i class="fas fa-save"></i> Save Brand
                         </button>
-                        <button type="button" id="cancel-add-brand" class="button secondary">
+                        <button type="button" id="cancel-add-brand" class="btn btn-secondary">
                             Cancel
                         </button>
                     </div>
@@ -56,7 +56,7 @@
             <div class="section-header">
                 <h3>{{ brand.name }}</h3>
                 <div class="section-actions">
-                    <button class="button primary add-product-btn" data-brand-id="{{ brand.id }}">
+                    <button class="btn btn-sm btn-primary add-product-btn" data-brand-id="{{ brand.id }}">
                         <i class="fas fa-plus"></i> Add Product
                     </button>
                 </div>
@@ -103,7 +103,7 @@
                                 <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}">
                             </td>
                             <td class="actions-cell">
-                                <button class="button small danger delete-product-btn" title="Delete Product">
+                                <button class="btn btn-sm btn-danger delete-product-btn" title="Delete Product">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 <span class="save-status"></span>
@@ -131,10 +131,10 @@
                                 <input type="number" class="new-product-k" min="0" max="100" step="0.1" placeholder="0.0">
                             </td>
                             <td class="actions-cell">
-                                <button class="button small success save-new-product-btn" title="Save Product">
+                                <button class="btn btn-sm btn-success save-new-product-btn" title="Save Product">
                                     <i class="fas fa-save"></i>
                                 </button>
-                                <button class="button small secondary cancel-add-product-btn" title="Cancel">
+                                <button class="btn btn-sm btn-secondary cancel-add-product-btn" title="Cancel">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </td>
