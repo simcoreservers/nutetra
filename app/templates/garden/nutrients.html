@@ -664,21 +664,19 @@
         });
         
         // Delete Product
-        document.querySelectorAll('.delete-product-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const row = this.closest('tr');
-                productToDelete = row;
-                
-                // Show confirmation modal using Bootstrap
-                $(deleteModal).modal('show');
-            });
+        $('.delete-product-btn').on('click', function() {
+            const row = $(this).closest('tr')[0];
+            productToDelete = row;
+            
+            // Show confirmation modal using Bootstrap
+            $('#deleteModal').modal('show');
         });
         
         // Confirm Delete
-        confirmDeleteBtn.addEventListener('click', function() {
+        $('#confirmDelete').on('click', function() {
             if (!productToDelete) return;
             
-            const productId = productToDelete.dataset.productId;
+            const productId = $(productToDelete).data('product-id');
             
             // Delete via API
             fetch(`/api/nutrient-products/${productId}`, {
@@ -688,8 +686,8 @@
             .then(result => {
                 if (result.success) {
                     // Remove row from table
-                    productToDelete.remove();
-                    $(deleteModal).modal('hide');
+                    $(productToDelete).remove();
+                    $('#deleteModal').modal('hide');
                 } else {
                     alert('Error: ' + result.error);
                 }
@@ -698,11 +696,6 @@
                 console.error('Error:', error);
                 alert('An error occurred while deleting the product');
             });
-        });
-        
-        // Reset productToDelete when modal is closed
-        $(deleteModal).on('hidden.bs.modal', function () {
-            productToDelete = null;
         });
     });
 </script>
