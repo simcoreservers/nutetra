@@ -652,22 +652,36 @@ def get_growth_phase_for_week(profile, week):
     # Parse the growth phases text
     # Expected format: "Seedling: 1-3, Vegetative: 4-6, Flowering: 7-12"
     phases = {}
-    for phase_entry in growth_phases_text.split(','):
-        if ':' in phase_entry:
-            phase_name, weeks_range = phase_entry.split(':', 1)
-            phase_name = phase_name.strip()
-            
-            for week_range in weeks_range.split(','):
-                week_range = week_range.strip()
-                if '-' in week_range:
-                    start, end = map(int, week_range.split('-'))
-                    for w in range(start, end + 1):
-                        phases[w] = phase_name
-                else:
-                    try:
-                        w = int(week_range)
-                        phases[w] = phase_name
-                    except ValueError:
-                        pass
+    try:
+        for phase_entry in growth_phases_text.split(','):
+            if ':' in phase_entry:
+                phase_name, weeks_range = phase_entry.split(':', 1)
+                phase_name = phase_name.strip()
+                
+                for week_range in weeks_range.split(','):
+                    week_range = week_range.strip()
+                    if '-' in week_range:
+                        try:
+                            start, end = map(int, week_range.split('-'))
+                            for w in range(start, end + 1):
+                                phases[w] = phase_name
+                        except ValueError:
+                            # Skip invalid ranges
+                            continue
+                    else:
+                        try:
+                            w = int(week_range)
+                            phases[w] = phase_name
+                        except ValueError:
+                            # Skip invalid week numbers
+                            continue
+    except Exception as e:
+        # If any parsing error occurs, fall back to defaults
+        if week <= 3:
+            return "Seedling"
+        elif week <= 6:
+            return "Vegetative"
+        else:
+            return "Flowering"
     
     return phases.get(week, "Unknown") 
