@@ -387,22 +387,57 @@
     
     .ratio-fill {
         height: 100%;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 6px currentColor;
+        animation: ratio-glow 3s infinite ease-in-out;
+    }
+    
+    .ratio-fill::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        animation: ratio-shine 3s infinite linear;
+    }
+    
+    @keyframes ratio-shine {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(100%); }
+    }
+    
+    @keyframes ratio-glow {
+        0% { box-shadow: 0 0 4px currentColor; }
+        50% { box-shadow: 0 0 8px currentColor; }
+        100% { box-shadow: 0 0 4px currentColor; }
     }
     
     .ratio-fill.grow {
         background-color: #4CAF50;
+        color: #4CAF50;
     }
     
     .ratio-fill.bloom {
         background-color: #FF9800;
+        color: #FF9800;
     }
     
     .ratio-fill.micro {
         background-color: #2196F3;
+        color: #2196F3;
     }
     
     .ratio-fill.calmag {
         background-color: #9C27B0;
+        color: #9C27B0;
     }
     
     .ratio-value {
@@ -496,18 +531,23 @@
             // Get the target width from the inline style
             const targetWidth = progressBar.style.width;
             
-            // Set the custom property for animation
-            progressBar.style.setProperty('--target-width', targetWidth);
+            // Store the current width value for next page load
+            const weekPercent = parseInt(targetWidth);
+            let oldPercent = localStorage.getItem('previousWeekPercent') || '0%';
             
-            // Reset the width to 0 to start the animation
-            progressBar.style.width = '0';
+            // Update the animation to use CSS transitions instead of keyframes
+            progressBar.style.animation = 'none';
+            progressBar.style.width = oldPercent;
             
             // Force a reflow
             void progressBar.offsetWidth;
             
-            // Apply the animation
+            // Apply the CSS transition
+            progressBar.style.transition = 'width 1s ease-out';
             setTimeout(function() {
                 progressBar.style.width = targetWidth;
+                // Store current percentage for next transition
+                localStorage.setItem('previousWeekPercent', targetWidth);
             }, 50);
         }
     });
