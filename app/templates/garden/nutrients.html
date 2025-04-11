@@ -1,195 +1,82 @@
 {% extends 'base.html' %}
 
-{% block title %}Nutrient Database{% endblock %}
+{% block title %}Nutrient Library - NuTetra Controller{% endblock %}
 
-{% block styles %}
-<style>
-    .nutrient-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 2rem;
-    }
-    
-    .nutrient-table th, 
-    .nutrient-table td {
-        padding: 0.5rem;
-        border: 1px solid #ddd;
-    }
-    
-    .nutrient-table th {
-        background-color: var(--primary-color);
-        color: white;
-        text-align: left;
-    }
-    
-    .nutrient-table tr:nth-child(even) {
-        background-color: #f2f2f2;
-    }
-    
-    .nutrient-table input,
-    .nutrient-table select {
-        width: 100%;
-        padding: 0.25rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-    
-    .nutrient-table input:focus,
-    .nutrient-table select:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    }
-    
-    .nutrient-table input[type="number"] {
-        text-align: right;
-    }
-    
-    .brand-container {
-        margin-bottom: 2rem;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    
-    .brand-header {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-bottom: 1px solid #ddd;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .brand-header h3 {
-        margin: 0;
-    }
-    
-    .brand-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .brand-body {
-        padding: 1rem;
-    }
-    
-    .add-product-row {
-        background-color: #f0f8ff !important;
-    }
-    
-    .save-all-btn {
-        position: sticky;
-        bottom: 1rem;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 100;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    
-    .actions-cell {
-        white-space: nowrap;
-        width: 100px;
-    }
-    
-    .spinner {
-        display: inline-block;
-        width: 1rem;
-        height: 1rem;
-        border: 2px solid rgba(0, 0, 0, 0.1);
-        border-radius: 50%;
-        border-top-color: var(--primary-color);
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-    
-    .changes-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        background-color: var(--danger-color);
-        color: white;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        margin-left: 0.5rem;
-    }
-    
-    .add-brand-container {
-        margin-bottom: 2rem;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 1rem;
-        background-color: #f0f8ff;
-    }
-    
-    .brand-form {
-        display: flex;
-        gap: 1rem;
-        align-items: flex-end;
-    }
-</style>
-{% endblock %}
+{% block page_title %}Nutrient Library{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="page-header">
-        <h2>Nutrient Database</h2>
-        <p class="lead">Manage nutrient brands and products, and define their nutrient types.</p>
-    </div>
-    
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i> Changes are automatically saved when you click out of a field or select a new option.
-    </div>
-    
-    <button id="add-brand-btn" class="btn btn-primary mb-4">
-        <i class="fas fa-plus"></i> Add New Brand
-    </button>
-    
-    <div id="add-brand-container" class="add-brand-container" style="display: none;">
-        <h3>Add New Brand</h3>
-        <form id="add-brand-form" class="brand-form">
-            <div class="form-group">
-                <label for="new-brand-name">Brand Name</label>
-                <input type="text" id="new-brand-name" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="new-brand-description">Description</label>
-                <input type="text" id="new-brand-description" class="form-control">
-            </div>
-            <div>
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-save"></i> Save Brand
-                </button>
-                <button type="button" id="cancel-add-brand" class="btn btn-secondary">
-                    Cancel
+<div class="dashboard-container">
+    <!-- Nutrient Library Header Section -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h3><i class="fas fa-vial"></i> Nutrient Library</h3>
+            <div class="section-actions">
+                <button id="add-brand-btn" class="button primary">
+                    <i class="fas fa-plus"></i> Add New Brand
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
+        
+        <div class="alert info-alert">
+            <i class="fas fa-info-circle"></i> Changes are automatically saved when you click out of a field or select a new option.
+        </div>
+        
+        <!-- Add Brand Form (initially hidden) -->
+        <div id="add-brand-container" class="form-card" style="display: none;">
+            <div class="form-card-header">
+                <h4>Add New Nutrient Brand</h4>
+            </div>
+            <div class="form-card-body">
+                <form id="add-brand-form">
+                    <div class="form-group">
+                        <label for="new-brand-name">Brand Name</label>
+                        <input type="text" id="new-brand-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-brand-description">Description</label>
+                        <input type="text" id="new-brand-description" class="form-control">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="button primary">
+                            <i class="fas fa-save"></i> Save Brand
+                        </button>
+                        <button type="button" id="cancel-add-brand" class="button secondary">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
     
+    <!-- Nutrient Brands Section -->
     <div id="brands-container">
         {% for brand in brands %}
-        <div class="brand-container" data-brand-id="{{ brand.id }}">
-            <div class="brand-header">
+        <section class="dashboard-section brand-section" data-brand-id="{{ brand.id }}">
+            <div class="section-header">
                 <h3>{{ brand.name }}</h3>
-                <div class="brand-description">{{ brand.description }}</div>
-                <div class="brand-actions">
-                    <button class="btn btn-sm btn-primary add-product-btn" data-brand-id="{{ brand.id }}">
+                <div class="section-actions">
+                    <button class="button primary add-product-btn" data-brand-id="{{ brand.id }}">
                         <i class="fas fa-plus"></i> Add Product
                     </button>
                 </div>
             </div>
-            <div class="brand-body">
+            
+            {% if brand.description %}
+            <div class="section-description">
+                {{ brand.description }}
+            </div>
+            {% endif %}
+            
+            <div class="nutrient-table-container">
                 <table class="nutrient-table">
                     <thead>
                         <tr>
                             <th>Product Name</th>
                             <th>Nutrient Type</th>
-                            <th>N</th>
-                            <th>P</th>
-                            <th>K</th>
+                            <th>N%</th>
+                            <th>P%</th>
+                            <th>K%</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -216,7 +103,7 @@
                                 <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}">
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-danger delete-product-btn" title="Delete Product">
+                                <button class="button small danger delete-product-btn" title="Delete Product">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 <span class="save-status"></span>
@@ -235,19 +122,19 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" class="new-product-n" min="0" max="100" step="0.1" placeholder="N%">
+                                <input type="number" class="new-product-n" min="0" max="100" step="0.1" placeholder="0.0">
                             </td>
                             <td>
-                                <input type="number" class="new-product-p" min="0" max="100" step="0.1" placeholder="P%">
+                                <input type="number" class="new-product-p" min="0" max="100" step="0.1" placeholder="0.0">
                             </td>
                             <td>
-                                <input type="number" class="new-product-k" min="0" max="100" step="0.1" placeholder="K%">
+                                <input type="number" class="new-product-k" min="0" max="100" step="0.1" placeholder="0.0">
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-success save-new-product-btn" title="Save Product">
+                                <button class="button small success save-new-product-btn" title="Save Product">
                                     <i class="fas fa-save"></i>
                                 </button>
-                                <button class="btn btn-sm btn-secondary cancel-add-product-btn" title="Cancel">
+                                <button class="button small secondary cancel-add-product-btn" title="Cancel">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </td>
@@ -255,7 +142,15 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
+        {% else %}
+        <section class="dashboard-section">
+            <div class="empty-state">
+                <i class="fas fa-vial"></i>
+                <h4>No nutrient brands found</h4>
+                <p>Get started by adding your first nutrient brand.</p>
+            </div>
+        </section>
         {% endfor %}
     </div>
 </div>
@@ -280,6 +175,269 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .dashboard-section {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        overflow: hidden;
+        margin-bottom: 0;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+    
+    .section-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-header h3 i {
+        margin-right: 8px;
+        color: var(--primary-color);
+    }
+    
+    .section-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .section-description {
+        margin-bottom: 15px;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px 0;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+    
+    .empty-state h4 {
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        margin: 0;
+    }
+    
+    .alert {
+        padding: 12px 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .alert i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .info-alert {
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+        color: var(--primary-color);
+        border-left: 3px solid var(--primary-color);
+    }
+    
+    .form-card {
+        background-color: var(--bg-color);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .form-card-header {
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .form-card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: var(--primary-color);
+    }
+    
+    .form-card-body {
+        padding: 15px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    
+    .nutrient-table-container {
+        overflow-x: auto;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .nutrient-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    
+    .nutrient-table th, 
+    .nutrient-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .nutrient-table th {
+        background-color: var(--bg-color);
+        font-weight: 600;
+        color: var(--primary-color);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .nutrient-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .nutrient-table tr:hover {
+        background-color: rgba(var(--primary-color-rgb), 0.05);
+    }
+    
+    .nutrient-table input,
+    .nutrient-table select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+    }
+    
+    .nutrient-table input:focus,
+    .nutrient-table select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
+    }
+    
+    .nutrient-table input[type="number"] {
+        text-align: right;
+    }
+    
+    .actions-cell {
+        white-space: nowrap;
+        width: 100px;
+        text-align: center;
+    }
+    
+    .add-product-row {
+        background-color: rgba(var(--primary-color-rgb), 0.05);
+    }
+    
+    .save-status {
+        display: inline-block;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(var(--primary-color-rgb), 0.1);
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 15px;
+            gap: 15px;
+        }
+        
+        .dashboard-section {
+            padding: 15px;
+        }
+        
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .section-actions {
+            width: 100%;
+        }
+        
+        .nutrient-table th, 
+        .nutrient-table td {
+            padding: 8px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .form-actions .button {
+            width: 100%;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block scripts %}
