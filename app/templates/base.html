@@ -41,7 +41,7 @@
                             <i class="fas fa-plus toggle-icon"></i>
                         </a>
                         <ul class="submenu">
-                            <li class="nav-item {% if '/sensors/history' in request.path and not '/sensors/calibration' in request.path %}active{% endif %}">>
+                            <li class="nav-item {% if '/sensors/history' in request.path and not '/sensors/calibration' in request.path %}active{% endif %}">
                                 <a href="{{ url_for('sensors.history') }}">
                                     <i class="fas fa-history"></i>
                                     <span>Sensor History</span>
