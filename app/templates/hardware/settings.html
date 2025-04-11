@@ -53,58 +53,6 @@
                     </div>
                 </div>
                 
-                <!-- Plant Profile Settings -->
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4>Plant Profile</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="plant-profile">Select Plant Type</label>
-                            <select id="plant-profile" name="active_plant_profile" class="form-control">
-                                {% for profile_id, profile in settings.plant_profiles.items() %}
-                                <option value="{{ profile_id }}" {% if settings.active_plant_profile == profile_id %}selected{% endif %}>
-                                    {{ profile.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <p class="helper-text">Automatically adjust pH, EC and temperature targets based on plant type</p>
-                        </div>
-                        
-                        <div class="profile-info">
-                            <div class="profile-details">
-                                <div class="detail-item">
-                                    <span class="detail-label">pH:</span> 
-                                    <span id="profile-ph" class="detail-value">{{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('ph_setpoint', 6.0) }}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">EC:</span> 
-                                    <span id="profile-ec" class="detail-value">{{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('ec_setpoint', 1350) }} μS/cm</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Temperature:</span> 
-                                    <span id="profile-temp" class="detail-value">{{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('temp_min', 18.0) }} - {{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('temp_max', 28.0) }}°C</span>
-                                </div>
-                            </div>
-                            <p id="profile-description" class="profile-description">{{ settings.plant_profiles.get(settings.active_plant_profile, {}).get('description', 'General purpose profile suitable for most plants') }}</p>
-                        </div>
-                        
-                        <div class="profile-link-container">
-                            <a href="{{ url_for('garden.profiles') }}" class="profile-link">
-                                <i class="fas fa-seedling"></i> Manage Plant Profiles
-                            </a>
-                            <p class="helper-text">Create, edit, or delete custom plant profiles</p>
-                            
-                            {% if settings.active_plant_profile == 'cannabis' %}
-                            <a href="{{ url_for('garden.grow_cycle') }}" class="profile-link cannabis-link">
-                                <i class="fas fa-calendar-alt"></i> Manage Cannabis Grow Cycle
-                            </a>
-                            <p class="helper-text">Track and update your grow week to adjust nutrient schedules</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- pH Dosing Settings -->
                 <div class="settings-card">
                     <div class="card-header">
@@ -268,88 +216,6 @@
         background-color: var(--primary-color);
         color: #fff;
     }
-    
-    .recipe-link-container {
-        margin-top: var(--spacing-lg);
-        padding-top: var(--spacing-md);
-        border-top: 1px solid var(--border-color);
-    }
-    
-    .recipe-link, .profile-link {
-        display: inline-flex;
-        align-items: center;
-        padding: var(--spacing-sm) var(--spacing-md);
-        background-color: var(--primary-color-light);
-        color: var(--primary-color);
-        border-radius: var(--border-radius);
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-    
-    .recipe-link:hover, .profile-link:hover {
-        background-color: var(--primary-color);
-        color: white;
-    }
-    
-    .profile-link.cannabis-link {
-        background-color: rgba(76, 175, 80, 0.2);
-        color: #4CAF50;
-        margin-top: 10px;
-    }
-    
-    .profile-link.cannabis-link:hover {
-        background-color: #4CAF50;
-        color: white;
-    }
-    
-    .recipe-link i, .profile-link i {
-        margin-right: var(--spacing-sm);
-    }
-    
-    .profile-info {
-        margin-top: var(--spacing-md);
-        padding: var(--spacing-md);
-        background-color: var(--bg-color-dark);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-    }
-    
-    .profile-details {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-sm);
-    }
-    
-    .detail-item {
-        flex: 1;
-        min-width: 80px;
-    }
-    
-    .detail-label {
-        font-weight: 500;
-        color: var(--text-color-muted);
-    }
-    
-    .detail-value {
-        display: block;
-        font-size: 1.1rem;
-        margin-top: 4px;
-    }
-    
-    .profile-description {
-        font-size: 0.9rem;
-        color: var(--text-color-muted);
-        margin-top: var(--spacing-sm);
-        margin-bottom: 0;
-    }
-    
-    .profile-link-container {
-        margin-top: var(--spacing-lg);
-        padding-top: var(--spacing-md);
-        border-top: 1px solid var(--border-color);
-    }
 </style>
 {% endblock %}
 
@@ -358,33 +224,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Form validation
         const form = document.getElementById('dosing-settings-form');
-        
-        // Get profile elements
-        const profileSelect = document.getElementById('plant-profile');
-        const profilePh = document.getElementById('profile-ph');
-        const profileEc = document.getElementById('profile-ec');
-        const profileTemp = document.getElementById('profile-temp');
-        const profileDescription = document.getElementById('profile-description');
-        
-        // Plant profiles data
-        const plantProfiles = JSON.parse('{{ settings.plant_profiles|tojson|safe }}');
-        
-        // Update profile display when selection changes
-        profileSelect.addEventListener('change', function() {
-            const selectedProfile = plantProfiles[this.value];
-            
-            // Update the display
-            profilePh.textContent = selectedProfile.ph_setpoint;
-            profileEc.textContent = selectedProfile.ec_setpoint + ' μS/cm';
-            profileTemp.textContent = selectedProfile.temp_min + ' - ' + selectedProfile.temp_max + '°C';
-            profileDescription.textContent = selectedProfile.description;
-            
-            // Optionally update the actual setting fields if we want them to change immediately
-            document.getElementById('ph-setpoint').value = selectedProfile.ph_setpoint;
-            document.getElementById('ph-buffer').value = selectedProfile.ph_buffer;
-            document.getElementById('ec-setpoint').value = selectedProfile.ec_setpoint;
-            document.getElementById('ec-buffer').value = selectedProfile.ec_buffer;
-        });
         
         // Form validation
         form.addEventListener('submit', function(e) {

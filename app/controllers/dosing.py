@@ -243,26 +243,10 @@ def events():
 @dosing_bp.route('/settings', methods=['GET', 'POST'])
 def settings():
     """Manage dosing settings"""
-    # Ensure plant profiles are initialized
-    if not Settings.get('plant_profiles'):
-        # Use the Settings model to initialize default plant profiles
-        Settings.initialize_defaults()
-    
-    # Auto-configure nutrient components based on available pumps
-    # This updates default profiles with the user's actual enabled pumps
-    config_result = Settings.auto_configure_nutrient_components()
-    
-    # Show configuration result as a message
-    if config_result and "Updated" in config_result:
-        flash(f"Plant profiles updated: {config_result}", 'success')
-    
     if request.method == 'POST':
         # Update settings from form
         auto_dosing = 'auto_dosing_enabled' in request.form
         night_mode = 'night_mode_enabled' in request.form
-        
-        # Get plant profile selection
-        active_profile = request.form.get('active_plant_profile')
         
         # pH settings
         ph_setpoint = request.form.get('ph_setpoint', type=float)
@@ -285,7 +269,6 @@ def settings():
         # Update settings
         Settings.set('auto_dosing_enabled', auto_dosing)
         Settings.set('night_mode_enabled', night_mode)
-        Settings.set('active_plant_profile', active_profile)
         
         # pH settings
         Settings.set('ph_setpoint', ph_setpoint)
@@ -305,20 +288,6 @@ def settings():
         Settings.set('night_mode_start', night_start)
         Settings.set('night_mode_end', night_end)
         
-        # If a profile was selected, update to use its values
-        if active_profile:
-            profiles = Settings.get('plant_profiles', {})
-            if active_profile in profiles:
-                profile = profiles[active_profile]
-                
-                # Use profile values
-                Settings.set('ph_setpoint', profile.get('ph_setpoint', ph_setpoint))
-                Settings.set('ph_buffer', profile.get('ph_buffer', ph_buffer))
-                Settings.set('ec_setpoint', profile.get('ec_setpoint', ec_setpoint))
-                Settings.set('ec_buffer', profile.get('ec_buffer', ec_buffer))
-                
-                flash(f"Using settings from plant profile: {profile.get('name', active_profile)}", 'success')
-        
         # Reschedule checks with new intervals
         schedule_dosing_checks()
         
@@ -327,20 +296,10 @@ def settings():
     
     # For GET requests, show the settings form
     
-    # Get all plant profiles for the dropdown
-    plant_profiles = Settings.get('plant_profiles', {})
-    
-    # Sort profiles by name
-    sorted_profiles = sorted(
-        [(profile_id, profile.get('name', profile_id)) for profile_id, profile in plant_profiles.items()],
-        key=lambda x: x[1]
-    )
-    
     # Get current settings
     settings = {
         'auto_dosing_enabled': Settings.get('auto_dosing_enabled', True),
         'night_mode_enabled': Settings.get('night_mode_enabled', False),
-        'active_plant_profile': Settings.get('active_plant_profile', 'general'),
         
         # pH settings
         'ph_setpoint': Settings.get('ph_setpoint', 6.0),
@@ -363,8 +322,7 @@ def settings():
     
     return render_template(
         'hardware/settings.html',
-        settings=settings,
-        plant_profiles=sorted_profiles
+        settings=settings
     )
 
 # Note: The following routes have been moved to the garden blueprint:
