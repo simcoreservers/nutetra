@@ -38,9 +38,13 @@
                 <div class="reading-details">
                     <h4>EC Level</h4>
                     <div class="reading-value" id="ec-value">
-                        {{ ec_reading|round(2) if ec_reading else '--' }} μS/cm
+                        {% if ec_reading %}
+                            {{ (ec_reading / 1000)|round(2) }} mS/cm
+                        {% else %}
+                            --
+                        {% endif %}
                     </div>
-                    <div class="reading-range">Target: {{ ec_min }} - {{ ec_max }}</div>
+                    <div class="reading-range">Target: {{ (ec_min / 1000)|round(2) }} - {{ (ec_max / 1000)|round(2) }} mS/cm</div>
                 </div>
             </div>
             
@@ -214,7 +218,7 @@
                     </div>
                     <div class="target-item">
                         <span class="target-label">EC:</span>
-                        <span class="target-value">{{ active_profile.ec_setpoint }} ± {{ active_profile.ec_buffer }} μS/cm</span>
+                        <span class="target-value">{{ (active_profile.ec_setpoint / 1000)|round(2) }} ± {{ (active_profile.ec_buffer / 1000)|round(2) }} mS/cm</span>
                     </div>
                     <div class="target-item">
                         <span class="target-label">Temperature:</span>
@@ -1686,7 +1690,7 @@
                 }
                 
                 if (readings.ec !== null) {
-                    document.getElementById('ec-value').textContent = readings.ec.toFixed(2);
+                    document.getElementById('ec-value').textContent = (readings.ec / 1000).toFixed(2) + ' mS/cm';
                 }
                 
                 if (readings.temp !== null) {
