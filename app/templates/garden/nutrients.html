@@ -459,69 +459,81 @@
 <script>
     // Global function to show the delete modal
     function confirmDeleteProduct(productId) {
-        console.log('Delete requested for product ID:', productId);
+        console.log('Delete requested for product ID:', productId, 'Type:', typeof productId);
         
-        // Ensure productId is a number if needed for API
-        productId = parseInt(productId, 10);
-        
-        // Store the product ID in the hidden input
-        document.getElementById('product-id-to-delete').value = productId;
-        
-        // Show the modal using jQuery
-        $('#deleteModal').modal('show');
+        if (confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
+            console.log("Confirmed deletion for product ID:", productId);
+            
+            // Execute the delete directly with parsed ID
+            deleteProduct(parseInt(productId, 10) || productId);
+        }
     }
     
-    // Set up the confirm button click handler when the page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get the confirm button
-        const deleteConfirmBtn = document.getElementById('delete-confirm-btn');
+    // Function to execute the deletion
+    function deleteProduct(productId) {
+        console.log('Executing delete for product ID:', productId, 'Type:', typeof productId);
         
-        // Add click handler
-        deleteConfirmBtn.addEventListener('click', function() {
-            // Get the product ID from the hidden input
-            const productId = parseInt(document.getElementById('product-id-to-delete').value, 10);
+        // Log the exact URL we're calling
+        const url = '/api/nutrient-products/' + productId;
+        console.log('Delete URL:', url);
+        
+        // Send DELETE request to API
+        fetch(url, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(function(response) {
+            console.log('Delete response status:', response.status);
+            return response.text();
+        })
+        .then(function(text) {
+            console.log('Delete response:', text);
             
-            if (!productId) {
-                console.error('No product ID found for deletion');
-                return;
+            // Find and remove the row
+            const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+            if (row) {
+                row.remove();
+                console.log('Row removed successfully');
+            } else {
+                console.warn('Row not found for product ID:', productId);
             }
             
-            console.log('Confirming delete for product ID:', productId);
-            
-            // Send DELETE request to API
-            fetch('/api/nutrient-products/' + productId, {
-                method: 'DELETE'
-            })
-            .then(function(response) {
-                console.log('Delete response status:', response.status);
-                return response.text();
-            })
-            .then(function(text) {
-                console.log('Delete response:', text);
-                
-                // Find and remove the row
-                const row = document.querySelector(`tr[data-product-id="${productId}"]`);
-                if (row) {
-                    row.remove();
-                    console.log('Row removed');
-                } else {
-                    console.warn('Row not found for product ID:', productId);
-                }
-                
-                // Hide the modal
-                $('#deleteModal').modal('hide');
-                
-                // Reload the page
-                setTimeout(function() {
-                    window.location.reload();
-                }, 500);
-            })
-            .catch(function(error) {
-                console.error('Delete error:', error);
-                alert('Error: ' + error.message);
-            });
+            // Reload the page
+            window.location.reload();
+        })
+        .catch(function(error) {
+            console.error('Delete error:', error);
+            alert('Error: ' + error.message);
         });
-    });
+    }
+    
+    // Add this for debugging - accessible from browser console
+    window.debugDeleteProduct = function(productId) {
+        console.log('Debug delete for product ID:', productId);
+        fetch('/api/nutrient-products/' + productId, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => {
+            console.log('Debug delete status:', response.status);
+            console.log('Debug delete status text:', response.statusText);
+            return response.text();
+        })
+        .then(text => {
+            console.log('Debug delete response text:', text);
+            try {
+                const json = JSON.parse(text);
+                console.log('Debug delete response JSON:', json);
+            } catch (e) {
+                console.log('Not JSON response');
+            }
+        })
+        .catch(error => {
+            console.error('Debug delete error:', error);
+        });
+        
+        return "Check console for debug output";
+    };
 </script>
 {% endblock %}
 
