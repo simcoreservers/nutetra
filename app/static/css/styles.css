@@ -702,7 +702,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .reading-value {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: var(--spacing-xs);
 }
