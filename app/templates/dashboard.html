@@ -280,10 +280,10 @@
             <div class="export-option">
                 <h4>Dosing Events</h4>
                 <div class="export-buttons">
-                    <a href="{{ url_for('api.export_events', format='csv') }}" class="button">
+                    <a href="{{ url_for('api.export_readings', format='csv', type='events') }}" class="button">
                         <i class="fas fa-file-csv"></i> CSV
                     </a>
-                    <a href="{{ url_for('api.export_events', format='json') }}" class="button">
+                    <a href="{{ url_for('api.export_readings', format='json', type='events') }}" class="button">
                         <i class="fas fa-file-code"></i> JSON
                     </a>
                 </div>
