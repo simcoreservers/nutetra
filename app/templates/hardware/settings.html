@@ -59,24 +59,6 @@
                         <h4>pH Dosing Settings</h4>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> These settings are initially set by your active plant profile. 
-                            Changes made here override the profile settings until a new profile is activated.
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="ph-setpoint">Setpoint</label>
-                                <input type="number" id="ph-setpoint" name="ph_setpoint" class="form-control" 
-                                       min="5.0" max="7.0" step="0.1" value="{{ settings.ph_setpoint }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="ph-buffer">Buffer Range</label>
-                                <input type="number" id="ph-buffer" name="ph_buffer" class="form-control" 
-                                       min="0.1" max="1.0" step="0.1" value="{{ settings.ph_buffer }}">
-                            </div>
-                        </div>
-                        
                         <div class="form-group">
                             <label for="ph-dose-amount">Dose Amount (ml)</label>
                             <input type="number" id="ph-dose-amount" name="ph_dose_amount" class="form-control" 
@@ -106,24 +88,6 @@
                         <h4>Nutrient Dosing Settings</h4>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> These settings are initially set by your active plant profile. 
-                            Changes made here override the profile settings until a new profile is activated.
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="ec-setpoint">EC Setpoint (μS/cm)</label>
-                                <input type="number" id="ec-setpoint" name="ec_setpoint" class="form-control" 
-                                       min="500" max="3000" step="10" value="{{ settings.ec_setpoint }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="ec-buffer">EC Buffer Range (μS/cm)</label>
-                                <input type="number" id="ec-buffer" name="ec_buffer" class="form-control" 
-                                       min="50" max="500" step="10" value="{{ settings.ec_buffer }}">
-                            </div>
-                        </div>
-                        
                         <div class="form-group">
                             <label for="ec-dose-amount">Nutrient Dose Amount (ml)</label>
                             <input type="number" id="ec-dose-amount" name="ec_dose_amount" class="form-control" 
