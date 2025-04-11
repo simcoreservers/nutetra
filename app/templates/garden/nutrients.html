@@ -103,7 +103,7 @@
                                 <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}">
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-danger" onclick="confirmDeleteProduct({{ product.id }})" title="Delete Product">
+                                <button class="btn btn-sm btn-danger" onclick="confirmDeleteProduct('{{ product.id }}')" title="Delete Product">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 <span class="save-status"></span>
@@ -461,6 +461,9 @@
     function confirmDeleteProduct(productId) {
         console.log('Delete requested for product ID:', productId);
         
+        // Ensure productId is a number if needed for API
+        productId = parseInt(productId, 10);
+        
         // Store the product ID in the hidden input
         document.getElementById('product-id-to-delete').value = productId;
         
@@ -476,7 +479,7 @@
         // Add click handler
         deleteConfirmBtn.addEventListener('click', function() {
             // Get the product ID from the hidden input
-            const productId = document.getElementById('product-id-to-delete').value;
+            const productId = parseInt(document.getElementById('product-id-to-delete').value, 10);
             
             if (!productId) {
                 console.error('No product ID found for deletion');
@@ -497,10 +500,12 @@
                 console.log('Delete response:', text);
                 
                 // Find and remove the row
-                const row = document.querySelector('tr[data-product-id="' + productId + '"]');
+                const row = document.querySelector(`tr[data-product-id="${productId}"]`);
                 if (row) {
                     row.remove();
                     console.log('Row removed');
+                } else {
+                    console.warn('Row not found for product ID:', productId);
                 }
                 
                 // Hide the modal
