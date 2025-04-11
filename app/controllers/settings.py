@@ -846,27 +846,36 @@ def _run_network_diagnostics():
             
         if router:
             output += f"  Pinging router ({router}):\n"
-            result = subprocess.run(['ping', '-c', '3', router], capture_output=True, text=True)
+            try:
+                result = subprocess.run(['ping', '-c', '3', router], capture_output=True, text=True)
+                if result.returncode == 0:
+                    output += "    Success\n"
+                else:
+                    output += f"    Failed: {result.stdout}\n"
+            except FileNotFoundError:
+                output += "    Error: ping command not found\n"
+        
+        # Ping Google DNS
+        output += "  Pinging Google DNS (8.8.8.8):\n"
+        try:
+            result = subprocess.run(['ping', '-c', '3', '8.8.8.8'], capture_output=True, text=True)
             if result.returncode == 0:
                 output += "    Success\n"
             else:
                 output += f"    Failed: {result.stdout}\n"
-        
-        # Ping Google DNS
-        output += "  Pinging Google DNS (8.8.8.8):\n"
-        result = subprocess.run(['ping', '-c', '3', '8.8.8.8'], capture_output=True, text=True)
-        if result.returncode == 0:
-            output += "    Success\n"
-        else:
-            output += f"    Failed: {result.stdout}\n"
+        except FileNotFoundError:
+            output += "    Error: ping command not found\n"
         
         # DNS lookup
         output += "  DNS Lookup (google.com):\n"
-        result = subprocess.run(['nslookup', 'google.com'], capture_output=True, text=True)
-        if result.returncode == 0:
-            output += "    Success\n"
-        else:
-            output += f"    Failed: {result.stdout}\n"
+        try:
+            result = subprocess.run(['nslookup', 'google.com'], capture_output=True, text=True)
+            if result.returncode == 0:
+                output += "    Success\n"
+            else:
+                output += f"    Failed: {result.stdout}\n"
+        except FileNotFoundError:
+            output += "    Error: nslookup command not found. Install with 'sudo apt install dnsutils'\n"
         
         return output
     except Exception as e:

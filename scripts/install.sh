@@ -29,6 +29,7 @@ apt install -y sqlite3
 apt install -y libopenjp2-7 # for Pillow
 apt install -y unclutter  # To hide mouse cursor in kiosk mode
 apt install -y xserver-xorg x11-xserver-utils xinit chromium-browser
+apt install -y dnsutils # for nslookup and other network diagnostic tools
 
 echo "Enabling I2C interface..."
 if ! grep -q "^dtparam=i2c_arm=on" /boot/config.txt; then
