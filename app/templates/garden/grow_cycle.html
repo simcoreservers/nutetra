@@ -29,7 +29,7 @@
                     <span class="percentage-indicator">{{ (current_week / total_weeks * 100)|round|int }}%</span>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress" style="width: {{ (current_week / total_weeks * 100)|round }}%" data-width="{{ (current_week / total_weeks * 100)|round }}%"></div>
+                    <div id="progress-bar" class="progress" data-width="{{ (current_week / total_weeks * 100)|round }}%"></div>
                 </div>
             </div>
         </div>
@@ -82,7 +82,7 @@
                             <div class="ratio-bar">
                                 <div class="ratio-label">Grow</div>
                                 <div class="ratio-container">
-                                    <div class="ratio-fill grow" style="width: {{ (ratios.grow / 2 * 100)|round }}%"></div>
+                                    <div class="ratio-fill grow" data-width="{{ (ratios.grow / 2 * 100)|round }}"></div>
                                 </div>
                                 <div class="ratio-value">{{ ratios.grow }}</div>
                             </div>
@@ -90,7 +90,7 @@
                             <div class="ratio-bar">
                                 <div class="ratio-label">Bloom</div>
                                 <div class="ratio-container">
-                                    <div class="ratio-fill bloom" style="width: {{ (ratios.bloom / 2 * 100)|round }}%"></div>
+                                    <div class="ratio-fill bloom" data-width="{{ (ratios.bloom / 2 * 100)|round }}"></div>
                                 </div>
                                 <div class="ratio-value">{{ ratios.bloom }}</div>
                             </div>
@@ -98,7 +98,7 @@
                             <div class="ratio-bar">
                                 <div class="ratio-label">Micro</div>
                                 <div class="ratio-container">
-                                    <div class="ratio-fill micro" style="width: {{ (ratios.micro / 2 * 100)|round }}%"></div>
+                                    <div class="ratio-fill micro" data-width="{{ (ratios.micro / 2 * 100)|round }}"></div>
                                 </div>
                                 <div class="ratio-value">{{ ratios.micro }}</div>
                             </div>
@@ -106,7 +106,7 @@
                             <div class="ratio-bar">
                                 <div class="ratio-label">CalMag</div>
                                 <div class="ratio-container">
-                                    <div class="ratio-fill calmag" style="width: {{ (ratios.calmag / 2 * 100)|round }}%"></div>
+                                    <div class="ratio-fill calmag" data-width="{{ (ratios.calmag / 2 * 100)|round }}"></div>
                                 </div>
                                 <div class="ratio-value">{{ ratios.calmag }}</div>
                             </div>
@@ -494,6 +494,7 @@
         overflow: hidden;
         box-shadow: 0 0 6px currentColor;
         animation: ratio-glow 3s infinite ease-in-out;
+        width: 0; /* Will be set by JS */
     }
     
     .ratio-fill::after {
@@ -745,30 +746,41 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the progress bar
-        const progressBar = document.querySelector('.progress');
+        // Apply widths to all ratio bars based on data attributes
+        document.querySelectorAll('.ratio-fill').forEach(element => {
+            const width = element.getAttribute('data-width');
+            if (width) {
+                element.style.width = width + '%';
+            }
+        });
+        
+        // Set up the progress bar
+        const progressBar = document.getElementById('progress-bar');
         if (progressBar) {
-            // Get the target width from the inline style
-            const targetWidth = progressBar.style.width;
-            
-            // Store the current width value for next page load
-            const weekPercent = parseInt(targetWidth);
-            let oldPercent = localStorage.getItem('previousWeekPercent') || '0%';
-            
-            // Update the animation to use CSS transitions instead of keyframes
-            progressBar.style.animation = 'none';
-            progressBar.style.width = oldPercent;
-            
-            // Force a reflow
-            void progressBar.offsetWidth;
-            
-            // Apply the CSS transition
-            progressBar.style.transition = 'width 1s ease-out';
-            setTimeout(function() {
-                progressBar.style.width = targetWidth;
-                // Store current percentage for next transition
-                localStorage.setItem('previousWeekPercent', targetWidth);
-            }, 50);
+            // Get the target width from the data attribute
+            const targetWidth = progressBar.getAttribute('data-width');
+            if (targetWidth) {
+                // Set CSS variable for animation target
+                document.documentElement.style.setProperty('--target-width', targetWidth + '%');
+                
+                // Store current width value for next page load
+                const weekPercent = parseInt(targetWidth);
+                let oldPercent = localStorage.getItem('previousWeekPercent') || '0%';
+                
+                // Apply initial width
+                progressBar.style.width = oldPercent;
+                
+                // Force a reflow to ensure transition works
+                void progressBar.offsetWidth;
+                
+                // Apply the CSS transition to animate to the new width
+                progressBar.style.transition = 'width 1s ease-out';
+                setTimeout(function() {
+                    progressBar.style.width = targetWidth + '%';
+                    // Store current percentage for next transition
+                    localStorage.setItem('previousWeekPercent', targetWidth + '%');
+                }, 50);
+            }
         }
     });
 </script>
