@@ -4,13 +4,13 @@
 {% block page_title %}System Settings{% endblock %}
 
 {% block content %}
-<div class="page-content">
-    <div class="dashboard-section">
-        <div class="section-header">
-            <h3>System Configuration</h3>
-        </div>
-        
-        <form id="system-settings-form" method="post" action="{{ url_for('settings.system') }}">
+<div class="settings-container">
+    <div class="section-header">
+        <h3><i class="fas fa-server"></i> System Configuration</h3>
+    </div>
+    
+    <form id="system-settings-form" method="post" action="{{ url_for('settings.system') }}">
+        <div class="settings-grid">
             <div class="settings-card">
                 <div class="card-header">
                     <h4>Display Settings</h4>
@@ -43,7 +43,7 @@
                 </div>
             </div>
             
-            <div class="settings-card mt-4">
+            <div class="settings-card">
                 <div class="card-header">
                     <h4>Data Collection</h4>
                 </div>
@@ -56,35 +56,77 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="button primary-button">Save Settings</button>
-                <a href="{{ url_for('settings.index') }}" class="button">Cancel</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="button success">Save Settings</button>
+            <a href="{{ url_for('settings.index') }}" class="button">Cancel</a>
+        </div>
+    </form>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
+    .settings-container {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
+    }
+    
+    .section-header {
+        grid-column: span 12;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--spacing-sm);
+    }
+    
+    .section-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-header h3 i {
+        margin-right: 8px;
+        color: var(--primary-color);
+    }
+    
+    .settings-grid {
+        grid-column: span 12;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
+    }
+    
     .settings-card {
-        background-color: var(--bg-color-lighter);
+        grid-column: span 12;
+        background-color: var(--bg-color-light);
         border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
         overflow: hidden;
+        box-shadow: var(--card-shadow);
         margin-bottom: var(--spacing-md);
     }
     
     .card-header {
-        background-color: var(--bg-color-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         padding: var(--spacing-md);
+        background-color: var(--bg-color-lighter);
         border-bottom: 1px solid var(--border-color);
     }
     
     .card-header h4 {
         margin: 0;
         font-size: 1.1rem;
+        color: var(--text-color);
     }
     
     .card-body {
@@ -93,6 +135,22 @@
     
     .form-group {
         margin-bottom: var(--spacing-md);
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-size: 0.95rem;
     }
     
     .switch-container {
@@ -109,19 +167,73 @@
     }
     
     .form-actions {
+        grid-column: span 12;
         display: flex;
         justify-content: flex-end;
-        gap: var(--spacing-md);
-        margin-top: var(--spacing-lg);
+        gap: var(--spacing-sm);
+        margin-top: var(--spacing-md);
     }
     
-    .primary-button {
+    .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 8px 16px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-color-lighter);
+        color: var(--text-color);
+        font-size: 0.95rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .button.success {
+        background-color: var(--primary-color-light);
+        color: var(--primary-color);
+    }
+    
+    .button.success:hover {
         background-color: var(--primary-color);
-        color: #fff;
+        color: white;
     }
     
-    .mt-4 {
-        margin-top: 1.5rem;
+    .button:hover {
+        background-color: var(--bg-color);
+    }
+    
+    /* Responsive Layouts */
+    @media (min-width: 992px) {
+        .settings-card {
+            grid-column: span 6;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .form-actions button,
+        .form-actions a {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .switch-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .switch-container .switch {
+            margin-top: var(--spacing-xs);
+        }
     }
 </style>
 {% endblock %}
