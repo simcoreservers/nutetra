@@ -66,66 +66,6 @@
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-    .settings-card {
-        background-color: var(--bg-color-lighter);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-        overflow: hidden;
-        margin-bottom: var(--spacing-md);
-    }
-    
-    .card-header {
-        background-color: var(--bg-color-light);
-        padding: var(--spacing-md);
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .card-header h4 {
-        margin: 0;
-        font-size: 1.1rem;
-    }
-    
-    .card-body {
-        padding: var(--spacing-md);
-    }
-    
-    .form-group {
-        margin-bottom: var(--spacing-md);
-    }
-    
-    .switch-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .helper-text {
-        font-size: 0.85rem;
-        color: var(--text-color-muted);
-        margin-top: 0.25rem;
-        margin-bottom: 0;
-    }
-    
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--spacing-md);
-        margin-top: var(--spacing-lg);
-    }
-    
-    .primary-button {
-        background-color: var(--primary-color);
-        color: #fff;
-    }
-    
-    .mt-4 {
-        margin-top: 1.5rem;
-    }
-</style>
-{% endblock %}
-
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
