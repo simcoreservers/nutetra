@@ -4,130 +4,144 @@
 {% block page_title %}Plant Grow Cycle Management{% endblock %}
 
 {% block content %}
-<div class="page-content">
-    <div class="dashboard-section">
-        {% if no_schedule %}
-        <div class="no-schedule-message">
-            <div class="empty-state">
-                <i class="fas fa-leaf fa-3x"></i>
-                <h3>No Active Grow Cycle</h3>
-                <p>There is currently no active plant profile with a weekly grow schedule.</p>
-                <p>Please activate a profile that uses weekly scheduling or edit an existing profile to enable weekly scheduling.</p>
-                <div class="action-buttons">
-                    <a href="{{ url_for('garden.profiles') }}" class="button success">
-                        <i class="fas fa-list"></i> View Plant Profiles
-                    </a>
-                </div>
+<div class="grow-cycle-container">
+    {% if no_schedule %}
+    <div class="empty-state-container">
+        <div class="empty-state">
+            <i class="fas fa-leaf fa-3x"></i>
+            <h4>No Active Grow Cycle</h4>
+            <p>There is currently no active plant profile with a weekly grow schedule.</p>
+            <p>Please activate a profile that uses weekly scheduling or edit an existing profile to enable weekly scheduling.</p>
+            <div class="action-buttons">
+                <a href="{{ url_for('garden.profiles') }}" class="button success">
+                    <i class="fas fa-list"></i> View Plant Profiles
+                </a>
             </div>
         </div>
-        {% else %}
-        <div class="grow-cycle-header">
-            <div class="cycle-status">
-                <h3>{{ profile.name }} - Current Growth Stage: <span class="growth-phase {{ growth_phase|lower }}">{{ growth_phase }}</span></h3>
-                <div class="week-indicator">
-                    <div class="week-label">
-                        Week {{ current_week }} of {{ total_weeks }}
-                        <span class="percentage-indicator">{{ (current_week / total_weeks * 100)|round|int }}%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: {{ (current_week / total_weeks * 100)|round }}%" data-width="{{ (current_week / total_weeks * 100)|round }}%"></div>
-                    </div>
+    </div>
+    {% else %}
+    <div class="section-header">
+        <div class="cycle-status">
+            <h3><i class="fas fa-seedling"></i> {{ profile.name }} - Current Growth Stage: <span class="growth-phase {{ growth_phase|lower }}">{{ growth_phase }}</span></h3>
+            <div class="week-indicator">
+                <div class="week-label">
+                    Week {{ current_week }} of {{ total_weeks }}
+                    <span class="percentage-indicator">{{ (current_week / total_weeks * 100)|round|int }}%</span>
                 </div>
-            </div>
-            
-            <div class="cycle-actions">
-                <form method="post" class="inline-form">
-                    <input type="hidden" name="action" value="next_week">
-                    <button type="submit" class="button success">
-                        <i class="fas fa-forward"></i> Next Week
-                    </button>
-                </form>
-                
-                <form method="post" class="inline-form">
-                    <input type="hidden" name="action" value="reset_cycle">
-                    <button type="submit" class="button danger" onclick="return confirm('Are you sure you want to reset the grow cycle to Week 1?')">
-                        <i class="fas fa-redo"></i> Reset Cycle
-                    </button>
-                </form>
+                <div class="progress-bar">
+                    <div class="progress" style="width: {{ (current_week / total_weeks * 100)|round }}%" data-width="{{ (current_week / total_weeks * 100)|round }}%"></div>
+                </div>
             </div>
         </div>
         
-        <div class="grow-cycle-content">
-            <div class="current-settings">
-                <h4>Current Week Nutrient Settings</h4>
-                <div class="settings-grid">
-                    <div class="setting-card">
-                        <div class="setting-header">EC Target</div>
-                        <div class="setting-value">{{ current_schedule.get('ec_setpoint', profile.ec_setpoint) }} μS/cm</div>
-                    </div>
-                    
-                    <div class="setting-card">
-                        <div class="setting-header">pH Target</div>
-                        <div class="setting-value">{{ profile.ph_setpoint }}</div>
-                    </div>
-                    
-                    <div class="setting-card">
-                        <div class="setting-header">Temperature Range</div>
-                        <div class="setting-value">{{ profile.temp_min }} - {{ profile.temp_max }}°C</div>
-                    </div>
+        <div class="section-actions">
+            <form method="post" class="inline-form">
+                <input type="hidden" name="action" value="next_week">
+                <button type="submit" class="button success">
+                    <i class="fas fa-forward"></i> Next Week
+                </button>
+            </form>
+            
+            <form method="post" class="inline-form">
+                <input type="hidden" name="action" value="reset_cycle">
+                <button type="submit" class="button danger" onclick="return confirm('Are you sure you want to reset the grow cycle to Week 1?')">
+                    <i class="fas fa-redo"></i> Reset Cycle
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="grow-cycle-content">
+        <div class="current-settings-container">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Current Week Nutrient Settings</h4>
                 </div>
-                
-                <h5>Nutrient Ratios</h5>
-                <div class="nutrient-ratios">
-                    {% set ratios = current_schedule.get('nutrient_ratios', profile.nutrient_ratios) %}
-                    <div class="ratio-bars">
-                        <div class="ratio-bar">
-                            <div class="ratio-label">Grow</div>
-                            <div class="ratio-container">
-                                <div class="ratio-fill grow" style="width: {{ (ratios.grow / 2 * 100)|round }}%"></div>
-                            </div>
-                            <div class="ratio-value">{{ ratios.grow }}</div>
+                <div class="card-body">
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-header">EC Target</div>
+                            <div class="setting-value">{{ current_schedule.get('ec_setpoint', profile.ec_setpoint) }} μS/cm</div>
                         </div>
                         
-                        <div class="ratio-bar">
-                            <div class="ratio-label">Bloom</div>
-                            <div class="ratio-container">
-                                <div class="ratio-fill bloom" style="width: {{ (ratios.bloom / 2 * 100)|round }}%"></div>
-                            </div>
-                            <div class="ratio-value">{{ ratios.bloom }}</div>
+                        <div class="setting-card">
+                            <div class="setting-header">pH Target</div>
+                            <div class="setting-value">{{ profile.ph_setpoint }}</div>
                         </div>
                         
-                        <div class="ratio-bar">
-                            <div class="ratio-label">Micro</div>
-                            <div class="ratio-container">
-                                <div class="ratio-fill micro" style="width: {{ (ratios.micro / 2 * 100)|round }}%"></div>
-                            </div>
-                            <div class="ratio-value">{{ ratios.micro }}</div>
+                        <div class="setting-card">
+                            <div class="setting-header">Temperature Range</div>
+                            <div class="setting-value">{{ profile.temp_min }} - {{ profile.temp_max }}°C</div>
                         </div>
-                        
-                        <div class="ratio-bar">
-                            <div class="ratio-label">CalMag</div>
-                            <div class="ratio-container">
-                                <div class="ratio-fill calmag" style="width: {{ (ratios.calmag / 2 * 100)|round }}%"></div>
+                    </div>
+                    
+                    <h5>Nutrient Ratios</h5>
+                    <div class="nutrient-ratios">
+                        {% set ratios = current_schedule.get('nutrient_ratios', profile.nutrient_ratios) %}
+                        <div class="ratio-bars">
+                            <div class="ratio-bar">
+                                <div class="ratio-label">Grow</div>
+                                <div class="ratio-container">
+                                    <div class="ratio-fill grow" style="width: {{ (ratios.grow / 2 * 100)|round }}%"></div>
+                                </div>
+                                <div class="ratio-value">{{ ratios.grow }}</div>
                             </div>
-                            <div class="ratio-value">{{ ratios.calmag }}</div>
+                            
+                            <div class="ratio-bar">
+                                <div class="ratio-label">Bloom</div>
+                                <div class="ratio-container">
+                                    <div class="ratio-fill bloom" style="width: {{ (ratios.bloom / 2 * 100)|round }}%"></div>
+                                </div>
+                                <div class="ratio-value">{{ ratios.bloom }}</div>
+                            </div>
+                            
+                            <div class="ratio-bar">
+                                <div class="ratio-label">Micro</div>
+                                <div class="ratio-container">
+                                    <div class="ratio-fill micro" style="width: {{ (ratios.micro / 2 * 100)|round }}%"></div>
+                                </div>
+                                <div class="ratio-value">{{ ratios.micro }}</div>
+                            </div>
+                            
+                            <div class="ratio-bar">
+                                <div class="ratio-label">CalMag</div>
+                                <div class="ratio-container">
+                                    <div class="ratio-fill calmag" style="width: {{ (ratios.calmag / 2 * 100)|round }}%"></div>
+                                </div>
+                                <div class="ratio-value">{{ ratios.calmag }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <div class="weekly-schedule-container">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Jump to Week</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="week-selector-form">
+                        <input type="hidden" name="action" value="set_week">
+                        <div class="week-selector">
+                            {% for week_num in range(1, total_weeks + 1) %}
+                                <button type="submit" name="week" value="{{ week_num }}" 
+                                        class="week-button {% if week_num == current_week %}active{% endif %}">
+                                    {{ week_num }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </form>
+                </div>
+            </div>
             
-            <div class="weekly-schedule">
-                <h4>Jump to Week</h4>
-                <form method="post" class="week-selector-form">
-                    <input type="hidden" name="action" value="set_week">
-                    <div class="week-selector">
-                        {% for week_num in range(1, total_weeks + 1) %}
-                            <button type="submit" name="week" value="{{ week_num }}" 
-                                    class="week-button {% if week_num == current_week %}active{% endif %}">
-                                {{ week_num }}
-                            </button>
-                        {% endfor %}
-                    </div>
-                </form>
-                
-                <div class="schedule-table-container">
+            <div class="card">
+                <div class="card-header">
                     <h4>Full {{ total_weeks }}-Week Schedule</h4>
-                    <div class="schedule-table">
+                </div>
+                <div class="card-body">
+                    <div class="schedule-table-container">
                         <table>
                             <thead>
                                 <tr>
@@ -170,28 +184,36 @@
                 </div>
             </div>
         </div>
-        
-        <div class="back-to-settings">
-            <a href="{{ url_for('garden.index') }}" class="button">
-                <i class="fas fa-arrow-left"></i> Back to Garden Dashboard
-            </a>
-            
-            <a href="{{ url_for('garden.profiles') }}" class="button success">
-                <i class="fas fa-cog"></i> Configure Plant Profiles
-            </a>
-            
-            <a href="{{ url_for('garden.edit_profile', profile_id=profile_id) }}" class="button">
-                <i class="fas fa-edit"></i> Edit This Profile
-            </a>
-        </div>
-        {% endif %}
     </div>
+    
+    <div class="navigation-actions">
+        <a href="{{ url_for('garden.index') }}" class="button">
+            <i class="fas fa-arrow-left"></i> Back to Garden Dashboard
+        </a>
+        
+        <a href="{{ url_for('garden.profiles') }}" class="button success">
+            <i class="fas fa-cog"></i> Configure Plant Profiles
+        </a>
+        
+        <a href="{{ url_for('garden.edit_profile', profile_id=profile_id) }}" class="button">
+            <i class="fas fa-edit"></i> Edit This Profile
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .grow-cycle-header {
+    .grow-cycle-container {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
+    }
+    
+    .section-header {
+        grid-column: span 12;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -200,11 +222,86 @@
         border-radius: var(--border-radius);
         padding: var(--spacing-md);
         border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
     }
     
-    .cycle-status h3 {
+    .section-header h3 {
+        margin: 0;
         margin-bottom: var(--spacing-sm);
         font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-header h3 i {
+        margin-right: 8px;
+        color: var(--primary-color);
+    }
+    
+    .section-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+    
+    .grow-cycle-content {
+        grid-column: span 12;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .current-settings-container {
+        grid-column: span 12;
+    }
+    
+    .weekly-schedule-container {
+        grid-column: span 12;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .navigation-actions {
+        grid-column: span 12;
+        display: flex;
+        gap: var(--spacing-sm);
+        background-color: var(--bg-color-lighter);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+    }
+    
+    .card {
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-lighter);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: var(--text-color);
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+        flex: 1;
     }
     
     .growth-phase {
@@ -318,35 +415,8 @@
         100% { transform: translateX(calc(300% + 160px)); }
     }
     
-    .cycle-actions {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-    
     .inline-form {
         display: inline-block;
-    }
-    
-    .grow-cycle-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-md);
-    }
-    
-    .current-settings {
-        background-color: var(--bg-color-lighter);
-        border-radius: var(--border-radius);
-        padding: var(--spacing-md);
-        border: 1px solid var(--border-color);
-    }
-    
-    .current-settings h4 {
-        margin-bottom: var(--spacing-sm);
-        font-size: 1.1rem;
-        color: var(--text-color);
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: var(--spacing-xs);
     }
     
     .settings-grid {
@@ -374,6 +444,15 @@
     .setting-value {
         font-size: 1.2em;
         color: var(--primary-color);
+    }
+    
+    .card-body h5 {
+        margin-top: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
+        font-size: 1rem;
+        color: var(--text-color);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--spacing-xs);
     }
     
     .nutrient-ratios {
@@ -469,26 +548,10 @@
         text-align: left;
     }
     
-    .weekly-schedule {
-        background-color: var(--bg-color-lighter);
-        border-radius: var(--border-radius);
-        padding: var(--spacing-md);
-        border: 1px solid var(--border-color);
-    }
-    
-    .weekly-schedule h4 {
-        margin-bottom: var(--spacing-sm);
-        font-size: 1.1rem;
-        color: var(--text-color);
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: var(--spacing-xs);
-    }
-    
     .week-selector {
         display: flex;
         flex-wrap: wrap;
         gap: 5px;
-        margin-bottom: var(--spacing-md);
     }
     
     .week-button {
@@ -516,111 +579,164 @@
     }
     
     .schedule-table-container {
-        margin-top: var(--spacing-md);
         overflow-x: auto;
-        background-color: var(--bg-color-light);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
     }
     
-    .schedule-table table {
+    .schedule-table-container table {
         width: 100%;
         border-collapse: collapse;
     }
     
-    .schedule-table th, .schedule-table td {
+    .schedule-table-container th, .schedule-table-container td {
         padding: 8px;
         text-align: center;
         border-bottom: 1px solid var(--border-color);
     }
     
-    .schedule-table th {
-        background-color: var(--bg-color-light);
+    .schedule-table-container th {
+        background-color: var(--bg-color-lighter);
         font-weight: bold;
         color: var(--text-color-muted);
     }
     
-    .schedule-table tr.current-week {
+    .schedule-table-container tr.current-week {
         background-color: var(--primary-color-light);
         color: var(--primary-color);
     }
     
-    .schedule-table tr:hover {
+    .schedule-table-container tr:hover {
         background-color: rgba(255, 255, 255, 0.05);
     }
     
-    .back-to-settings {
-        margin-top: var(--spacing-md);
-        display: flex;
-        gap: var(--spacing-sm);
-        background-color: var(--bg-color-lighter);
+    .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 8px 16px;
         border-radius: var(--border-radius);
-        padding: var(--spacing-md);
         border: 1px solid var(--border-color);
+        background-color: var(--bg-color-lighter);
+        color: var(--text-color);
+        font-size: 0.95rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
     
-    .no-schedule-message {
-        padding: var(--spacing-xl);
+    .button.success {
+        background-color: var(--primary-color-light);
+        color: var(--primary-color);
+    }
+    
+    .button.success:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .button.danger {
+        background-color: var(--danger-color-light);
+        color: var(--danger-color);
+    }
+    
+    .button.danger:hover {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .button:hover {
+        background-color: var(--bg-color);
+    }
+    
+    .empty-state-container {
+        grid-column: span 12;
     }
     
     .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         text-align: center;
-        padding: var(--spacing-xl);
-        background-color: var(--bg-color-lighter);
+        padding: 40px 0;
+        color: var(--text-color-muted);
+        background-color: var(--bg-color-light);
         border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
     }
     
     .empty-state i {
-        margin-bottom: var(--spacing-md);
-        color: var(--text-color-muted);
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+        color: var(--primary-color);
     }
     
-    .empty-state h3 {
-        margin-bottom: var(--spacing-md);
-        color: var(--text-color);
+    .empty-state h4 {
+        margin-bottom: 10px;
+        font-size: 1.2rem;
     }
     
     .empty-state p {
-        margin-bottom: var(--spacing-md);
-        color: var(--text-color-muted);
+        margin: 0 auto;
+        color: var(--text-color-light);
         max-width: 600px;
+        margin-bottom: 10px;
     }
     
     .empty-state .action-buttons {
-        margin-top: var(--spacing-md);
+        margin-top: 20px;
+    }
+    
+    /* Responsive Layouts */
+    @media (min-width: 992px) {
+        .current-settings-container {
+            grid-column: span 6;
+        }
+        
+        .weekly-schedule-container {
+            grid-column: span 6;
+        }
     }
     
     @media (max-width: 768px) {
-        .grow-cycle-header {
+        .section-header {
             flex-direction: column;
             align-items: flex-start;
         }
         
-        .cycle-actions {
+        .section-actions {
             margin-top: var(--spacing-sm);
             width: 100%;
             justify-content: space-between;
-        }
-        
-        .grow-cycle-content {
-            grid-template-columns: 1fr;
         }
         
         .settings-grid {
             grid-template-columns: 1fr;
         }
         
-        .back-to-settings {
+        .navigation-actions {
             flex-direction: column;
         }
         
-        .back-to-settings a {
+        .navigation-actions a {
             width: 100%;
             text-align: center;
+            justify-content: center;
+        }
+        
+        .ratio-bar {
+            flex-wrap: wrap;
+        }
+        
+        .ratio-label {
+            width: 100%;
+            text-align: left;
+        }
+        
+        .ratio-value {
+            width: 100%;
+            text-align: right;
+        }
+        
+        .week-selector {
+            justify-content: center;
         }
     }
 </style>
