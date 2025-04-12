@@ -7,43 +7,19 @@
 :root {
   /* Dark Theme Colors */
   --bg-color: #1a1a1a;
-  --bg-color-light: #242424;
+  --bg-color-light: #252525;
   --bg-color-lighter: #303030;
-  --bg-color-dark: #141414;
-  
-  /* Text colors */
   --text-color: #f0f0f0;
   --text-color-muted: #a0a0a0;
-  --text-color-light: #d4d4d4;
-  
-  /* Brand colors */
   --primary-color: #4facfe;
-  --primary-color-rgb: 79, 172, 254;
-  --primary-color-dark: #3c8bc9;
-  
-  --success-color: #28a745;
-  --success-color-rgb: 40, 167, 69;
-  
+  --success-color: #43e97b;
   --warning-color: #ffd166;
-  --warning-color-rgb: 255, 209, 102;
-  
   --danger-color: #f4736b;
-  --danger-color-rgb: 244, 115, 107;
-  --danger-color-dark: #d3302a;
-  
-  --info-color: #17a2b8;
-  --info-color-rgb: 23, 162, 184;
-  
-  /* Transparent variants */
-  --primary-color-light: rgba(var(--primary-color-rgb), 0.15);
-  --success-color-light: rgba(var(--success-color-rgb), 0.15);
-  --warning-color-light: rgba(var(--warning-color-rgb), 0.15);
-  --danger-color-light: rgba(var(--danger-color-rgb), 0.15);
-  --info-color-light: rgba(var(--info-color-rgb), 0.15);
-  
-  /* Borders */
   --border-color: #3a3a3a;
-  --border-radius: 6px;
+  --success-color-light: rgba(67, 233, 123, 0.1);
+  --warning-color-light: rgba(255, 209, 102, 0.1);
+  --danger-color-light: rgba(244, 115, 107, 0.1);
+  --primary-color-light: rgba(79, 172, 254, 0.1);
   
   /* Fonts */
   --font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
@@ -60,10 +36,8 @@
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 60px;
   --header-height: 60px;
-  
-  /* Shadows */
+  --border-radius: 8px;
   --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --dropdown-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Global Reset */
