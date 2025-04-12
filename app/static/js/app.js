@@ -1,5 +1,6 @@
 /**
- * NuTetra Controller - Main Application JavaScript
+ * NuTetra Application JavaScript
+ * Handles UI interactions like sidebar toggling and dark mode
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -381,4 +382,111 @@ function enhanceMobileInteraction() {
     
     // Improve scrolling on touch devices
     document.addEventListener('touchstart', function() {}, {passive: true});
-} 
+}
+
+/**
+ * NuTetra Application JavaScript
+ * Handles UI interactions like sidebar toggling and dark mode
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const body = document.body;
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sectionToggles = document.querySelectorAll('.section-toggle');
+    
+    // Initialize sidebar state from localStorage if available
+    if (localStorage.getItem('sidebar-collapsed') === 'true') {
+        body.classList.add('sidebar-collapsed');
+    }
+    
+    // Sidebar toggle functionality
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            // On mobile, we use menu-open instead of sidebar-collapsed
+            if (window.innerWidth <= 768) {
+                body.classList.toggle('menu-open');
+                // Add overlay for closing menu when clicking outside
+                if (body.classList.contains('menu-open')) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'menu-overlay';
+                    overlay.addEventListener('click', function() {
+                        body.classList.remove('menu-open');
+                        this.remove();
+                    });
+                    body.appendChild(overlay);
+                } else {
+                    const overlay = document.querySelector('.menu-overlay');
+                    if (overlay) overlay.remove();
+                }
+            } else {
+                // On desktop, we use sidebar-collapsed
+                body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', body.classList.contains('sidebar-collapsed'));
+            }
+        });
+    }
+    
+    // Section toggle functionality (for submenu)
+    sectionToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const parent = this.closest('.nav-section');
+            
+            // If we're in collapsed mode on desktop, expand sidebar first
+            if (window.innerWidth > 768 && body.classList.contains('sidebar-collapsed')) {
+                body.classList.remove('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', 'false');
+            }
+            
+            // Toggle active state
+            parent.classList.toggle('active');
+        });
+    });
+    
+    // Handle responsive behavior
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            body.classList.remove('menu-open');
+            const overlay = document.querySelector('.menu-overlay');
+            if (overlay) overlay.remove();
+            
+            // Restore desktop sidebar state
+            if (localStorage.getItem('sidebar-collapsed') === 'true') {
+                body.classList.add('sidebar-collapsed');
+            } else {
+                body.classList.remove('sidebar-collapsed');
+            }
+        }
+    });
+    
+    // Auto-expand the active section
+    const activeSection = document.querySelector('.nav-section.active');
+    if (activeSection) {
+        activeSection.querySelector('.submenu').style.maxHeight = 
+            activeSection.querySelector('.submenu').scrollHeight + 'px';
+    }
+    
+    // Add glow effect to status indicators if in alert state
+    const alertStatusItems = document.querySelectorAll('.status-item.alert');
+    alertStatusItems.forEach(item => {
+        item.classList.add('pulse');
+    });
+    
+    // Add active classes based on current URL
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.sidebar-nav a');
+    
+    navItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (href && currentPath.includes(href) && href !== '/') {
+            item.closest('li').classList.add('active');
+            
+            // Also activate parent section
+            const section = item.closest('.nav-section');
+            if (section) {
+                section.classList.add('active');
+            }
+        }
+    });
+}); 
