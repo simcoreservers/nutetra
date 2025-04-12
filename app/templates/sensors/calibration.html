@@ -5,7 +5,7 @@
 {% block page_title %}Sensor Calibration{% endblock %}
 
 {% block content %}
-<div class="calibration-container">
+<div class="container-fluid calibration-container">
     <div class="section-header">
         <h3><i class="fas fa-sliders-h"></i> Sensor Calibration</h3>
         <button id="refresh-readings" class="refresh-btn" title="Refresh readings">
@@ -13,103 +13,109 @@
         </button>
     </div>
 
-    <div class="sensor-calibration-grid">
+    <div class="row sensor-calibration-grid">
         <!-- pH Calibration -->
-        <div class="calibration-card">
-            <div class="card-header">
-                <h4><i class="fas fa-flask"></i> pH Sensor Calibration</h4>
-                <div class="current-reading">
-                    <span class="label">Current:</span>
-                    <span class="value" id="current-ph">Loading...</span>
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="calibration-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-flask"></i> pH Sensor Calibration</h4>
+                    <div class="current-reading">
+                        <span class="label">Current:</span>
+                        <span class="value" id="current-ph">Loading...</span>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <form action="{{ url_for('sensors.calibrate_ph_sensor') }}" method="post" class="calibration-form">
-                    <div class="form-group">
-                        <label for="ph-calibration-point">Calibration Point:</label>
-                        <select name="point" id="ph-calibration-point" required>
-                            <option value="">Select a calibration point</option>
-                            <option value="low">Low (pH 4.0)</option>
-                            <option value="mid">Mid (pH 7.0)</option>
-                            <option value="high">High (pH 10.0)</option>
-                        </select>
-                    </div>
+                <div class="card-body">
+                    <form action="{{ url_for('sensors.calibrate_ph_sensor') }}" method="post" class="calibration-form">
+                        <div class="form-group mb-3">
+                            <label for="ph-calibration-point">Calibration Point:</label>
+                            <select name="point" id="ph-calibration-point" class="form-select" required>
+                                <option value="">Select a calibration point</option>
+                                <option value="low">Low (pH 4.0)</option>
+                                <option value="mid">Mid (pH 7.0)</option>
+                                <option value="high">High (pH 10.0)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="ph-calibration-value">Actual Value:</label>
+                            <input type="number" name="value" id="ph-calibration-value" class="form-control" step="0.01" min="0" max="14" placeholder="e.g. 4.0" required>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Calibrate pH</button>
+                        </div>
+                    </form>
                     
-                    <div class="form-group">
-                        <label for="ph-calibration-value">Actual Value:</label>
-                        <input type="number" name="value" id="ph-calibration-value" step="0.01" min="0" max="14" placeholder="e.g. 4.0" required>
+                    <div class="calibration-instructions">
+                        <p><strong>Note:</strong> For best results, calibrate with at least two points. Use standard pH buffer solutions.</p>
                     </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="button primary-button">Calibrate pH</button>
-                    </div>
-                </form>
-                
-                <div class="calibration-instructions">
-                    <p><strong>Note:</strong> For best results, calibrate with at least two points. Use standard pH buffer solutions.</p>
                 </div>
             </div>
         </div>
         
         <!-- EC Calibration -->
-        <div class="calibration-card">
-            <div class="card-header">
-                <h4><i class="fas fa-bolt"></i> EC Sensor Calibration</h4>
-                <div class="current-reading">
-                    <span class="label">Current:</span>
-                    <span class="value" id="current-ec">Loading...</span>
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="calibration-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-bolt"></i> EC Sensor Calibration</h4>
+                    <div class="current-reading">
+                        <span class="label">Current:</span>
+                        <span class="value" id="current-ec">Loading...</span>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <form action="{{ url_for('sensors.calibrate_ec_sensor') }}" method="post" class="calibration-form">
-                    <div class="form-group">
-                        <label for="ec-calibration-point">Calibration Point:</label>
-                        <select name="point" id="ec-calibration-point" required>
-                            <option value="">Select a calibration point</option>
-                            <option value="low">Low (1413 μS/cm)</option>
-                            <option value="high">High (2764 μS/cm)</option>
-                        </select>
-                    </div>
+                <div class="card-body">
+                    <form action="{{ url_for('sensors.calibrate_ec_sensor') }}" method="post" class="calibration-form">
+                        <div class="form-group mb-3">
+                            <label for="ec-calibration-point">Calibration Point:</label>
+                            <select name="point" id="ec-calibration-point" class="form-select" required>
+                                <option value="">Select a calibration point</option>
+                                <option value="low">Low (1413 μS/cm)</option>
+                                <option value="high">High (2764 μS/cm)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="ec-calibration-value">Actual Value (μS/cm):</label>
+                            <input type="number" name="value" id="ec-calibration-value" class="form-control" step="1" min="0" max="5000" placeholder="e.g. 1413" required>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Calibrate EC</button>
+                        </div>
+                    </form>
                     
-                    <div class="form-group">
-                        <label for="ec-calibration-value">Actual Value (μS/cm):</label>
-                        <input type="number" name="value" id="ec-calibration-value" step="1" min="0" max="5000" placeholder="e.g. 1413" required>
+                    <div class="calibration-instructions">
+                        <p><strong>Note:</strong> Use standard EC calibration solutions. Make sure the probe is clean and dry before calibration.</p>
                     </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="button primary-button">Calibrate EC</button>
-                    </div>
-                </form>
-                
-                <div class="calibration-instructions">
-                    <p><strong>Note:</strong> Use standard EC calibration solutions. Make sure the probe is clean and dry before calibration.</p>
                 </div>
             </div>
         </div>
         
         <!-- Temperature Calibration -->
-        <div class="calibration-card">
-            <div class="card-header">
-                <h4><i class="fas fa-thermometer-half"></i> Temperature Sensor Calibration</h4>
-                <div class="current-reading">
-                    <span class="label">Current:</span>
-                    <span class="value" id="current-temp">Loading...</span>
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="calibration-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-thermometer-half"></i> Temperature Sensor Calibration</h4>
+                    <div class="current-reading">
+                        <span class="label">Current:</span>
+                        <span class="value" id="current-temp">Loading...</span>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <form action="{{ url_for('sensors.calibrate_temp_sensor') }}" method="post" class="calibration-form">
-                    <div class="form-group">
-                        <label for="temp-calibration-value">Actual Temperature (°C):</label>
-                        <input type="number" name="value" id="temp-calibration-value" step="0.1" min="0" max="50" placeholder="e.g. 25.0" required>
-                    </div>
+                <div class="card-body">
+                    <form action="{{ url_for('sensors.calibrate_temp_sensor') }}" method="post" class="calibration-form">
+                        <div class="form-group mb-3">
+                            <label for="temp-calibration-value">Actual Temperature (°C):</label>
+                            <input type="number" name="value" id="temp-calibration-value" class="form-control" step="0.1" min="0" max="50" placeholder="e.g. 25.0" required>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Calibrate Temperature</button>
+                        </div>
+                    </form>
                     
-                    <div class="form-actions">
-                        <button type="submit" class="button primary-button">Calibrate Temperature</button>
+                    <div class="calibration-instructions">
+                        <p><strong>Note:</strong> Use a reliable reference thermometer for accurate calibration.</p>
                     </div>
-                </form>
-                
-                <div class="calibration-instructions">
-                    <p><strong>Note:</strong> Use a reliable reference thermometer for accurate calibration.</p>
                 </div>
             </div>
         </div>
@@ -120,14 +126,10 @@
 {% block extra_css %}
 <style>
     .calibration-container {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: var(--spacing-md);
-        margin-top: var(--spacing-md);
+        padding: var(--spacing-md);
     }
     
     .section-header {
-        grid-column: span 12;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -148,20 +150,13 @@
         color: var(--primary-color);
     }
     
-    .sensor-calibration-grid {
-        grid-column: span 12;
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: var(--spacing-md);
-    }
-    
     .calibration-card {
-        grid-column: span 12;
         background-color: var(--bg-color-light);
         border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
         overflow: hidden;
         box-shadow: var(--card-shadow);
+        height: 100%;
     }
     
     .card-header {
@@ -199,11 +194,6 @@
         margin-right: 6px;
     }
     
-    .current-reading .value {
-        font-weight: 600;
-        color: var(--primary-color);
-    }
-    
     .card-body {
         padding: var(--spacing-md);
     }
@@ -218,53 +208,20 @@
     
     .form-group label {
         display: block;
-        margin-bottom: 6px;
+        margin-bottom: 5px;
         font-weight: 500;
-    }
-    
-    .form-group input,
-    .form-group select {
-        width: 100%;
-        padding: 8px 10px;
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        font-size: 0.95rem;
     }
     
     .form-actions {
         margin-top: var(--spacing-md);
     }
     
-    .button {
-        padding: 8px 16px;
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-        background-color: var(--bg-color-lighter);
-        color: var(--text-color);
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .primary-button {
-        background-color: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-    }
-    
-    .primary-button:hover {
-        background-color: var(--primary-color-dark);
-    }
-    
     .calibration-instructions {
-        font-size: 0.9rem;
-        color: var(--text-color-light);
-        padding: 10px;
+        margin-top: var(--spacing-md);
+        padding: var(--spacing-sm);
         background-color: var(--bg-color);
         border-radius: var(--border-radius);
-        margin-top: var(--spacing-md);
+        font-size: 0.9rem;
     }
     
     .calibration-instructions p {
@@ -296,30 +253,23 @@
         to { transform: rotate(360deg); }
     }
     
-    /* Responsive Layouts */
-    @media (min-width: 768px) {
-        .calibration-card {
-            grid-column: span 6;
-        }
-    }
-    
-    @media (min-width: 1200px) {
-        .calibration-card {
-            grid-column: span 4;
-        }
-    }
-    
     @media (max-width: 768px) {
-        .calibration-container {
-            display: flex;
+        .section-header {
             flex-direction: column;
-            gap: var(--spacing-md);
-            padding: var(--spacing-sm);
+            align-items: flex-start;
+            gap: var(--spacing-sm);
         }
         
-        .form-group input,
-        .form-group select {
-            max-width: 100%;
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+        
+        .current-reading {
+            margin-top: var(--spacing-xs);
+            width: 100%;
+            justify-content: space-between;
         }
     }
 </style>

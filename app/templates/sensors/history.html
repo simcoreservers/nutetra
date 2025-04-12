@@ -5,11 +5,11 @@
 {% block page_title %}Sensor History{% endblock %}
 
 {% block content %}
-<div class="sensor-history-container">
+<div class="container-fluid sensor-history-container">
     <div class="section-header">
         <h3><i class="fas fa-chart-line"></i> Sensor History</h3>
         <div class="time-filter">
-            <select id="history-timeframe">
+            <select id="history-timeframe" class="form-select">
                 <option value="1d">24 Hours</option>
                 <option value="7d">7 Days</option>
                 <option value="30d">30 Days</option>
@@ -18,54 +18,60 @@
         </div>
     </div>
 
-    <div class="sensor-charts-grid">
+    <div class="row sensor-charts-grid">
         <!-- pH History Chart -->
-        <div class="chart-card">
-            <div class="card-header">
-                <h4><i class="fas fa-flask"></i> pH History</h4>
-                <div class="card-actions">
-                    <button class="refresh-btn" data-sensor="ph" title="Refresh chart">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-flask"></i> pH History</h4>
+                    <div class="card-actions">
+                        <button class="refresh-btn" data-sensor="ph" title="Refresh chart">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="ph-chart"></canvas>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="ph-chart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         
         <!-- EC History Chart -->
-        <div class="chart-card">
-            <div class="card-header">
-                <h4><i class="fas fa-bolt"></i> EC History</h4>
-                <div class="card-actions">
-                    <button class="refresh-btn" data-sensor="ec" title="Refresh chart">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-bolt"></i> EC History</h4>
+                    <div class="card-actions">
+                        <button class="refresh-btn" data-sensor="ec" title="Refresh chart">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="ec-chart"></canvas>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="ec-chart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         
         <!-- Temperature History Chart -->
-        <div class="chart-card">
-            <div class="card-header">
-                <h4><i class="fas fa-thermometer-half"></i> Temperature History</h4>
-                <div class="card-actions">
-                    <button class="refresh-btn" data-sensor="temp" title="Refresh chart">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-thermometer-half"></i> Temperature History</h4>
+                    <div class="card-actions">
+                        <button class="refresh-btn" data-sensor="temp" title="Refresh chart">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="temp-chart"></canvas>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="temp-chart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -76,17 +82,21 @@
         <h3><i class="fas fa-file-export"></i> Export Data</h3>
     </div>
     
-    <div class="export-section">
-        <div class="export-options">
-            <div class="export-option">
-                <h4>Sensor Readings</h4>
-                <div class="export-buttons">
-                    <a href="{{ url_for('api.export_readings', format='csv') }}" class="button">
-                        <i class="fas fa-file-csv"></i> CSV
-                    </a>
-                    <a href="{{ url_for('api.export_readings', format='json') }}" class="button">
-                        <i class="fas fa-file-code"></i> JSON
-                    </a>
+    <div class="row">
+        <div class="col-12">
+            <div class="export-section">
+                <div class="export-options">
+                    <div class="export-option">
+                        <h4>Sensor Readings</h4>
+                        <div class="export-buttons">
+                            <a href="{{ url_for('api.export_readings', format='csv') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-file-csv"></i> CSV
+                            </a>
+                            <a href="{{ url_for('api.export_readings', format='json') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-file-code"></i> JSON
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -97,14 +107,10 @@
 {% block extra_css %}
 <style>
     .sensor-history-container {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: var(--spacing-md);
-        margin-top: var(--spacing-md);
+        padding: var(--spacing-md);
     }
     
     .section-header {
-        grid-column: span 12;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -134,20 +140,13 @@
         font-size: 0.9rem;
     }
     
-    .sensor-charts-grid {
-        grid-column: span 12;
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: var(--spacing-md);
-    }
-    
     .chart-card {
-        grid-column: span 12;
         background-color: var(--bg-color-light);
         border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
         overflow: hidden;
         box-shadow: var(--card-shadow);
+        height: 100%;
     }
     
     .card-header {
@@ -187,7 +186,6 @@
     
     /* Export Section */
     .export-section {
-        grid-column: span 12;
         background-color: var(--bg-color-light);
         border-radius: var(--border-radius);
         padding: var(--spacing-md);
@@ -217,22 +215,10 @@
         gap: var(--spacing-sm);
     }
     
-    .export-buttons .button {
+    .export-buttons .btn {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 6px 12px;
-        background-color: var(--bg-color-lighter);
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        text-decoration: none;
-        font-size: 0.9rem;
-    }
-    
-    .export-buttons .button:hover {
-        background-color: var(--primary-color-light);
-        color: var(--primary-color);
     }
     
     /* Refresh button */
@@ -260,29 +246,24 @@
         to { transform: rotate(360deg); }
     }
     
-    /* Responsive Layouts */
-    @media (min-width: 768px) {
-        .chart-card {
-            grid-column: span 6;
-        }
-    }
-    
-    @media (min-width: 1200px) {
-        .chart-card {
-            grid-column: span 4;
-        }
-    }
-    
+    /* Responsive adjustments moved to Bootstrap grid system */
     @media (max-width: 768px) {
-        .sensor-history-container {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-md);
-            padding: var(--spacing-sm);
-        }
-        
         .chart-container {
             height: 250px;
+        }
+        
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+        
+        .time-filter {
+            width: 100%;
+        }
+        
+        .time-filter select {
+            width: 100%;
         }
     }
 </style>
