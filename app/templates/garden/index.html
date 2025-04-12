@@ -5,48 +5,78 @@
 
 {% block extra_css %}
 <style>
-    .garden-dashboard {
+    .garden-dashboard-container {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(12, 1fr);
         gap: var(--spacing-md);
         margin-top: var(--spacing-md);
     }
     
-    .dashboard-card {
-        background-color: var(--bg-color-lighter);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-        padding: var(--spacing-md);
-        position: relative;
-        overflow: hidden;
+    .section-header {
+        grid-column: span 12;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--spacing-sm);
     }
     
-    .dashboard-card h3 {
-        margin-top: 0;
+    .section-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
     }
     
-    .dashboard-card i {
+    .section-header h3 i {
+        margin-right: 8px;
         color: var(--primary-color);
     }
     
-    .dashboard-card p.lead {
-        margin-bottom: var(--spacing-md);
-        color: var(--text-color-muted);
+    .garden-dashboard-grid {
+        grid-column: span 12;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
     }
     
-    .action-buttons {
-        margin-top: var(--spacing-md);
+    .dashboard-card {
+        grid-column: span 12;
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .card-header {
         display: flex;
-        gap: var(--spacing-sm);
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-lighter);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .card-header h4 i {
+        color: var(--primary-color);
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
     }
     
     .profile-info {
-        margin: var(--spacing-md) 0;
+        margin: var(--spacing-sm) 0;
     }
     
     .profile-info .label {
@@ -80,34 +110,110 @@
     
     .grow-cycle-indicator {
         margin-top: var(--spacing-md);
-        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
     }
     
     .week-badge {
-        display: inline-block;
-        padding: 0.5rem 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.4rem 0.8rem;
         background-color: var(--primary-color);
         color: white;
         border-radius: 999px;
         font-weight: 600;
+        font-size: 0.9rem;
     }
     
     .phase-badge {
-        display: inline-block;
-        margin-left: 0.5rem;
-        padding: 0.5rem 1rem;
-        background-color: var(--bg-color-light);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.4rem 0.8rem;
+        background-color: var(--bg-color);
         color: var(--text-color);
         border-radius: 999px;
         font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-top: var(--spacing-md);
+    }
+    
+    .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 8px 16px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-color-lighter);
+        color: var(--text-color);
+        font-size: 0.95rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .button.success {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .button.success:hover {
+        background-color: var(--primary-color-dark);
+    }
+    
+    .button:hover {
+        background-color: var(--primary-color-light);
+        color: var(--primary-color);
+    }
+    
+    /* Responsive Layouts */
+    @media (min-width: 768px) {
+        .dashboard-card {
+            grid-column: span 6;
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        .dashboard-card {
+            grid-column: span 4;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .garden-dashboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm);
+        }
+        
+        .action-buttons {
+            flex-wrap: wrap;
+        }
+        
+        .button {
+            flex: 1 1 auto;
+            text-align: center;
+            justify-content: center;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-section">
+<div class="garden-dashboard-container">
     <div class="section-header">
-        <h3>Garden Dashboard</h3>
+        <h3><i class="fas fa-seedling"></i> Garden Dashboard</h3>
         <div class="header-actions">
             <a href="{{ url_for('garden.add_profile') }}" class="button success">
                 <i class="fas fa-plus"></i> Add Profile
@@ -115,76 +221,91 @@
         </div>
     </div>
     
-    <div class="garden-dashboard">
+    <div class="garden-dashboard-grid">
+        <!-- Active Plant Profile Card -->
         <div class="dashboard-card">
-            <h3><i class="fas fa-leaf"></i> Active Plant Profile</h3>
-            {% if active_profile %}
-                <p class="lead">{{ active_profile.name }}</p>
-                <div class="profile-info">
-                    <div><span class="label">pH Target:</span> <span class="value">{{ active_profile.ph_setpoint|ph }} ± {{ active_profile.ph_buffer|ph }}</span></div>
-                    <div><span class="label">EC Target:</span> <span class="value">{{ active_profile.ec_setpoint|ec }} ± {{ active_profile.ec_buffer|ec }}</span></div>
-                    <div><span class="label">Temperature:</span> <span class="value">{{ active_profile.temp_min }}°C - {{ active_profile.temp_max }}°C</span></div>
-                </div>
-                
-                {% if active_profile.weekly_schedules and active_profile.current_week %}
-                <div class="grow-cycle-indicator">
-                    <span class="week-badge">Week {{ active_profile.current_week }}</span>
-                    <span class="phase-badge">{{ get_growth_phase_for_week(active_profile, active_profile.current_week) }}</span>
-                </div>
+            <div class="card-header">
+                <h4><i class="fas fa-leaf"></i> Active Plant Profile</h4>
+            </div>
+            <div class="card-body">
+                {% if active_profile %}
+                    <p>{{ active_profile.name }}</p>
+                    <div class="profile-info">
+                        <div><span class="label">pH Target:</span> <span class="value">{{ active_profile.ph_setpoint|ph }} ± {{ active_profile.ph_buffer|ph }}</span></div>
+                        <div><span class="label">EC Target:</span> <span class="value">{{ active_profile.ec_setpoint|ec }} ± {{ active_profile.ec_buffer|ec }}</span></div>
+                        <div><span class="label">Temperature:</span> <span class="value">{{ active_profile.temp_min }}°C - {{ active_profile.temp_max }}°C</span></div>
+                    </div>
+                    
+                    {% if active_profile.weekly_schedules and active_profile.current_week %}
+                    <div class="grow-cycle-indicator">
+                        <span class="week-badge">Week {{ active_profile.current_week }}</span>
+                        <span class="phase-badge">{{ get_growth_phase_for_week(active_profile, active_profile.current_week) }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="action-buttons">
+                        <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="button success">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </a>
+                        <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="button" {% if not active_profile.weekly_schedules %}disabled{% endif %}>
+                            <i class="fas fa-calendar-alt"></i> Schedule
+                        </a>
+                    </div>
+                {% else %}
+                    <p>No active plant profile selected.</p>
+                    <div class="action-buttons">
+                        <a href="{{ url_for('garden.profiles') }}" class="button success">
+                            <i class="fas fa-leaf"></i> Select Profile
+                        </a>
+                    </div>
                 {% endif %}
-                
-                <div class="action-buttons">
-                    <a href="{{ url_for('garden.edit_profile', profile_id=active_profile_id) }}" class="button success">
-                        <i class="fas fa-edit"></i> Edit Profile
-                    </a>
-                    <a href="{{ url_for('garden.profile_schedule', profile_id=active_profile_id) }}" class="button" {% if not active_profile.weekly_schedules %}disabled{% endif %}>
-                        <i class="fas fa-calendar-alt"></i> Schedule
-                    </a>
-                </div>
-            {% else %}
-                <p>No active plant profile selected.</p>
-                <div class="action-buttons">
-                    <a href="{{ url_for('garden.profiles') }}" class="button success">
-                        <i class="fas fa-leaf"></i> Select Profile
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-        
-        <div class="dashboard-card">
-            <h3><i class="fas fa-flask"></i> Nutrient Components</h3>
-            {% if active_profile and active_profile.nutrient_components %}
-                <p class="lead">Active nutrients for this profile:</p>
-                
-                {% for component in active_profile.nutrient_components %}
-                <div class="active-component">
-                    <span class="component-name">{{ component.pump_name }}</span>
-                    <span class="component-ratio">{{ component.ratio }}</span>
-                    <div class="component-type">{{ component.nutrient_name }}</div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <p>No nutrient components configured.</p>
-            {% endif %}
-            
-            <div class="action-buttons">
-                <a href="{{ url_for('garden.nutrients') }}" class="button success">
-                    <i class="fas fa-flask"></i> Manage Nutrients
-                </a>
             </div>
         </div>
         
+        <!-- Nutrient Components Card -->
         <div class="dashboard-card">
-            <h3><i class="fas fa-seedling"></i> Plant Profiles</h3>
-            <p class="lead">Customize growing conditions for your plants</p>
-            
-            <div class="action-buttons">
-                <a href="{{ url_for('garden.profiles') }}" class="button">
-                    <i class="fas fa-list"></i> View Profiles
-                </a>
-                <a href="{{ url_for('garden.add_profile') }}" class="button success">
-                    <i class="fas fa-plus"></i> Add Profile
-                </a>
+            <div class="card-header">
+                <h4><i class="fas fa-flask"></i> Nutrient Components</h4>
+            </div>
+            <div class="card-body">
+                {% if active_profile and active_profile.nutrient_components %}
+                    <p>Active nutrients for this profile:</p>
+                    
+                    {% for component in active_profile.nutrient_components %}
+                    <div class="active-component">
+                        <span class="component-name">{{ component.pump_name }}</span>
+                        <span class="component-ratio">{{ component.ratio }}</span>
+                        <div class="component-type">{{ component.nutrient_name }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No nutrient components configured.</p>
+                {% endif %}
+                
+                <div class="action-buttons">
+                    <a href="{{ url_for('garden.nutrients') }}" class="button success">
+                        <i class="fas fa-flask"></i> Manage Nutrients
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Plant Profiles Card -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h4><i class="fas fa-seedling"></i> Plant Profiles</h4>
+            </div>
+            <div class="card-body">
+                <p>Customize growing conditions for your plants</p>
+                
+                <div class="action-buttons">
+                    <a href="{{ url_for('garden.profiles') }}" class="button">
+                        <i class="fas fa-list"></i> View Profiles
+                    </a>
+                    <a href="{{ url_for('garden.add_profile') }}" class="button success">
+                        <i class="fas fa-plus"></i> Add Profile
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -193,7 +314,7 @@
 
 {% block scripts %}
 <script>
-    $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function() {
         // Any JavaScript for the garden dashboard can go here
     });
 </script>
