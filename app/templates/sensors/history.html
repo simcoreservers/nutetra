@@ -7,15 +7,27 @@
 {% block content %}
 <div class="sensor-history-container">
     <div class="section-header">
-        <h3>Sensor History</h3>
-        <p class="section-description">View historical sensor data and trends over time</p>
+        <h3><i class="fas fa-chart-line"></i> Sensor History</h3>
+        <div class="time-filter">
+            <select id="history-timeframe">
+                <option value="1d">24 Hours</option>
+                <option value="7d">7 Days</option>
+                <option value="30d">30 Days</option>
+                <option value="90d">90 Days</option>
+            </select>
+        </div>
     </div>
 
     <div class="sensor-charts-grid">
         <!-- pH History Chart -->
         <div class="chart-card">
             <div class="card-header">
-                <h4><i class="fas fa-tint"></i> pH History</h4>
+                <h4><i class="fas fa-flask"></i> pH History</h4>
+                <div class="card-actions">
+                    <button class="refresh-btn" data-sensor="ph" title="Refresh chart">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="chart-container">
@@ -28,6 +40,11 @@
         <div class="chart-card">
             <div class="card-header">
                 <h4><i class="fas fa-bolt"></i> EC History</h4>
+                <div class="card-actions">
+                    <button class="refresh-btn" data-sensor="ec" title="Refresh chart">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="chart-container">
@@ -40,10 +57,36 @@
         <div class="chart-card">
             <div class="card-header">
                 <h4><i class="fas fa-thermometer-half"></i> Temperature History</h4>
+                <div class="card-actions">
+                    <button class="refresh-btn" data-sensor="temp" title="Refresh chart">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="chart-container">
                     <canvas id="temp-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Export Section -->
+    <div class="section-header" style="margin-top: 2rem;">
+        <h3><i class="fas fa-file-export"></i> Export Data</h3>
+    </div>
+    
+    <div class="export-section">
+        <div class="export-options">
+            <div class="export-option">
+                <h4>Sensor Readings</h4>
+                <div class="export-buttons">
+                    <a href="{{ url_for('api.export_readings', format='csv') }}" class="button">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </a>
+                    <a href="{{ url_for('api.export_readings', format='json') }}" class="button">
+                        <i class="fas fa-file-code"></i> JSON
+                    </a>
                 </div>
             </div>
         </div>
@@ -54,26 +97,65 @@
 {% block extra_css %}
 <style>
     .sensor-history-container {
-        padding: 1rem;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
+    }
+    
+    .section-header {
+        grid-column: span 12;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--spacing-sm);
+    }
+    
+    .section-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-header h3 i {
+        margin-right: 8px;
+        color: var(--primary-color);
+    }
+    
+    .time-filter select {
+        padding: 6px 12px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-color-light);
+        color: var(--text-color);
+        font-size: 0.9rem;
     }
     
     .sensor-charts-grid {
+        grid-column: span 12;
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        margin-top: 1rem;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
     }
     
     .chart-card {
-        background-color: var(--card-bg);
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        grid-column: span 12;
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
         overflow: hidden;
+        box-shadow: var(--card-shadow);
     }
     
     .card-header {
-        padding: 1rem;
-        background-color: var(--card-header-bg);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-lighter);
         border-bottom: 1px solid var(--border-color);
     }
     
@@ -85,8 +167,17 @@
         gap: 0.5rem;
     }
     
+    .card-header h4 i {
+        color: var(--primary-color);
+    }
+    
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
     .card-body {
-        padding: 1rem;
+        padding: var(--spacing-md);
     }
     
     .chart-container {
@@ -94,21 +185,112 @@
         position: relative;
     }
     
+    /* Export Section */
+    .export-section {
+        grid-column: span 12;
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        box-shadow: var(--card-shadow);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .export-options {
+        display: flex;
+        gap: var(--spacing-md);
+        flex-wrap: wrap;
+    }
+    
+    .export-option {
+        flex: 1;
+        min-width: 250px;
+    }
+    
+    .export-option h4 {
+        margin-top: 0;
+        margin-bottom: var(--spacing-sm);
+        font-size: 1rem;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+    
+    .export-buttons .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 6px 12px;
+        background-color: var(--bg-color-lighter);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    
+    .export-buttons .button:hover {
+        background-color: var(--primary-color-light);
+        color: var(--primary-color);
+    }
+    
+    /* Refresh button */
+    .refresh-btn {
+        background: transparent;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 5px;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+    }
+    
+    .refresh-btn:hover {
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+    }
+    
+    .refresh-btn.rotating {
+        animation: rotate 0.5s linear;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Layouts */
     @media (min-width: 768px) {
-        .sensor-charts-grid {
-            grid-template-columns: 1fr 1fr;
+        .chart-card {
+            grid-column: span 6;
         }
     }
     
     @media (min-width: 1200px) {
-        .sensor-charts-grid {
-            grid-template-columns: 1fr 1fr 1fr;
+        .chart-card {
+            grid-column: span 4;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .sensor-history-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm);
+        }
+        
+        .chart-container {
+            height: 250px;
         }
     }
 </style>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Parse data from Jinja
@@ -116,93 +298,174 @@
         var ecData = {{ ec_data|safe }};
         var tempData = {{ temp_data|safe }};
         
-        // pH Chart
-        var phCtx = document.getElementById('ph-chart').getContext('2d');
-        var phLabels = [];
-        var phValues = [];
+        // Target ranges
         var phMin = {{ ph_min }};
         var phMax = {{ ph_max }};
-        
-        for (var i = 0; i < phData.length; i++) {
-            phLabels.push(new Date(phData[i].time));
-            phValues.push(phData[i].value);
-        }
-        
-        var phChart = new Chart(phCtx, {
-            type: 'line',
-            data: {
-                labels: phLabels,
-                datasets: [{
-                    label: 'pH Level',
-                    data: phValues,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-        
-        // EC Chart
-        var ecCtx = document.getElementById('ec-chart').getContext('2d');
-        var ecLabels = [];
-        var ecValues = [];
         var ecMin = {{ ec_min }};
         var ecMax = {{ ec_max }};
+        var tempMin = {{ temp_min|default('18') }};
+        var tempMax = {{ temp_max|default('28') }};
         
-        for (var i = 0; i < ecData.length; i++) {
-            ecLabels.push(new Date(ecData[i].time));
-            ecValues.push(ecData[i].value);
+        // Initialize charts
+        let phChart, ecChart, tempChart;
+        initCharts();
+        
+        // Set up event listeners
+        setupEventListeners();
+        
+        function initCharts() {
+            // Common chart options
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 500
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            };
+            
+            // pH Chart
+            const phCtx = document.getElementById('ph-chart').getContext('2d');
+            phChart = new Chart(phCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'pH',
+                        data: phData.map(item => ({
+                            x: new Date(item.time),
+                            y: item.value
+                        })),
+                        borderColor: '#4facfe',
+                        backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            suggestedMin: Math.max(0, phMin - 0.5),
+                            suggestedMax: phMax + 0.5
+                        }
+                    }
+                }
+            });
+            
+            // EC Chart
+            const ecCtx = document.getElementById('ec-chart').getContext('2d');
+            ecChart = new Chart(ecCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'EC',
+                        data: ecData.map(item => ({
+                            x: new Date(item.time),
+                            y: item.value
+                        })),
+                        borderColor: '#43e97b',
+                        backgroundColor: 'rgba(67, 233, 123, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            suggestedMin: Math.max(0, ecMin - 150),
+                            suggestedMax: ecMax + 150
+                        }
+                    }
+                }
+            });
+            
+            // Temperature Chart
+            const tempCtx = document.getElementById('temp-chart').getContext('2d');
+            tempChart = new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Temperature',
+                        data: tempData.map(item => ({
+                            x: new Date(item.time),
+                            y: item.value
+                        })),
+                        borderColor: '#f4736b',
+                        backgroundColor: 'rgba(244, 115, 107, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            suggestedMin: Math.max(0, tempMin - 2),
+                            suggestedMax: tempMax + 2
+                        }
+                    }
+                }
+            });
         }
         
-        var ecChart = new Chart(ecCtx, {
-            type: 'line',
-            data: {
-                labels: ecLabels,
-                datasets: [{
-                    label: 'EC Level (μS/cm)',
-                    data: ecValues,
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-        
-        // Temperature Chart
-        var tempCtx = document.getElementById('temp-chart').getContext('2d');
-        var tempLabels = [];
-        var tempValues = [];
-        
-        for (var i = 0; i < tempData.length; i++) {
-            tempLabels.push(new Date(tempData[i].time));
-            tempValues.push(tempData[i].value);
+        function setupEventListeners() {
+            // Time filter select
+            document.getElementById('history-timeframe').addEventListener('change', function() {
+                const timeframe = this.value;
+                // Here you would fetch new data based on the timeframe
+                // For now, we'll just simulate a refresh
+                document.querySelectorAll('.refresh-btn').forEach(btn => {
+                    btn.click();
+                });
+            });
+            
+            // Refresh buttons
+            document.querySelectorAll('.refresh-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const sensor = this.getAttribute('data-sensor');
+                    this.classList.add('rotating');
+                    
+                    // Simulate fetch delay - in production you would fetch new data here
+                    setTimeout(() => {
+                        this.classList.remove('rotating');
+                    }, 500);
+                });
+            });
         }
-        
-        var tempChart = new Chart(tempCtx, {
-            type: 'line',
-            data: {
-                labels: tempLabels,
-                datasets: [{
-                    label: 'Temperature (°C)',
-                    data: tempValues,
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
     });
 </script>
 {% endblock %} 
