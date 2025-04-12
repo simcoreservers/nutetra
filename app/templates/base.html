@@ -216,16 +216,6 @@
                 </div>
             </header>
             
-            <!-- Breadcrumb Navigation -->
-            {% if request.path != url_for('main.index') %}
-            <nav class="breadcrumb-nav">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}"><i class="fas fa-home"></i></a></li>
-                    {% block breadcrumbs %}{% endblock %}
-                </ol>
-            </nav>
-            {% endif %}
-            
             <!-- Flash Messages -->
             <div class="flash-messages">
                 {% with messages = get_flashed_messages(with_categories=true) %}
