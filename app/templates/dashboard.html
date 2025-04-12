@@ -373,7 +373,7 @@
 <style>
     .dashboard-container {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(12, 1fr);
         gap: var(--spacing-md);
         margin-top: var(--spacing-md);
     }
@@ -386,21 +386,33 @@
         margin-bottom: var(--spacing-md);
     }
     
-    /* Section layout control */
+    /* Section layout control - more responsive approach */
     .readings-section {
-        grid-column: span 4;
+        grid-column: span 12;
     }
     
     .status-section {
-        grid-column: span 2;
+        grid-column: span 6;
     }
     
     .actions-section {
-        grid-column: span 2;
+        grid-column: span 6;
     }
     
     .active-profile-section {
+        grid-column: span 12;
+    }
+    
+    .charts-section {
+        grid-column: span 8;
+    }
+    
+    .activity-section {
         grid-column: span 4;
+    }
+    
+    .export-section {
+        grid-column: span 12;
     }
     
     /* Dashboard card styles from garden */
@@ -470,7 +482,7 @@
     /* Readings section */
     .readings-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: var(--spacing-md);
     }
     
@@ -535,7 +547,7 @@
     /* Status section */
     .status-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: var(--spacing-md);
     }
     
@@ -611,7 +623,7 @@
     /* Actions section */
     .actions-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: var(--spacing-md);
     }
     
@@ -679,7 +691,7 @@
     /* Active Profile Section */
     .profile-detail-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: var(--spacing-md);
     }
     
@@ -783,234 +795,84 @@
     
     /* Responsive adjustments */
     @media (max-width: 1200px) {
-        .reading-card {
-            width: calc(33.333% - 20px);
+        .status-section, 
+        .actions-section {
+            grid-column: span 6;
+        }
+        
+        .charts-section {
+            grid-column: span 8;
+        }
+        
+        .activity-section {
+            grid-column: span 4;
         }
     }
     
     @media (max-width: 992px) {
-        .reading-card {
-            width: calc(50% - 15px);
+        .charts-section,
+        .activity-section {
+            grid-column: span 12;
         }
         
         .readings-grid {
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+        
+        .status-grid {
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+        
+        .actions-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         }
     }
 
     /* Tablet adjustments */
-    @media (max-width: 992px) {
+    @media (max-width: 768px) {
         .dashboard-container {
-            gap: 15px;
-            padding: 15px;
+            grid-template-columns: repeat(6, 1fr);
         }
         
-        .dashboard-section {
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .section-header {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-        }
-        
-        .section-header h3 {
-            font-size: 1.1rem;
-        }
-
-        .readings-grid {
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
-        }
-        
-        .reading-card {
-            padding: 12px;
-        }
-        
-        .reading-icon {
-            width: 45px;
-            height: 45px;
-            font-size: 1.2rem;
-            margin-right: 10px;
-        }
-        
-        .reading-value {
-            font-size: 1.5rem;
+        .readings-section,
+        .status-section,
+        .actions-section,
+        .active-profile-section,
+        .charts-section,
+        .activity-section,
+        .export-section {
+            grid-column: span 6;
         }
         
         .charts-container {
             height: 300px;
         }
-        
-        .charts-section, 
-        .activity-section, 
-        .export-section {
-            grid-column: span 3;
-        }
-        
-        .charts-section {
-            grid-row: auto;
-        }
-        
-        .activity-section {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .activity-list {
-            max-height: none;
-            overflow-y: visible;
-        }
     }
     
     /* Mobile adjustments */
-    @media (max-width: 768px) {
-        body, html {
-            height: auto !important;
-            min-height: 100% !important;
-        }
-        
+    @media (max-width: 576px) {
         .dashboard-container {
-            display: block !important;
-            height: auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-            overflow: visible !important;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
             padding: 15px;
         }
         
         .dashboard-section {
-            width: 100% !important;
-            display: block !important;
-            height: auto !important;
-            min-height: auto !important;
-            padding: 15px;
-            margin-bottom: 20px !important;
-            flex-shrink: 0 !important;
-            overflow: visible !important;
-        }
-        
-        /* Force natural height for reading cards */
-        .readings-section {
-            height: auto !important;
-            min-height: auto !important;
-        }
-        
-        .readings-grid {
-            display: block !important;
-            height: auto !important;
-            min-height: auto !important;
-        }
-        
-        .reading-card {
-            width: 100% !important;
-            min-height: 110px !important;
-            height: auto !important;
-            display: flex !important;
-            align-items: center !important;
-            margin-bottom: 15px !important;
-            padding: 15px !important;
-        }
-        
-        .reading-icon {
-            width: 45px !important;
-            height: 45px !important;
-            flex-shrink: 0 !important;
-        }
-        
-        .reading-details {
-            flex: 1 !important;
-        }
-        
-        .reading-value {
-            font-size: 1.5rem !important;
-        }
-        
-        /* Force natural height for status section */
-        .status-section {
-            height: auto !important;
-            min-height: auto !important;
-        }
-        
-        .status-grid {
-            display: block !important;
-            height: auto !important;
-        }
-        
-        .status-card {
-            width: 100% !important;
-            height: auto !important;
-            min-height: 80px !important;
-            display: flex !important;
-            margin-bottom: 15px !important;
-            padding: 15px !important;
-        }
-        
-        /* Force natural height for action section */
-        .actions-section {
-            height: auto !important;
-            min-height: auto !important;
-        }
-        
-        .actions-grid {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 15px !important;
-            height: auto !important;
-        }
-        
-        .action-card {
-            min-height: 90px !important;
-            height: auto !important;
-            margin-bottom: 0 !important;
-        }
-        
-        /* Force natural height for profile section */
-        .active-profile-section {
-            height: auto !important;
-            min-height: auto !important;
-        }
-        
-        .profile-detail-grid {
-            display: block !important;
-            height: auto !important;
-        }
-        
-        .profile-info-card {
-            width: 100% !important;
-            height: auto !important;
-            margin-bottom: 15px !important;
-        }
-        
-        /* Fixed height for charts only */
-        .charts-container {
-            height: 250px !important;
-        }
-    }
-    
-    /* Small mobile adjustments */
-    @media (max-width: 480px) {
-        .dashboard-container {
-            padding: 10px;
-            gap: 15px;
-        }
-        
-        .dashboard-section {
+            width: 100%;
             padding: 15px;
             margin-bottom: 15px;
-            height: auto;
         }
         
-        .actions-grid {
-            grid-template-columns: 1fr;
+        .readings-grid,
+        .status-grid {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
         }
         
-        .reading-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1.1rem;
-            margin-right: 10px;
+        .charts-container {
+            height: 250px;
         }
     }
 
