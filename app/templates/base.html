@@ -34,247 +34,345 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="NuTetra" class="logo">
-                <h1>NuTetra</h1>
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="NuTetra">
+                    <h3>NuTetra</h3>
+                </div>
             </div>
             
             <nav class="sidebar-nav">
-                <ul>
-                    <li class="{% if request.path == url_for('main.index') %}active{% endif %}">
-                        <a href="{{ url_for('main.index') }}">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-section {% if '/sensors' in request.path or '/events' in request.path %}active{% endif %}">
-                        <a href="#" class="section-toggle">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Sensor Monitoring</span>
-                            <i class="fas fa-plus toggle-icon"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li class="nav-item {% if '/sensors/history' in request.path and not '/sensors/calibration' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('sensors.history') }}">
-                                    <i class="fas fa-history"></i>
-                                    <span>Sensor History</span>
-                                </a>
-                            </li>
-                            <li class="nav-item {% if '/sensors/calibration' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('sensors.calibration') }}">
-                                    <i class="fas fa-sliders-h"></i>
-                                    <span>Calibration</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    
-                    <li class="nav-section {% if '/garden' in request.path or '/garden/nutrients' in request.path or '/garden/profiles' in request.path or '/garden/grow_cycle' in request.path %}active{% endif %}">
-                        <a href="#" class="section-toggle">
-                            <i class="fas fa-seedling"></i>
-                            <span>Garden</span>
-                            <i class="fas fa-plus toggle-icon"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li class="{% if '/garden' == request.path %}active{% endif %}">
-                                <a href="{{ url_for('garden.index') }}">
-                                    <i class="fas fa-seedling"></i>
-                                    <span>Garden Overview</span>
-                                </a>
-                            </li>
-                            <li class="{% if '/garden/nutrients' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('garden.nutrients') }}">
-                                    <i class="fas fa-vial"></i>
-                                    <span>Nutrient Library</span>
-                                </a>
-                            </li>
-                            <li class="{% if '/garden/profiles' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('garden.profiles') }}">
-                                    <i class="fas fa-leaf"></i>
-                                    <span>Plant Profiles</span>
-                                </a>
-                            </li>
-                            
-                            <li class="{% if '/garden/grow-cycle' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('garden.grow_cycle') }}">
-                                    <i class="fas fa-leaf"></i>
-                                    <span>Grow Cycle</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    
-                    <li class="nav-section {% if '/hardware/pumps' in request.path or '/calibration' in request.path %}active{% endif %}">
-                        <a href="#" class="section-toggle">
-                            <i class="fas fa-microchip"></i>
-                            <span>Hardware</span>
-                            <i class="fas fa-plus toggle-icon"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li class="{% if '/hardware/pumps' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.pumps') }}">
-                                    <i class="fas fa-pump-soap"></i>
-                                    <span>Pumps</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    
-                    <li class="nav-section {% if '/settings' in request.path or '/hardware/settings' in request.path %}active{% endif %}">
-                        <a href="#" class="section-toggle">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                            <i class="fas fa-plus toggle-icon"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li class="{% if '/hardware/settings' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('dosing.settings') }}">
-                                    <i class="fas fa-tint"></i>
-                                    <span>Dosing Settings</span>
-                                </a>
-                            </li>
-                            <li class="{% if '/settings/system' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('settings.system') }}">
-                                    <i class="fas fa-server"></i>
-                                    <span>System</span>
-                                </a>
-                            </li>
-                            <li class="{% if '/settings/network' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('settings.network') }}">
-                                    <i class="fas fa-wifi"></i>
-                                    <span>Network</span>
-                                </a>
-                            </li>
-                            <li class="{% if '/settings/notifications' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('settings.notifications') }}">
-                                    <i class="fas fa-bell"></i>
-                                    <span>Notifications</span>
-                                </a>
-                            </li>
-                            <li class="{% if '/settings/backup' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('settings.backup') }}">
-                                    <i class="fas fa-database"></i>
-                                    <span>Backup & Restore</span>
-                                </a>
-                            </li>
-                            <li class="{% if '/settings/diagnostics' in request.path %}active{% endif %}">
-                                <a href="{{ url_for('settings.diagnostics') }}">
-                                    <i class="fas fa-stethoscope"></i>
-                                    <span>Diagnostics</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="{{ url_for('main.index') }}" class="nav-item {% if request.path == url_for('main.index') %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-tachometer-alt"></i></span>
+                        <span class="nav-item-text">Dashboard</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Monitoring</div>
+                    <a href="{{ url_for('sensors.history') }}" class="nav-item {% if '/sensors/history' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-chart-line"></i></span>
+                        <span class="nav-item-text">Sensor History</span>
+                    </a>
+                    <a href="{{ url_for('sensors.calibration') }}" class="nav-item {% if '/sensors/calibration' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-sliders-h"></i></span>
+                        <span class="nav-item-text">Calibration</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section-divider"></div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Garden</div>
+                    <a href="{{ url_for('garden.index') }}" class="nav-item {% if '/garden' == request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-seedling"></i></span>
+                        <span class="nav-item-text">Garden Overview</span>
+                    </a>
+                    <a href="{{ url_for('garden.nutrients') }}" class="nav-item {% if '/garden/nutrients' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-vial"></i></span>
+                        <span class="nav-item-text">Nutrient Library</span>
+                    </a>
+                    <a href="{{ url_for('garden.profiles') }}" class="nav-item {% if '/garden/profiles' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-leaf"></i></span>
+                        <span class="nav-item-text">Plant Profiles</span>
+                    </a>
+                    <a href="{{ url_for('garden.grow_cycle') }}" class="nav-item {% if '/garden/grow-cycle' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-sync-alt"></i></span>
+                        <span class="nav-item-text">Grow Cycle</span>
+                        <span class="nav-item-badge">2</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Hardware</div>
+                    <a href="{{ url_for('dosing.pumps') }}" class="nav-item {% if '/hardware/pumps' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-pump-soap"></i></span>
+                        <span class="nav-item-text">Pumps</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section-divider"></div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="{{ url_for('dosing.settings') }}" class="nav-item {% if '/hardware/settings' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-tint"></i></span>
+                        <span class="nav-item-text">Dosing Settings</span>
+                    </a>
+                    <a href="{{ url_for('settings.system') }}" class="nav-item {% if '/settings/system' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-server"></i></span>
+                        <span class="nav-item-text">System</span>
+                    </a>
+                    <a href="{{ url_for('settings.network') }}" class="nav-item {% if '/settings/network' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-wifi"></i></span>
+                        <span class="nav-item-text">Network</span>
+                    </a>
+                    <a href="{{ url_for('settings.notifications') }}" class="nav-item {% if '/settings/notifications' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-bell"></i></span>
+                        <span class="nav-item-text">Notifications</span>
+                    </a>
+                    <a href="{{ url_for('settings.backup') }}" class="nav-item {% if '/settings/backup' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-database"></i></span>
+                        <span class="nav-item-text">Backup & Restore</span>
+                    </a>
+                    <a href="{{ url_for('settings.diagnostics') }}" class="nav-item {% if '/settings/diagnostics' in request.path %}active{% endif %}">
+                        <span class="nav-item-icon"><i class="fas fa-stethoscope"></i></span>
+                        <span class="nav-item-text">Diagnostics</span>
+                    </a>
+                </div>
             </nav>
             
             <div class="sidebar-footer">
-                <p>&copy; 2025 NuTetra</p>
-                <p class="version">v1.0.0</p>
+                <span>&copy; 2025 NuTetra</span>
+                <span class="version">v1.0.0</span>
             </div>
         </aside>
         
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Top Navigation Bar -->
-            <header class="top-nav">
-                <div class="nav-left">
-                    <button id="sidebar-toggle" class="sidebar-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+        <!-- Top Navbar -->
+        <header class="topnav">
+            <div class="topnav-toggle" id="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            
+            <div class="topnav-brand">
+                <img src="{{ url_for('static', filename='img/logo-icon.svg') }}" alt="NuTetra">
+                <div class="topnav-title">{% block page_title %}Dashboard{% endblock %}</div>
+            </div>
+            
+            <div class="topnav-search">
+                <span class="topnav-search-icon"><i class="fas fa-search"></i></span>
+                <input type="text" placeholder="Search...">
+            </div>
+            
+            <div class="topnav-menu">
+                <!-- Real-time status indicators -->
+                {% set ph_reading = get_last_reading('ph') %}
+                {% set ec_reading = get_last_reading('ec') %}
+                {% set temp_reading = get_last_reading('temp') %}
+                
+                <!-- Pass settings to chart JavaScript -->
+                {% set settings = settings|default({}) %}
+                {% set ph_setpoint = settings.get('ph_setpoint', 6.0) %}
+                {% set ph_buffer = settings.get('ph_buffer', 0.2) %}
+                {% set ph_min = ph_setpoint - ph_buffer %}
+                {% set ph_max = ph_setpoint + ph_buffer %}
+                
+                {% set ec_setpoint = settings.get('ec_setpoint', 1350) %}
+                {% set ec_buffer = settings.get('ec_buffer', 150) %}
+                {% set ec_min = ec_setpoint - ec_buffer %}
+                {% set ec_max = ec_setpoint + ec_buffer %}
+                
+                <div class="badge {% if ph_reading and (ph_reading < ph_min or ph_reading > ph_max) %}badge-danger{% else %}badge-success{% endif %}">
+                    pH: {{ ph_reading|round(2) if ph_reading else '--' }}
                 </div>
                 
-                <div class="nav-right">
-                    <!-- Real-time status indicators -->
-                    <div class="status-indicators">
-                        {% set ph_reading = get_last_reading('ph') %}
-                        {% set ec_reading = get_last_reading('ec') %}
-                        {% set temp_reading = get_last_reading('temp') %}
-                        
-                        <!-- Pass settings to chart JavaScript -->
-                        {% set settings = settings|default({}) %}
-                        <!-- Calculate min/max from setpoint and buffer -->
-                        {% set ph_setpoint = settings.get('ph_setpoint', 6.0) %}
-                        {% set ph_buffer = settings.get('ph_buffer', 0.2) %}
-                        {% set ph_min = ph_setpoint - ph_buffer %}
-                        {% set ph_max = ph_setpoint + ph_buffer %}
-                        
-                        {% set ec_setpoint = settings.get('ec_setpoint', 1350) %}
-                        {% set ec_buffer = settings.get('ec_buffer', 150) %}
-                        {% set ec_min = ec_setpoint - ec_buffer %}
-                        {% set ec_max = ec_setpoint + ec_buffer %}
-                        
-                        <div class="status-item {% if ph_reading and (ph_reading < ph_min or ph_reading > ph_max) %}alert{% endif %}">
-                            <span class="label">pH</span>
-                            <span class="value">{{ ph_reading|round(2) if ph_reading else '--' }}</span>
-                        </div>
-                        
-                        <div class="status-item {% if ec_reading and (ec_reading < ec_min or ec_reading > ec_max) %}alert{% endif %}">
-                            <span class="label">EC</span>
-                            <span class="value">{{ ec_reading|round(2) if ec_reading else '--' }}</span>
-                        </div>
-                        
-                        <div class="status-item">
-                            <span class="label">Temp</span>
-                            <span class="value">{{ temp_reading|round(1) if temp_reading else '--' }}°C</span>
-                        </div>
+                <div class="badge {% if ec_reading and (ec_reading < ec_min or ec_reading > ec_max) %}badge-danger{% else %}badge-success{% endif %}">
+                    EC: {{ ec_reading|round(2) if ec_reading else '--' }}
+                </div>
+                
+                <div class="badge badge-info">
+                    {{ temp_reading|round(1) if temp_reading else '--' }}°C
+                </div>
+                
+                <!-- Theme Toggler -->
+                <div class="topnav-item" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </div>
+                
+                <!-- Notifications -->
+                <div class="topnav-item" id="notifications-toggle">
+                    <i class="fas fa-bell"></i>
+                    <span class="topnav-badge" id="notification-count">0</span>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="topnav-user" id="user-menu-toggle">
+                    <div class="topnav-user-avatar">
+                        <i class="fas fa-user"></i>
                     </div>
-                    
-                    <!-- Notifications bell -->
-                    <div class="notifications-bell">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-count" id="notification-count">0</span>
+                    <div class="topnav-user-info">
+                        <div class="topnav-user-name">Admin</div>
+                        <div class="topnav-user-role">Administrator</div>
                     </div>
                 </div>
-            </header>
-            
-            <!-- Flash Messages -->
-            <div class="flash-messages">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">
-                                <span>{{ message }}</span>
-                                <button class="close-btn">&times;</button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
             </div>
-            
+        </header>
+        
+        <!-- Main Content -->
+        <div class="main-container">
             <!-- Page Content -->
             <div class="page-content">
+                <!-- Flash Messages -->
+                <div class="flash-messages">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    <div class="alert-icon">
+                                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% elif category == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                                    </div>
+                                    <div class="alert-content">{{ message }}</div>
+                                    <button class="alert-close">&times;</button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">{% block content_title %}Dashboard{% endblock %}</h1>
+                    <p class="page-subtitle">{% block content_subtitle %}{% endblock %}</p>
+                    
+                    <div class="breadcrumb">
+                        <div class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></div>
+                        {% block breadcrumb %}{% endblock %}
+                    </div>
+                </div>
+                
+                <!-- Content -->
                 {% block content %}{% endblock %}
             </div>
-        </main>
+            
+            <!-- Footer -->
+            <footer class="footer">
+                &copy; 2025 NuTetra. All rights reserved.
+            </footer>
+        </div>
     </div>
     
     <!-- Notification Drawer -->
-    <div class="notifications-drawer" id="notifications-drawer">
-        <div class="drawer-header">
-            <h3>Notifications</h3>
-            <button class="close-drawer">&times;</button>
+    <div class="modal" id="notifications-modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Notifications</h3>
+            <button class="modal-close" id="notifications-close">&times;</button>
         </div>
-        <div class="notifications-list" id="notifications-list">
-            <p class="empty-state">No notifications</p>
+        <div class="modal-body">
+            <div class="notifications-list" id="notifications-list">
+                <p class="empty-state">No notifications</p>
+            </div>
         </div>
+        <div class="modal-footer">
+            <button class="btn btn-sm btn-outline" id="clear-notifications">Clear All</button>
+        </div>
+    </div>
+    <div class="modal-backdrop" id="notifications-backdrop"></div>
+    
+    <!-- User Menu Dropdown -->
+    <div class="dropdown-menu" id="user-dropdown">
+        <a href="{{ url_for('settings.profile') }}" class="dropdown-item">
+            <i class="fas fa-user-circle"></i> Profile
+        </a>
+        <a href="{{ url_for('settings.preferences') }}" class="dropdown-item">
+            <i class="fas fa-cog"></i> Preferences
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
     </div>
     
     <!-- JavaScript dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     
     <!-- Add any additional JS files needed for specific pages -->
     {% block extra_js %}{% endblock %}
     
-    <!-- Socket.IO integration -->
+    <!-- Main App JS -->
     <script>
         // Connect to Socket.IO server
         const socket = io();
         
-        // Listen for real-time updates
+        // DOM Elements
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const themeToggle = document.getElementById('theme-toggle');
+        const notificationsToggle = document.getElementById('notifications-toggle');
+        const notificationsModal = document.getElementById('notifications-modal');
+        const notificationsBackdrop = document.getElementById('notifications-backdrop');
+        const notificationsClose = document.getElementById('notifications-close');
+        const clearNotifications = document.getElementById('clear-notifications');
+        const userMenuToggle = document.getElementById('user-menu-toggle');
+        const userDropdown = document.getElementById('user-dropdown');
+        
+        // Toggle sidebar on mobile
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+        }
+        
+        // Toggle dark/light mode
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                
+                // Update the icon
+                const icon = themeToggle.querySelector('i');
+                if (document.body.classList.contains('dark-mode')) {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                } else {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                }
+                
+                // Save preference via AJAX
+                fetch('/settings/toggle-theme', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+            });
+        }
+        
+        // Notifications Modal
+        if (notificationsToggle && notificationsModal && notificationsBackdrop && notificationsClose) {
+            notificationsToggle.addEventListener('click', function() {
+                notificationsModal.classList.add('show');
+                notificationsBackdrop.classList.add('show');
+            });
+            
+            notificationsClose.addEventListener('click', function() {
+                notificationsModal.classList.remove('show');
+                notificationsBackdrop.classList.remove('show');
+            });
+            
+            notificationsBackdrop.addEventListener('click', function() {
+                notificationsModal.classList.remove('show');
+                notificationsBackdrop.classList.remove('show');
+            });
+        }
+        
+        // User dropdown
+        if (userMenuToggle && userDropdown) {
+            userMenuToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+                
+                // Position the dropdown
+                const rect = userMenuToggle.getBoundingClientRect();
+                userDropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+                userDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('show');
+            });
+        }
+        
+        // Close alert messages
+        document.querySelectorAll('.alert-close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.alert').remove();
+            });
+        });
+        
+        // Socket.IO event listeners
         socket.on('sensor_update', function(data) {
             // Update status indicators with new data
             updateStatusIndicator(data.sensor_type, data.value);
@@ -292,23 +390,43 @@
         
         // Helper function to update status indicators
         function updateStatusIndicator(type, value) {
-            const elements = document.querySelectorAll('.status-item');
+            const badges = document.querySelectorAll('.topnav-menu .badge');
             
-            elements.forEach(element => {
-                const label = element.querySelector('.label').textContent.toLowerCase();
+            badges.forEach(badge => {
+                const text = badge.textContent.toLowerCase();
                 
-                if ((type === 'ph' && label === 'ph') || 
-                    (type === 'ec' && label === 'ec') || 
-                    (type === 'temp' && label === 'temp')) {
+                if ((type === 'ph' && text.includes('ph')) || 
+                    (type === 'ec' && text.includes('ec')) || 
+                    (type === 'temp' && text.includes('°c'))) {
                     
                     let displayValue = value;
-                    if (type === 'ph' || type === 'ec') {
-                        displayValue = value.toFixed(2);
+                    if (type === 'ph') {
+                        badge.textContent = `pH: ${value.toFixed(2)}`;
+                        
+                        // Check if value is outside the acceptable range
+                        const phMin = parseFloat('{{ ph_min }}');
+                        const phMax = parseFloat('{{ ph_max }}');
+                        
+                        if (value < phMin || value > phMax) {
+                            badge.className = 'badge badge-danger';
+                        } else {
+                            badge.className = 'badge badge-success';
+                        }
+                    } else if (type === 'ec') {
+                        badge.textContent = `EC: ${value.toFixed(2)}`;
+                        
+                        // Check if value is outside the acceptable range
+                        const ecMin = parseFloat('{{ ec_min }}');
+                        const ecMax = parseFloat('{{ ec_max }}');
+                        
+                        if (value < ecMin || value > ecMax) {
+                            badge.className = 'badge badge-danger';
+                        } else {
+                            badge.className = 'badge badge-success';
+                        }
                     } else if (type === 'temp') {
-                        displayValue = value.toFixed(1) + '°C';
+                        badge.textContent = `${value.toFixed(1)}°C`;
                     }
-                    
-                    element.querySelector('.value').textContent = displayValue;
                 }
             });
         }
@@ -337,75 +455,37 @@
             // Update notification count
             const count = document.getElementById('notification-count');
             count.textContent = parseInt(count.textContent) + 1;
-            count.style.display = 'inline-block';
+            count.style.display = 'block';
         }
         
-        // Navigation system
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize active navigation sections
-            document.querySelectorAll('.nav-section.active').forEach(section => {
-                section.classList.add('expanded');
+        // Clear all notifications
+        if (clearNotifications) {
+            clearNotifications.addEventListener('click', function() {
+                const notificationsList = document.getElementById('notifications-list');
+                notificationsList.innerHTML = '<p class="empty-state">No notifications</p>';
                 
-                // Update the icon for active sections
-                const icon = section.querySelector('.toggle-icon');
-                if (icon) {
-                    icon.classList.remove('fa-plus');
-                    icon.classList.add('fa-minus');
-                }
+                // Reset notification count
+                const count = document.getElementById('notification-count');
+                count.textContent = '0';
+                count.style.display = 'none';
             });
-            
-            // Handle toggle clicks
-            document.querySelectorAll('.section-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const section = this.closest('.nav-section');
-                    section.classList.toggle('expanded');
-                    
-                    // Don't toggle icon for active sections (they stay expanded)
-                    if (!section.classList.contains('active')) {
-                        const icon = this.querySelector('.toggle-icon');
-                        if (icon) {
-                            icon.classList.toggle('fa-plus');
-                            icon.classList.toggle('fa-minus');
-                        }
-                    }
-                });
-            });
-            
-            // Clean click handling for submenu items
-            document.querySelectorAll('.submenu a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-            });
-            
-            // Handle sidebar toggle for mobile
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const sidebar = document.querySelector('.sidebar');
-            
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('expanded');
-                });
-            }
-        });
+        }
 
-        // Fix for submenu navigation issues
+        // Initialize theme icon based on current theme
         document.addEventListener('DOMContentLoaded', function() {
-            // Prevent submenu items from toggling parent menus
-            const submenuItems = document.querySelectorAll('.sidebar .submenu a');
-            submenuItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Stop event from bubbling up to parent menu items
-                });
-            });
+            if (themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                if (document.body.classList.contains('dark-mode')) {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                } else {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                }
+            }
         });
     </script>
     
-    <!-- JavaScript -->
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html> 
