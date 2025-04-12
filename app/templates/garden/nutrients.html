@@ -5,226 +5,186 @@
 {% block page_title %}Nutrient Library{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="nutrient-library-container">
     <!-- Nutrient Library Header Section -->
-    <section class="dashboard-section">
-        <div class="section-header">
-            <h3><i class="fas fa-vial"></i> Nutrient Library</h3>
-            <div class="section-actions">
-                <button onclick="showAddBrandForm()" class="action-button success">
-                    <i class="fas fa-plus"></i> Add New Brand
-                </button>
-            </div>
+    <div class="section-header">
+        <h3><i class="fas fa-vial"></i> Nutrient Library</h3>
+        <div class="section-actions">
+            <button onclick="showAddBrandForm()" class="button success">
+                <i class="fas fa-plus"></i> Add New Brand
+            </button>
         </div>
-    
-        <div class="alert info-alert">
+    </div>
+
+    <div class="alert info-alert">
         <i class="fas fa-info-circle"></i> Changes are automatically saved when you click out of a field or select a new option.
     </div>
     
-        <!-- Add Brand Form (initially hidden) -->
-        <div id="add-brand-container" class="form-card" style="display: none;">
-            <div class="form-card-header">
-                <h4>Add New Nutrient Brand</h4>
-            </div>
-            <div class="form-card-body">
-                <form id="add-brand-form" onsubmit="saveBrand(event)">
-            <div class="form-group">
-                <label for="new-brand-name">Brand Name</label>
-                <input type="text" id="new-brand-name" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="new-brand-description">Description</label>
-                <input type="text" id="new-brand-description" class="form-control">
-            </div>
-                    <div class="form-actions">
-                        <button type="submit" class="action-button success">
-                            <i class="fas fa-save"></i> Save Brand
-                        </button>
-                        <button type="button" onclick="cancelAddBrand()" class="action-button">
-                            Cancel
-                        </button>
-                    </div>
-        </form>
-    </div>
+    <!-- Add Brand Form (initially hidden) -->
+    <div id="add-brand-container" class="form-card" style="display: none;">
+        <div class="card-header">
+            <h4>Add New Nutrient Brand</h4>
         </div>
-    </section>
+        <div class="card-body">
+            <form id="add-brand-form" onsubmit="saveBrand(event)">
+                <div class="form-group">
+                    <label for="new-brand-name">Brand Name</label>
+                    <input type="text" id="new-brand-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-brand-description">Description</label>
+                    <input type="text" id="new-brand-description" class="form-control">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="button success">
+                        <i class="fas fa-save"></i> Save Brand
+                    </button>
+                    <button type="button" onclick="cancelAddBrand()" class="button">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <!-- Nutrient Brands Section -->
-    <div id="brands-container">
+    <div id="brands-container" class="brands-grid">
         {% for brand in brands %}
-        <section class="dashboard-section brand-section" data-brand-id="{{ brand.id }}">
-            <div class="section-header">
-                <h3>{{ brand.name }}</h3>
-                <div class="section-actions">
-                    <button class="action-button success" onclick="showAddProductRow('{{ brand.id }}')" title="Add Product">
+        <div class="brand-card" data-brand-id="{{ brand.id }}">
+            <div class="card-header">
+                <h4>{{ brand.name }}</h4>
+                <div class="card-actions">
+                    <button class="button success" onclick="showAddProductRow('{{ brand.id }}')" title="Add Product">
                         <i class="fas fa-plus"></i> Add Product
                     </button>
-                    <button class="action-button danger" onclick="confirmDeleteBrand('{{ brand.id }}')" title="Delete Brand">
-                        <i class="fas fa-trash"></i> Delete
+                    <button class="button danger" onclick="confirmDeleteBrand('{{ brand.id }}')" title="Delete Brand">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
             
-            {% if brand.description %}
-            <div class="section-description">
-                {{ brand.description }}
+            <div class="card-body">
+                {% if brand.description %}
+                <div class="brand-description">
+                    {{ brand.description }}
+                </div>
+                {% endif %}
+                
+                <div class="nutrient-table-container">
+                    <table class="nutrient-table">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Nutrient Type</th>
+                                <th>N%</th>
+                                <th>P%</th>
+                                <th>K%</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in brand.products %}
+                            <tr data-product-id="{{ product.id }}">
+                                <td>
+                                    <input type="text" class="product-name" value="{{ product.name }}" data-original="{{ product.name }}" 
+                                           onchange="updateProductField(this.closest('tr'), 'name', this.value)" 
+                                           onblur="if(this.value !== this.getAttribute('data-original')) updateProductField(this.closest('tr'), 'name', this.value)">
+                                </td>
+                                <td>
+                                    <select class="product-type" data-original="{{ product.nutrient_type or 'other' }}"
+                                            onchange="updateProductField(this.closest('tr'), 'nutrient_type', this.value)">
+                                        {% for type in nutrient_types %}
+                                        <option value="{{ type.id }}" {% if product.nutrient_type == type.id %}selected{% endif %}>{{ type.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" class="product-n" min="0" max="100" step="0.1" value="{{ product.nitrogen_pct }}" data-original="{{ product.nitrogen_pct }}"
+                                           onchange="updateProductField(this.closest('tr'), 'nitrogen_pct', parseFloat(this.value) || 0)"
+                                           onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'nitrogen_pct', parseFloat(this.value) || 0)">
+                                </td>
+                                <td>
+                                    <input type="number" class="product-p" min="0" max="100" step="0.1" value="{{ product.phosphorus_pct }}" data-original="{{ product.phosphorus_pct }}"
+                                           onchange="updateProductField(this.closest('tr'), 'phosphorus_pct', parseFloat(this.value) || 0)"
+                                           onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'phosphorus_pct', parseFloat(this.value) || 0)">
+                                </td>
+                                <td>
+                                    <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}"
+                                           onchange="updateProductField(this.closest('tr'), 'potassium_pct', parseFloat(this.value) || 0)"
+                                           onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'potassium_pct', parseFloat(this.value) || 0)">
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="button danger" onclick="confirmDeleteProduct('{{ product.id }}')" title="Delete Product">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <span class="save-status"></span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="add-product-row" data-brand-id="{{ brand.id }}" style="display: none;">
+                                <td>
+                                    <input type="text" class="new-product-name form-control" placeholder="Product Name" required>
+                                </td>
+                                <td>
+                                    <select class="new-product-type form-control">
+                                        {% for type in nutrient_types %}
+                                        <option value="{{ type.id }}">{{ type.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" class="new-product-n form-control" min="0" max="100" step="0.1" placeholder="0.0">
+                                </td>
+                                <td>
+                                    <input type="number" class="new-product-p form-control" min="0" max="100" step="0.1" placeholder="0.0">
+                                </td>
+                                <td>
+                                    <input type="number" class="new-product-k form-control" min="0" max="100" step="0.1" placeholder="0.0">
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="button success" onclick="saveNewProduct(this)" title="Save Product">
+                                        <i class="fas fa-save"></i> Save
+                                    </button>
+                                    <button class="button" onclick="cancelAddProduct(this)" title="Cancel">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            {% endif %}
-            
-            <div class="nutrient-table-container">
-                <table class="nutrient-table">
-                    <thead>
-                        <tr>
-                            <th>Product Name</th>
-                            <th>Nutrient Type</th>
-                            <th>N%</th>
-                            <th>P%</th>
-                            <th>K%</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in brand.products %}
-                        <tr data-product-id="{{ product.id }}">
-                            <td>
-                                <input type="text" class="product-name" value="{{ product.name }}" data-original="{{ product.name }}" 
-                                       onchange="updateProductField(this.closest('tr'), 'name', this.value)" 
-                                       onblur="if(this.value !== this.getAttribute('data-original')) updateProductField(this.closest('tr'), 'name', this.value)">
-                            </td>
-                            <td>
-                                <select class="product-type" data-original="{{ product.nutrient_type or 'other' }}"
-                                        onchange="updateProductField(this.closest('tr'), 'nutrient_type', this.value)">
-                                    {% for type in nutrient_types %}
-                                    <option value="{{ type.id }}" {% if product.nutrient_type == type.id %}selected{% endif %}>{{ type.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-                            <td>
-                                <input type="number" class="product-n" min="0" max="100" step="0.1" value="{{ product.nitrogen_pct }}" data-original="{{ product.nitrogen_pct }}"
-                                       onchange="updateProductField(this.closest('tr'), 'nitrogen_pct', parseFloat(this.value) || 0)"
-                                       onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'nitrogen_pct', parseFloat(this.value) || 0)">
-                            </td>
-                            <td>
-                                <input type="number" class="product-p" min="0" max="100" step="0.1" value="{{ product.phosphorus_pct }}" data-original="{{ product.phosphorus_pct }}"
-                                       onchange="updateProductField(this.closest('tr'), 'phosphorus_pct', parseFloat(this.value) || 0)"
-                                       onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'phosphorus_pct', parseFloat(this.value) || 0)">
-                            </td>
-                            <td>
-                                <input type="number" class="product-k" min="0" max="100" step="0.1" value="{{ product.potassium_pct }}" data-original="{{ product.potassium_pct }}"
-                                       onchange="updateProductField(this.closest('tr'), 'potassium_pct', parseFloat(this.value) || 0)"
-                                       onblur="if(parseFloat(this.value) !== parseFloat(this.getAttribute('data-original'))) updateProductField(this.closest('tr'), 'potassium_pct', parseFloat(this.value) || 0)">
-                            </td>
-                            <td class="actions-cell">
-                                <button class="action-button danger" onclick="confirmDeleteProduct('{{ product.id }}')" title="Delete Product">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                                <span class="save-status"></span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        <tr class="add-product-row" data-brand-id="{{ brand.id }}" style="display: none;">
-                            <td>
-                                <input type="text" class="new-product-name form-control" placeholder="Product Name" required>
-                            </td>
-                            <td>
-                                <select class="new-product-type form-control">
-                                    {% for type in nutrient_types %}
-                                    <option value="{{ type.id }}">{{ type.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-                            <td>
-                                <input type="number" class="new-product-n form-control" min="0" max="100" step="0.1" placeholder="0.0">
-                            </td>
-                            <td>
-                                <input type="number" class="new-product-p form-control" min="0" max="100" step="0.1" placeholder="0.0">
-                            </td>
-                            <td>
-                                <input type="number" class="new-product-k form-control" min="0" max="100" step="0.1" placeholder="0.0">
-                            </td>
-                            <td class="actions-cell">
-                                <button class="action-button success" onclick="saveNewProduct(this)" title="Save Product">
-                                    <i class="fas fa-save"></i> Save
-                                </button>
-                                <button class="action-button" onclick="cancelAddProduct(this)" title="Cancel">
-                                    <i class="fas fa-times"></i> Cancel
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+        </div>
         {% else %}
-        <section class="dashboard-section">
+        <div class="empty-state-container">
             <div class="empty-state">
                 <i class="fas fa-vial"></i>
                 <h4>No nutrient brands found</h4>
                 <p>Get started by adding your first nutrient brand.</p>
+            </div>
         </div>
-        </section>
         {% endfor %}
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Deletion</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to delete this product? This action cannot be undone.
-                <input type="hidden" id="product-id-to-delete" value="">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="delete-confirm-btn">Delete</button>
-            </div>
-        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .dashboard-container {
+    .nutrient-library-container {
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 20px;
-        padding-top: 30px; /* Extra padding at top */
-        margin-top: 15px; /* Add margin at top */
-    }
-    
-    .dashboard-section {
-        background-color: var(--card-bg);
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        overflow: visible; /* Changed from hidden to visible */
-        margin-bottom: 20px; /* Increased bottom margin */
-        position: relative; /* Add position relative */
-        z-index: 10; /* Ensure proper stacking */
-    }
-    
-    /* Header section specific styles to ensure visibility */
-    section.dashboard-section:first-child {
-        margin-top: 0;
-        padding-top: 25px;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
     }
     
     .section-header {
+        grid-column: span 12;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 15px;
+        margin-bottom: var(--spacing-md);
         border-bottom: 1px solid var(--border-color);
-        padding-bottom: 10px;
+        padding-bottom: var(--spacing-sm);
     }
     
     .section-header h3 {
@@ -241,39 +201,14 @@
     
     .section-actions {
         display: flex;
-        gap: 10px;
-    }
-    
-    .section-description {
-        margin-bottom: 15px;
-        color: var(--text-muted);
-        font-style: italic;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 30px 0;
-        color: var(--text-muted);
-    }
-    
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 15px;
-        opacity: 0.5;
-    }
-    
-    .empty-state h4 {
-        margin-bottom: 10px;
-    }
-    
-    .empty-state p {
-        margin: 0;
+        gap: var(--spacing-sm);
     }
     
     .alert {
+        grid-column: span 12;
         padding: 12px 15px;
-        border-radius: 6px;
-        margin-bottom: 20px;
+        border-radius: var(--border-radius);
+        margin-bottom: var(--spacing-md);
         display: flex;
         align-items: center;
     }
@@ -289,37 +224,72 @@
         border-left: 3px solid var(--primary-color);
     }
     
-    .form-card {
-        background-color: var(--bg-color);
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 20px;
-        border: 1px solid var(--border-color);
+    .brands-grid {
+        grid-column: span 12;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--spacing-md);
     }
     
-    .form-card-header {
-        background-color: rgba(var(--primary-color-rgb), 0.1);
-        padding: 12px 15px;
+    .brand-card {
+        grid-column: span 12;
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-md);
+        background-color: var(--bg-color-lighter);
         border-bottom: 1px solid var(--border-color);
     }
     
-    .form-card-header h4 {
+    .card-header h4 {
         margin: 0;
         font-size: 1.1rem;
-        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
     
-    .form-card-body {
-        padding: 15px;
+    .card-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    .form-card {
+        grid-column: span 12;
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .brand-description {
+        margin-bottom: var(--spacing-md);
+        color: var(--text-color-muted);
+        font-style: italic;
     }
     
     .form-group {
-        margin-bottom: 15px;
+        margin-bottom: var(--spacing-md);
     }
     
     .form-group label {
         display: block;
-        margin-bottom: 5px;
+        margin-bottom: 6px;
         font-weight: 500;
     }
     
@@ -327,22 +297,24 @@
         width: 100%;
         padding: 8px 12px;
         border: 1px solid var(--border-color);
-        border-radius: 4px;
-        background-color: var(--input-bg);
+        border-radius: var(--border-radius);
+        background-color: var(--bg-color);
         color: var(--text-color);
+        font-size: 0.95rem;
     }
     
     .form-actions {
         display: flex;
-        gap: 10px;
+        gap: var(--spacing-sm);
         justify-content: flex-end;
-        margin-top: 20px;
+        margin-top: var(--spacing-md);
     }
     
     .nutrient-table-container {
         overflow-x: auto;
-        border-radius: 6px;
+        border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
+        margin-top: var(--spacing-sm);
     }
     
     .nutrient-table {
@@ -380,8 +352,8 @@
         width: 100%;
         padding: 8px;
         border: 1px solid var(--border-color);
-        border-radius: 4px;
-        background-color: var(--input-bg);
+        border-radius: var(--border-radius);
+        background-color: var(--bg-color);
         color: var(--text-color);
     }
     
@@ -398,7 +370,7 @@
     
     .actions-cell {
         white-space: nowrap;
-        width: 100px;
+        width: 120px;
         text-align: center;
     }
     
@@ -426,82 +398,139 @@
         to { transform: rotate(360deg); }
     }
     
-    /* Responsive adjustments */
+    .empty-state-container {
+        grid-column: span 12;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 0;
+        color: var(--text-color-muted);
+        background-color: var(--bg-color-light);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+        color: var(--primary-color);
+    }
+    
+    .empty-state h4 {
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+    }
+    
+    .empty-state p {
+        margin: 0;
+        color: var(--text-color-light);
+    }
+    
+    .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 8px 16px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-color-lighter);
+        color: var(--text-color);
+        font-size: 0.95rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .button.success {
+        background-color: var(--primary-color-light);
+        color: var(--primary-color);
+    }
+    
+    .button.success:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .button.danger {
+        background-color: var(--danger-color-light);
+        color: var(--danger-color);
+    }
+    
+    .button.danger:hover {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .button:hover {
+        background-color: var(--bg-color);
+    }
+    
+    /* Responsive Layouts */
+    @media (min-width: 992px) {
+        .brand-card {
+            grid-column: span 6;
+        }
+    }
+    
+    @media (min-width: 1400px) {
+        .brand-card {
+            grid-column: span 4;
+        }
+    }
+    
     @media (max-width: 768px) {
-        .dashboard-container {
-            padding: 15px;
-            gap: 15px;
+        .nutrient-library-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm);
         }
         
-        .dashboard-section {
-            padding: 15px;
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+        
+        .card-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+        
+        .form-actions {
+            flex-wrap: wrap;
         }
         
         .section-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 10px;
+            gap: var(--spacing-sm);
         }
         
         .section-actions {
             width: 100%;
         }
         
+        .nutrient-table {
+            font-size: 0.85rem;
+        }
+        
         .nutrient-table th, 
         .nutrient-table td {
-            padding: 8px;
+            padding: 8px 6px;
         }
         
-        .form-actions {
-            flex-direction: column;
+        .actions-cell {
+            width: 100px;
         }
         
-        .form-actions .button {
-            width: 100%;
+        .button {
+            padding: 6px 10px;
+            font-size: 0.85rem;
         }
-    }
-    
-    /* Action button styles to match pump management */
-    .action-button {
-        background-color: var(--bg-color-light);
-        border: none;
-        color: var(--text-color);
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        transition: background-color 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .action-button:hover {
-        background-color: var(--primary-color);
-    }
-    
-    .action-button.danger {
-        background-color: var(--danger-color-light);
-        color: var(--danger-color);
-    }
-    
-    .action-button.danger:hover {
-        background-color: var(--danger-color);
-        color: white;
-    }
-    
-    .action-button i {
-        font-size: 0.9rem;
-    }
-    
-    .action-button.success {
-        background-color: var(--primary-color-light);
-        color: var(--primary-color);
-    }
-    
-    .action-button.success:hover {
-        background-color: var(--primary-color);
-        color: white;
     }
 </style>
 {% endblock %}
@@ -509,7 +538,6 @@
 {% block extra_js %}
 <!-- First load jQuery and Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     // Function to update a product field via API
